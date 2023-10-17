@@ -1,0 +1,22 @@
+version: '3.8'
+
+#for up container:
+  #docker-compose up dev-db -d (-d for background)
+
+services:
+  dev-db:
+    container_name: postgres
+    image: postgres:16
+    ports:
+      - 5434:5434
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: nest
+    networks:
+      - transcendance
+
+# Permet aux containers de communiquer en bridge
+networks:
+  transcendance:
+    driver: bridge
