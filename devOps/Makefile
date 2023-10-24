@@ -53,19 +53,19 @@ volumes:
 # ----- MANDATORY PART RULES -----
 
 up:
-	@echo "$(ON_GREEN)- Running Inception ... -$(EOC)"
+	@echo "$(ON_GREEN)- Running ft_transcendence ... -$(EOC)"
 	@docker compose -f $(YAML) up -d --build
-	@echo "$(BCYAN)---> Inception running: [DONE]$(EOC)"
+	@echo "$(BCYAN)---> ft_transcendence running: [DONE]$(EOC)"
 
 down: 
-	@echo "$(ON_GREEN)- Putting down Inception... -$(EOC)"
+	@echo "$(ON_GREEN)- Putting down ft_transcendence... -$(EOC)"
 	@docker compose -f $(YAML) down
-	@echo "$(BCYAN)---> Putting Inception down: [OK]$(EOC)"
+	@echo "$(BCYAN)---> Putting ft_transcendence down: [OK]$(EOC)"
 
 rm:
 	@echo "$(ON_PURPLE)- Removing all containers... -$(EOC)"
 	@docker rm $$(docker ps -aq) 2> /dev/null || true
-	@echo "$(BCYAN)---> Inception containers removing: [DONE]$(EOC)"
+	@echo "$(BCYAN)---> ft_transcendence containers removing: [DONE]$(EOC)"
  
 rmi:
 	@echo "$(ON_BLUE)- Removing all images... -$(EOC)"
@@ -73,18 +73,18 @@ rmi:
 	@echo "$(BCYAN)---> Images removing: [DONE]$(EOC)"
 	
 stop: 
-	@echo "$(ON_GREEN)- Stopping Inception... -$(EOC)"
+	@echo "$(ON_GREEN)- Stopping ft_transcendence... -$(EOC)"
 	@docker compose -f $(YAML) stop
-	@echo "$(BCYAN)---> Inception stopped: [OK]$(EOC)"
+	@echo "$(BCYAN)---> ft_transcendence stopped: [OK]$(EOC)"
 
 clean: stop down
 	@docker volume rm $$(docker volume ls -q) 2> /dev/null || true
-	@echo "$(BCYAN)Inception containers, networks and volumes removed: [OK]$(EOC)"
+	@echo "$(BCYAN)ft_transcendence containers, networks and volumes removed: [OK]$(EOC)"
 
 #fclean: clean 
-#	@echo "$(ON_GREEN)- Wiping out every traces of Inception... -$(EOC)"
+#	@echo "$(ON_GREEN)- Wiping out every traces of ft_transcendence... -$(EOC)"
 #	@docker system prune -a --volumes -f
-#	@echo "$(BCYAN)No more inception: [DONE]$(EOC)"
+#	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
 
 #re: fclean all
 

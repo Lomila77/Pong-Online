@@ -7,8 +7,9 @@ RUN npm i
 COPY . .
 EXPOSE 5173
 
-# change default shell
-#SHELL ["/bin/bash", "-c"] 
+
+RUN ["npm", "install", "yup"]
+RUN ["npm", "install", "react-hook-form"]
 
 CMD ["npm", "run", "dev"]
 
