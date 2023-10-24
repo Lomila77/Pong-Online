@@ -1,6 +1,6 @@
 # Transcendance
 
-
+`make or make clean`
 
 ## Getting started
 
