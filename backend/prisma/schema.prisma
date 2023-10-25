@@ -11,24 +11,27 @@ datasource db {
 }
 
 model User {
-  fortytwo_id   Int     @id @default(autoincrement())
-  pseudo        String  @unique @default("0") @db.VarChar(50)
-  refresh_token String  @default("0")
-  email         String  @unique
+  fortytwo_id   Int       @id @default(autoincrement())
+  pseudo        String    @unique @default("0") @db.VarChar(50)
+  refresh_token String    @default("0")
+  email         String    @unique
   password      String
-  avatar        String  @default("0")
-  isF2Active    Boolean @default(false)
-  secretOf2FA   String  @default("0")
-  xp            Float   @default(0)
-  ratio         Int     @default(0)
+  avatar        String    @default("0")
+  isF2Active    Boolean   @default(false)
+  secretOf2FA   String    @default("0")
+  xp            Float     @default(0)
+  ratio         Int       @default(0)
+  Channel       Channel[]
 
   @@map("users")
 }
 
 model Channel {
-  owner        Int      @unique
-  name         String   @unique
-  type         Int
-  password     String
-  creationDate DateTime
+  owner           Int      @unique
+  name            String   @unique
+  type            Int
+  password        String
+  creationDate    DateTime
+  user            User     @relation(fields: [userFortytwo_id], references: [fortytwo_id])
+  userFortytwo_id Int
 }
