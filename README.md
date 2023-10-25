@@ -1,6 +1,8 @@
 # Transcendance
 
-
+Usage in devOps folder: 
+* `make` will build the project
+* `make clean` will stop and put down all containers and images
 
 ## Getting started
 

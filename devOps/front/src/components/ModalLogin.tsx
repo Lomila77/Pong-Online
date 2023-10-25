@@ -2,12 +2,15 @@ import { useRef } from 'react';
 import { useState } from 'react';
 import Nemo from '../images/Nemo.jpg';
 import { useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
+import { createUser } from '../api/helpers'
+import { schema } from '/login.schema'
 
 const ModalLogin = () => {
   const hiddenFileInput = useRef(null);
   const [file, setFile] = useState(Nemo);
-  const [userName, setUserName] = useState('');
-  const [toggle, setToggle] = useState(false);
 
   const [hidden, setHidden] = useState(true);
 
@@ -21,26 +24,24 @@ const ModalLogin = () => {
     setFile(URL.createObjectURL(e.target.files[0]));
   };
 
-  const handleChangeUserName = (e) => {
-    setUserName(e.target.value);
-  };
+  const schema = Yup.object().shape({
+      pseudo: Yup.string()
+        .min(3, 'Pseudo 3 chars')
+        .required('Entrer un pseudo'),
+      TwoFA: Yup.boolean().required('Coucou 2FA'),
+      // photo: Yup.mixed()
+      //   .required('Photo obligatoire')
+  });
 
-  const handlelChangeToggle = (e) => {
-    setToggle(!toggle);
-  };
+  const {register, handleSubmit, formState: {errors }} = useForm(
+    {resolver: yupResolver(schema),
+  });
 
-  const handleSaveButton = (e) => {
-    if (!userName) {
-      setHidden(false);
-    } else {
-      setHidden(true);
-      navigate("/home");
-      console.log('SUBMIT');
-      console.log('* Avatar file: ' + file);
-      console.log('* Username: ' + userName);
-      console.log('* 2FA: ' + toggle);
-    }
-  };
+  const onSubmit = (data) => {
+    console.log(data);
+    createUser(data);
+    navigate("/home");
+  }
 
   return (
     <>
@@ -50,8 +51,10 @@ const ModalLogin = () => {
       >
         42 LOGIN
       </button>
-      <dialog id="my_modal_1" className="modal">
+      
+      <dialog id="my_modal_1" className="modal"> 
         <div className="modal-box w-11/12 max-w-3xl">
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex">
             <div className="basis-1/2">
               <h1 className="font-display text-4xl">
@@ -60,8 +63,8 @@ const ModalLogin = () => {
               <input
                 type="text"
                 placeholder="Nom d'utilisateur"
-                onChange={handleChangeUserName}
                 className="input input-bordered w-full mt-6"
+                {...register('pseudo')}
               />
               <hr className="border-neutral-500 mt-5" />
               <div className="form-control mt-3">
@@ -72,20 +75,20 @@ const ModalLogin = () => {
                   <input
                     type="checkbox"
                     className="toggle toggle-secondary"
-                    onClick={handlelChangeToggle}
+                    {...register('TwoFA')}
                   />
                 </label>
               </div>
               <h1 className="label-text text-xs ml-1">
-                L'authentification a deux facteurs permet de
-                vous connecter en toute securite a votre
-                compte afin de proteger vos donnees
+                L'authentification à deux facteurs permet de
+                vous connecter en toute sécurité à votre
+                compte afin de protéger vos données
                 personnelles
               </h1>
               <div>
                 <button
                   className="btn btn-secondary btn-block font-display mt-6"
-                  onClick={(e) => handleSaveButton(e)}
+                  type="submit"
                 >
                   ENREGISTRER
                 </button>
@@ -143,6 +146,7 @@ const ModalLogin = () => {
               d'utilisateur !
             </span>
           </div>
+          </form>
         </div>
         <form method="dialog" className="modal-backdrop">
           <button onClick={(e) => setHidden(true)}>close</button>
