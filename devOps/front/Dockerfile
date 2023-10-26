@@ -3,6 +3,7 @@ FROM node:latest
 # front-end files handling in container
 WORKDIR /app
 COPY ./package* .
+COPY tailwind.config.js .
 RUN npm i
 COPY . .
 EXPOSE 5173
