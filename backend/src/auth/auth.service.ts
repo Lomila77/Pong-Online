@@ -19,6 +19,7 @@ export class AuthService {
         data: {
           pseudo: dto.pseudo,
           isF2Active: dto.isF2Active,
+          avatar: dto.avatar,
         },
       });
       return this.signToken(user.fortytwo_id, user.pseudo);

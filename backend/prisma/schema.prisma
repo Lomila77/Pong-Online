@@ -16,7 +16,7 @@ model User {
   refresh_token String    @default("0")
   //  email         String    @unique
   //  password      String
-  avatar        String    @default("0")
+  avatar        String
   isF2Active    Boolean   @default(false)
   secretOf2FA   String    @default("0")
   xp            Float     @default(0)

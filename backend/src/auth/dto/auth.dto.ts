@@ -8,4 +8,8 @@ export class AuthDto {
   @IsBoolean()
   @IsNotEmpty()
   isF2Active: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  avatar: string;
 }
