@@ -37,7 +37,7 @@ const ModalLogin = () => {
         /^[0-9a-zA-Z-_]*$/,
         'Entrez des caractères valides'
       ),
-    is2FActive: Yup.boolean().required(''),
+    isF2Active: Yup.boolean().required(''),
     avatar: Yup.mixed()
     .test('fileSize', 'Fichier trop volumineux', () => {
       return (fileSize <= MAX_FILE_SIZE);
@@ -52,7 +52,7 @@ const ModalLogin = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       pseudo: '',
-      is2FActive: false,
+      isF2Active: false,
       avatar: {MGameWatch}
     },
   });
@@ -107,7 +107,7 @@ const ModalLogin = () => {
                     <input
                       type="checkbox"
                       className="toggle toggle-secondary"
-                      {...register('is2FActive')}
+                      {...register('isF2Active')}
                     />
                   </label>
                 </div>
