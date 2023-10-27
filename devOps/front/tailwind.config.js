@@ -13,13 +13,23 @@ export default {
       fontFamily: {
         'display': ['"Press Start 2P"'],
       },
+      colors: {
+        'navbar': '#F4F2DF'
+      }
     },
   },
   plugins: [
     require("daisyui")
   ],
   daisyui: {
-    themes: ["retro"],
+    themes: [
+      {
+        retro: {
+          ...require("daisyui/src/theming/themes")["[data-theme=retro]"],
+          "base-100": "#F4F2DF",
+        },
+      },
+    ],
   },
 }
 
