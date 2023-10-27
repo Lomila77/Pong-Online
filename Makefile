@@ -54,7 +54,7 @@ volumes:
 
 up:
 	@echo "$(ON_GREEN)- Running ft_transcendence ... -$(EOC)"
-	@docker compose -f $(YAML) up -d --build
+	@docker compose -f $(YAML) up --build
 	@echo "$(BCYAN)---> ft_transcendence running: [DONE]$(EOC)"
 
 down: 
@@ -81,10 +81,10 @@ clean: stop down
 	@docker volume rm $$(docker volume ls -q) 2> /dev/null || true
 	@echo "$(BCYAN)ft_transcendence containers, networks and volumes removed: [OK]$(EOC)"
 
-#fclean: clean 
-#	@echo "$(ON_GREEN)- Wiping out every traces of ft_transcendence... -$(EOC)"
-#	@docker system prune -a --volumes -f
-#	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
+fclean: clean 
+	@echo "$(ON_GREEN)- Wiping out every traces of ft_transcendence... -$(EOC)"
+	@docker system prune -a --volumes -f
+	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
 
 #re: fclean all
 

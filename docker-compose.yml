@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+
+  front_react:
+    image: front_react
+    build: front
+    container_name: front_react
+    volumes:
+     - ./front/src:/app/src
+     - ./front/public:/app/public
+    ports:
+      - "${FRONT_PORT}:5173"
+
+  backend:
+    image: backend
+    build: back
+    container_name: backend
+    volumes:
+      - ./back/prisma:/app/prisma
+      - ./back/src:/app/src
+      - ./back/.prettierrc:/app/.prettierrc
+      - ./back/.nest-cli.json:/app/.nest-cli.json
+    ports:
+      - "${BACK_PORT}:3333"
+
+  dev_db:
+    container_name: postgres
+    image: postgres:16
+    ports:
+      - "${DB_PORT}:5432"
+    environment:
+      POSTGRES_USER: $(POSTGRES_USER)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - transcendance
+    volumes:
+      - dev_DB:/var/lib/postgresql/data
+
+
+networks:
+  transcendance:
+
+volumes:
+  dev_DB:

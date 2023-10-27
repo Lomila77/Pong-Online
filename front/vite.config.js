@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     watch: {
       usePolling: true,
+      files: ['tailwind.config.js']
     },
     host: true, // needed for the Docker Container port mapping to work
     strictPort: true,

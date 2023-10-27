@@ -1,1 +1,6 @@
+#ENV FILES
+.env
+
+#NODE_MODULES
 node_modules
+
