@@ -22,6 +22,7 @@ export class AuthService {
           avatar: dto.avatar,
         },
       });
+      console.log('SUCCESS');
       return this.signToken(user.fortytwo_id, user.pseudo);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
