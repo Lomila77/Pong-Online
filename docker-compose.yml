@@ -13,6 +13,8 @@ services:
       - "${FRONT_PORT}:5173"
 
   backend:
+    depends_on:
+      - dev_db
     image: backend
     build: back
     container_name: backend
@@ -26,7 +28,7 @@ services:
 
   dev_db:
     container_name: postgres
-    image: postgres:16
+    image: postgres:latest
     ports:
       - "${DB_PORT}:5432"
     environment:
