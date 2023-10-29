@@ -5,13 +5,17 @@ import { UserModule } from './user/user.module';
 import {ConfigModule} from "@nestjs/config";
 @Module({
   imports: [
-      AuthModule,
+    AuthModule,
     PrismaModule,
     UserModule,
     ConfigModule.forRoot({
+      envFilePath: '.env',
       isGlobal: true,
-  })],
+    })
+  ],
+
   controllers: [],
+
   providers: [],
 })
 export class AppModule {}
