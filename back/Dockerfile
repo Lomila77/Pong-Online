@@ -9,12 +9,11 @@ COPY prisma ./prisma/
 RUN npm install
 RUN npm install -g prisma
 RUN prisma generate
-RUN prisma migrate dev
 
 COPY . .
 
-CMD [  "npm", "run", "start:migrate:dev" ]
-
+CMD [  "npx", "prisma", "migrate dev" ]
+CMD [ "npm", "run", "start:dev" ]
 
 #debug
 #CMD tail -f /dev/null
