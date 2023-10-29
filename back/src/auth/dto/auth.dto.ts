@@ -12,4 +12,9 @@ export class AuthDto {
   @IsString()
   @IsNotEmpty()
   avatar: string;
+
+  id: number;
+	login: string;
+  email: string;
+  image: {link: string};
 }
