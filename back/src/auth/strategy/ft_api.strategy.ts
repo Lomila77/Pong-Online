@@ -1,5 +1,5 @@
 import { AuthService } from '../auth.service';
-import { Injectable, Get } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy as OAuth2Strategy } from 'passport-oauth2'
@@ -25,6 +25,7 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
 			scope:				['public']
 		})
 	}
+
 	async validate(accessToken: string, refreshToken:string): Promise<any>{
 		try {
 			const ret: AxiosResponse<AuthDto, any>  = await this.httpService.get('https://api.intra.42.fr/v2/me', {

@@ -1,4 +1,4 @@
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PassportStatic } from 'passport';
 import { AuthDto } from "src/auth/dto";
 
