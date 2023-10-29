@@ -14,7 +14,7 @@ export class AuthDto {
   avatar: string;
 
   id: number;
-	login: string;
+  login: string;
   email: string;
-  image: {link: string};
+  image: { link: string };
 }

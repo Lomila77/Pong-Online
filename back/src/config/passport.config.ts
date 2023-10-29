@@ -1,26 +1,25 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 import { PassportStatic } from 'passport';
-import { AuthDto } from "src/auth/dto";
+import { AuthDto } from 'src/auth/dto';
 
 const prisma = new PrismaClient();
 export function configurePassport(passport: PassportStatic) {
-	passport.serializeUser((user: AuthDto, done) => {
-		console.log('Serializing user:', user.id, user.login);
-		done(null, user.id);
-	});
+  passport.serializeUser((user: AuthDto, done) => {
+    console.log('Serializing user:', user.id, user.login);
+    done(null, user.id);
+  });
 
-	passport.deserializeUser(async (id: number, done) => {
-		console.log('Deserializing user ID:', id);
-		try {
-			const user = await prisma.user.findUnique({
-				where: {
-					fortytwo_id: id,
-				},
-			});
-			done(null, user); // 'user' sera disponible dans 'req.user'
-		} catch (error) {
-			done(error, null);
-		}
-	});
+  passport.deserializeUser(async (id: number, done) => {
+    console.log('Deserializing user ID:', id);
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          fortytwo_id: id,
+        },
+      });
+      done(null, user); // 'user' sera disponible dans 'req.user'
+    } catch (error) {
+      done(error, null);
+    }
+  });
 }
-
