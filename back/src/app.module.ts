@@ -3,7 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
-
+import { TwofaModule } from './twofa/twofa.module';
 
 @Module({
   imports: [
@@ -14,6 +14,7 @@ import { ConfigModule } from '@nestjs/config';
       // envFilePath: '../../.env',
       isGlobal: true,
     }),
+    TwofaModule,
   ],
   controllers: [],
   providers: [],
