@@ -26,7 +26,7 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string): Promise<any> {
+  async validate(accessToken: string /*, refreshToken: string*/): Promise<any> {
     try {
       const ret: AxiosResponse<AuthDto, any> = await this.httpService
         .get('https://api.intra.42.fr/v2/me', {
