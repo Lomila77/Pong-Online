@@ -10,7 +10,21 @@ services:
      - ./front/src:/app/src
      - ./front/public:/app/public
     ports:
-      - "${FRONT_PORT}:${FRONT_PORT}"
+      - "${FRONT_PORT}:5173"
+    networks:
+      - transcendance
+
+  dev_db:
+    container_name: postgres
+    image: postgres:latest
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    networks:
+      - transcendance
+    volumes:
+      - dev_DB:/var/lib/postgresql/data
 
   backend:
     depends_on:
@@ -25,20 +39,15 @@ services:
       - ./back/.nest-cli.json:/app/.nest-cli.json
     ports:
       - "${BACK_PORT}:${BACK_PORT}"
+    networks:
+      - transcendance
     env_file:
       - .env
+    #command: >
+    #  sh -c "npx prisma migrate dev --name newMigration deploy && npm run start:dev"
     command: >
-      sh -c "npx prisma migrate dev --name newMigration deploy && npm run start:dev"
-
-  dev_db:
-    container_name: postgres
-    image: postgres:latest
-    env_file:
-      - .env
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    volumes:
-      - dev_DB:/var/lib/postgresql/data
+      sh -c "until pg_isready -h dev_db -p ${DB_PORT}; do echo 'Waiting for database to become available...' && sleep 1; done &&
+      npx prisma migrate dev --name newMigration deploy && npm run start:dev"
 
 networks:
   transcendance:
