@@ -9,16 +9,16 @@ import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-console.log(process.env.DATABASE_URL)
-console.log(process.env.DATABASE_URL)
-console.log(process.env.COOKIES_SECRET_KEY)
-console.log(process.env.POSTGRES_USER)
-console.log(process.env.POSTGRES_PASSWORD)
-console.log(process.env.POSTGRES_DB)
-console.log(process.env.DB_PORT)
-console.log(process.env.BACK_PORT)
-console.log(process.env.FRONT_PORT)
-console.log(process.env.DATABASE_URL)
+console.log(process.env.DATABASE_URL);
+console.log(process.env.DATABASE_URL);
+console.log(process.env.COOKIES_SECRET_KEY);
+console.log(process.env.POSTGRES_USER);
+console.log(process.env.POSTGRES_PASSWORD);
+console.log(process.env.POSTGRES_DB);
+console.log(process.env.DB_PORT);
+console.log(process.env.BACK_PORT);
+console.log(process.env.FRONT_PORT);
+console.log(process.env.DATABASE_URL);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -44,6 +44,14 @@ async function bootstrap() {
       saveUninitialized: true,
     }),
   );
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET,HEAD,PUT,PATCH,POST,DELETE',
+    );
+    next();
+  });
   app.use(passport.initialize());
   app.use(passport.session());
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
