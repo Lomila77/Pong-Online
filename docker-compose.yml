@@ -25,11 +25,14 @@ services:
       - ./back/.nest-cli.json:/app/.nest-cli.json
     ports:
       - "${BACK_PORT}:3333"
+    env_file:
+      - .env
 
   dev_db:
     container_name: postgres
     image: postgres:latest
-    env_file: .env
+    env_file:
+      - .env
     ports:
       - "${DB_PORT}:5432"
     networks:
