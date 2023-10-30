@@ -17,12 +17,16 @@ export class AuthService {
 
   async handleApiRet(apiRet: AxiosResponse<AuthDto, any>) {
     const incommingUser = apiRet.data;
+    console.log(incommingUser.id)
+    console.log(incommingUser.login)
+    console.log(incommingUser.email)
     const prismaRet = await this.prisma.user.findUnique({
       where: {
         fortytwo_id: incommingUser.id,
       },
     });
-    if (!prismaRet) this.signup(incommingUser);
+    if (!prismaRet)
+      this.signup(incommingUser);
     return incommingUser;
   }
 

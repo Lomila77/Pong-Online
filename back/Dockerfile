@@ -12,7 +12,6 @@ RUN prisma generate
 
 COPY . .
 
-CMD [  "npx", "prisma", "migrate dev" ]
 CMD [ "npm", "run", "start:dev" ]
 
 #debug

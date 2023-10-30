@@ -10,7 +10,7 @@ services:
      - ./front/src:/app/src
      - ./front/public:/app/public
     ports:
-      - "${FRONT_PORT}:5173"
+      - "${FRONT_PORT}:${FRONT_PORT}"
 
   backend:
     depends_on:
@@ -24,9 +24,11 @@ services:
       - ./back/.prettierrc:/app/.prettierrc
       - ./back/.nest-cli.json:/app/.nest-cli.json
     ports:
-      - "${BACK_PORT}:3333"
+      - "${BACK_PORT}:${BACK_PORT}"
     env_file:
       - .env
+    command: >
+      sh -c "npx prisma migrate dev --name newMigration deploy && npm run start:dev"
 
   dev_db:
     container_name: postgres
@@ -34,12 +36,9 @@ services:
     env_file:
       - .env
     ports:
-      - "${DB_PORT}:5432"
-    networks:
-      - transcendance
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - dev_DB:/var/lib/postgresql/data
-
 
 networks:
   transcendance:
