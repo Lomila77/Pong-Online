@@ -47,6 +47,5 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
-  // await app.listen(3333);
 }
 bootstrap();
