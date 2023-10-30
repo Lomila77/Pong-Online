@@ -21,7 +21,7 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
       tokenURL: 'https://api.intra.42.fr/oauth/token',
       clientID: config.get('UID'),
       clientSecret: config.get('API_SECRET'),
-      callbackURL: 'http://localhost:8080/auth/callback',
+      callbackURL: 'http://localhost:3333/auth/callback',
       scope: ['public'],
     });
   }

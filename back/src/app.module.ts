@@ -4,13 +4,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 
+
 @Module({
   imports: [
     AuthModule,
     PrismaModule,
     UserModule,
     ConfigModule.forRoot({
-      envFilePath: '../../.env',
+      // envFilePath: '../../.env',
       isGlobal: true,
     }),
   ],

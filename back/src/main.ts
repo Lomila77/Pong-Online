@@ -6,6 +6,19 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { configurePassport } from './config/passport.config';
 import { ConfigService } from '@nestjs/config';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+console.log(process.env.DATABASE_URL)
+console.log(process.env.DATABASE_URL)
+console.log(process.env.COOKIES_SECRET_KEY)
+console.log(process.env.POSTGRES_USER)
+console.log(process.env.POSTGRES_PASSWORD)
+console.log(process.env.POSTGRES_DB)
+console.log(process.env.DB_PORT)
+console.log(process.env.BACK_PORT)
+console.log(process.env.FRONT_PORT)
+console.log(process.env.DATABASE_URL)
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
