@@ -15,7 +15,7 @@ model User {
   fortytwo_picture  String?
   fortytwo_userName String    @unique
   fortytwo_email    String    @unique
-  pseudo            String    @unique @default("0") @db.VarChar(20)
+  pseudo            String    @default("0") @db.VarChar(20)
   refresh_token     String    @default("0")
   avatar            String    @default("0")
   isF2Active        Boolean   @default(false)
