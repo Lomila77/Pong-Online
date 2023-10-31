@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AxiosResponse } from 'axios';
 import { User } from '@prisma/client';
+import * as speakeasy from 'speakeasy';
+import * as qrcode from 'qrcode';
 
 @Injectable({})
 export class AuthService {
@@ -17,16 +19,14 @@ export class AuthService {
 
   async handleApiRet(apiRet: AxiosResponse<AuthDto, any>) {
     const incommingUser = apiRet.data;
-    console.log(incommingUser.id)
-    console.log(incommingUser.login)
-    console.log(incommingUser.email)
     const prismaRet = await this.prisma.user.findUnique({
       where: {
         fortytwo_id: incommingUser.id,
       },
     });
-    if (!prismaRet)
-      this.signup(incommingUser);
+    if (!prismaRet) {
+      await this.signup(incommingUser);
+    }
     return incommingUser;
   }
 
@@ -54,13 +54,11 @@ export class AuthService {
   }
 
   async signin(dto: AuthDto) {
-    // find the user by email
     const user = await this.prisma.user.findUnique({
       where: {
         fortytwo_id: dto.id,
       },
     });
-    // find except
     if (!user) throw new ForbiddenException('Credentials incorrect');
     return this.signToken(user.fortytwo_id, user.fortytwo_email);
   }
@@ -79,6 +77,25 @@ export class AuthService {
       secret: secret,
     });
     return { access_token: token };
+  }
+
+  twoFA(user: User) {
+    const secret = speakeasy.generateSecret({
+      name: user.pseudo,
+    });
+    user.secretOf2FA = secret.base32;
+    qrcode.toDataURL(secret.otpauth_url, function (err) {
+      if (err) throw err;
+    });
+    return secret.otpauth_url;
+  }
+
+  verify(user: User, code: string) {
+    return speakeasy.totp.verify({
+      secret: user.secretOf2FA,
+      encoding: 'base32',
+      token: code,
+    });
   }
 }
 
