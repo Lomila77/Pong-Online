@@ -1,10 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { PassportStatic } from 'passport';
-import { AuthDto } from 'src/auth/dto';
+import { Fortytwo_dto } from 'src/auth/dto';
 
 const prisma = new PrismaClient();
 export function configurePassport(passport: PassportStatic) {
-  passport.serializeUser((user: AuthDto, done) => {
+  passport.serializeUser((user: Fortytwo_dto, done) => {
     console.log('Serializing user:', user.id, user.login);
     done(null, user.id);
   });

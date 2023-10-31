@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto } from './dto';
+import { AuthDto, Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +8,7 @@ import { AxiosResponse } from 'axios';
 import { User } from '@prisma/client';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
+import {Request, Response, NextFunction} from 'express';
 
 @Injectable({})
 export class AuthService {
@@ -17,8 +18,21 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async handleApiRet(apiRet: AxiosResponse<AuthDto, any>) {
-    const incommingUser = apiRet.data;
+  // async handleApiRet(apiRet: AxiosResponse<AuthDto, any>) {
+  //   const incommingUser = apiRet.data;
+  //   const prismaRet = await this.prisma.user.findUnique({
+  //     where: {
+  //       fortytwo_id: incommingUser.id,
+  //     },
+  //   });
+  //   if (!prismaRet) {
+  //     await this.signup(incommingUser);
+  //   }
+  //   return incommingUser;
+  // }
+
+  async handleIncommingUser(incommingUser :Fortytwo_dto) {
+    // const incommingUser = apiRet.data;
     const prismaRet = await this.prisma.user.findUnique({
       where: {
         fortytwo_id: incommingUser.id,
@@ -27,40 +41,37 @@ export class AuthService {
     if (!prismaRet) {
       await this.signup(incommingUser);
     }
-    return incommingUser;
+    return this.signToken(incommingUser.id, incommingUser.email);
   }
 
-  async signup(dto: AuthDto) {
+  async signup(incommingUser: Fortytwo_dto) {
     //save the new user in the db
     try {
       const user: User = await this.prisma.user.create({
         data: {
-          fortytwo_id: dto.id,
-          fortytwo_email: dto.email,
-          fortytwo_userName: dto.login,
-          fortytwo_picture: dto.image.link,
-          pseudo: dto.pseudo,
-          isF2Active: dto.isF2Active,
+          fortytwo_id: incommingUser.id,
+          fortytwo_email: incommingUser.email,
+          fortytwo_userName: incommingUser.login,
+          fortytwo_picture: incommingUser.image[1]?.value || null,
         },
       });
       return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
-          throw new ForbiddenException('Credentials taken');
+          throw new ForbiddenException('signup : Credentials taken');
       }
       throw error;
     }
   }
 
-  async signin(dto: AuthDto) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        fortytwo_id: dto.id,
-      },
-    });
-    if (!user) throw new ForbiddenException('Credentials incorrect');
-    return this.signToken(user.fortytwo_id, user.fortytwo_email);
+  async prismaPrintTable() {
+    try {
+      const users = await this.prisma.user.findMany(); // Remplacez user par le nom de votre modèle Prisma
+      console.log(users); // Cela affichera le contenu de la table dans la console
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async signToken(
@@ -78,6 +89,16 @@ export class AuthService {
     });
     return { access_token: token };
   }
+
+  // logout(req: Request, res: Response): void{
+  //   req.session.destroy;
+  //   res.clearCookie(process.env.COOKIES_NAME)
+  //   res.redirect("http://localhost:5172/login");
+  // }
+
+  // isAuthenticated(req: Request): boolean {
+  //   return !!req.session && !!req.session.user;
+  // }
 
   twoFA(user: User) {
     const secret = speakeasy.generateSecret({

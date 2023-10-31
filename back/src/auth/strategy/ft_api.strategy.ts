@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
 import { HttpService } from '@nestjs/axios';
-import { AuthDto } from '../dto/auth.dto';
+import { AuthDto, Fortytwo_dto } from '../dto/auth.dto';
 import { AxiosResponse } from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -26,17 +26,32 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
     });
   }
 
-  async validate(accessToken: string /*, refreshToken: string*/): Promise<any> {
+  async validate(accessToken: string, refreshToken: string, profile:AuthDto): Promise<Fortytwo_dto> {
     try {
-      const ret: AxiosResponse<AuthDto, any> = await this.httpService
+      console.log("access token: ", accessToken);
+      console.log("refreshToken: ", refreshToken);
+      console.log("profile: ", profile);
+
+      const  {data} : AxiosResponse<Fortytwo_dto, any> = await this.httpService
         .get('https://api.intra.42.fr/v2/me', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         })
         .toPromise();
-      // console.log(ret.data.image)
-      return await this.authservice.handleApiRet(ret);
+      console.log(data.id);
+      const userDto: Fortytwo_dto = {
+        id: data.id,
+        login: data.login,
+        email: data.email,
+        image: data.image,
+      }
+      console.log("id: ", userDto.id);
+      console.log("login: ", userDto.login);
+      console.log("email: ", userDto.email);
+      console.log("image: ", userDto.image);
+      console.log("image: leaving strategy");
+      return userDto || null; // demander a gpt si null est utile ici
     } catch (error) {
       throw error;
     }

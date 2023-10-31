@@ -50,6 +50,8 @@ async function bootstrap() {
       secret: app.get(ConfigService).get<string>('COOKIES_SECRET_KEY'),
       resave: false,
       saveUninitialized: true,
+      cookie: { httpOnly: true, maxAge: 3600000, sameSite: 'strict', signed: true,},
+      name: app.get(ConfigService).get<string>('COOKIES_NAME'),
     }),
   );
   app.use(passport.initialize());
