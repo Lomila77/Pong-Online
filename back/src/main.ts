@@ -35,6 +35,14 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   };
   app.enableCors(corsOptions);
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET,HEAD,PUT,PATCH,POST,DELETE',
+    );
+    next();
+  });
 
   configurePassport(passport);
   app.use(
