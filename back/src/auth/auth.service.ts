@@ -41,6 +41,7 @@ export class AuthService {
           fortytwo_picture: dto.image.link,
           pseudo: dto.pseudo,
           isF2Active: dto.isF2Active,
+          avatar: dto.avatar,
         },
       });
       return user;
