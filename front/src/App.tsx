@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout'
 import Login from './pages/Login'
 import Home from './pages/Home'
-import Layout from './components/Layout'
+import Friends from './pages/Friends'
 
 
 const App = () => {
@@ -15,6 +16,14 @@ const App = () => {
           element={
             <Layout>
               <Home />
+            </Layout>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <Layout>
+              <Friends />
             </Layout>
           }
         />

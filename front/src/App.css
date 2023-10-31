@@ -33,7 +33,7 @@
 }
 
 .Pong {
-  filter: drop-shadow(3px 3px 0px #747474);
+  filter: drop-shadow(3px 3px 0px #cecccc);
 }
 
 .Buildings {
@@ -50,5 +50,35 @@
 
 .Foot {
   position: absolute;
+}
+
+.Parent {
+  position: relative;
+}
+
+.enfant {
+  position: absolute;
+  bottom: -60px;
+  filter: drop-shadow(2px 2px 0px #a1a1a1);
+  z-index: 1;
+}
+
+.enfant2 {
+  position: absolute;
+  left: 90px;
+  top: 120px;
+}
+
+.shadow {
+  filter: drop-shadow(6px 6px 10px #ebe2ca);
+}
+
+.pseudo {
+  letter-spacing: -2px;
+  filter: drop-shadow(6px 6px 10px #ebe2ca);
+}
+
+.pseudoProfil {
+  letter-spacing: -2px;
 }
 

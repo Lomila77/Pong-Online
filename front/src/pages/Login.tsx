@@ -9,11 +9,11 @@ function Login() {
   const {user} = useUser();
   console.log(user);
 
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user])
+  // useEffect(() => {
+  //   if (user) {
+  //     navigate("/");
+  //   }
+  // }, [user])
 
   return (
     <div className="Background">

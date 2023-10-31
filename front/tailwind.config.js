@@ -15,7 +15,9 @@ export default {
       },
       colors: {
         'navbar': '#F4F2DF',
-        'orangeNG': '#E07A5F'
+        'orangeNG': '#E07A5F',
+        'bleuPseudo': '#3E415C',
+        'vertOnLine': '#82B39B'
       }
     },
   },
