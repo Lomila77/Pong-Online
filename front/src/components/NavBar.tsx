@@ -5,7 +5,7 @@ function NavBar() {
   return (
     <div className="navbar bg-gradient-to-b from-navbar to-white">
       <div className="flex-1">
-        <a className="btn btn-ghost text-white Pong normal-case text-xl font-display">
+        <a className="btn btn-ghost text-white Pong normal-case text-2xl font-display">
           PONG
         </a>
       </div>

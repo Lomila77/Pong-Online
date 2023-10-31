@@ -14,7 +14,8 @@ export default {
         'display': ['"Press Start 2P"'],
       },
       colors: {
-        'navbar': '#F4F2DF'
+        'navbar': '#F4F2DF',
+        'orangeNG': '#E07A5F'
       }
     },
   },

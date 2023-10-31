@@ -5,9 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-import { createUser } from '../api/helpers';
-import NavBar from '../components/NavBar'
-import { schema } from '/login.schema';
+import { createUser } from '../api/queries';
+import { useUser } from '../context/UserContext';
 
 const MAX_FILE_SIZE: number = 1.3 * 1024 * 1024; // 1,3 Mo
 let fileSize: number = 0;
@@ -17,6 +16,7 @@ const ModalLogin = () => {
   const hiddenFileInput = useRef(null);
   const [file, setFile] = useState(MGameWatch);
   const navigate = useNavigate();
+  const {user, setUser} = useUser();
 
   const uploadFile = (e: any) => {
     hiddenFileInput.current.click();
@@ -57,12 +57,15 @@ const ModalLogin = () => {
     },
   });
 
-  const onSubmit = async (data: any) => {
-    data.avatar = file;
-    console.log(data);
-    createUser(data);
 
-    navigate('/home');
+  const onSubmit = async (data: any) => {
+
+    setUser({
+      ...data,
+      avatar: file
+    })
+    console.log(data);
+    createUser({...data, avatar: file});
   };
 
   return (
