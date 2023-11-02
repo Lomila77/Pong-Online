@@ -90,15 +90,34 @@ export class AuthService {
     return { access_token: token };
   }
 
-  // logout(req: Request, res: Response): void{
-  //   req.session.destroy;
-  //   res.clearCookie(process.env.COOKIES_NAME)
-  //   res.redirect("http://localhost:5172/login");
-  // }
+  async logout(req: Request, res: Response): Promise<void> {
+    // req.session.destroy((err) => {
+    //   if (err) {
+    //     console.error("Erreur lors de la destruction de la session :", err);
+    //   } else {
+    //     console.log("Session détruite avec succès.");
+    //   }});
+    res.clearCookie(process.env.COOKIES_NAME)
+    // console.log(req.destroyed)
+    console.log(req.user)
+    // console.log(req.url)
+    console.log("session ID (logout)", req.sessionID)
+    // console.log(req.logOut)
+    console.log("logout called");
+    console.log("req bool: ", !!req.isAuthenticated());
+    console.log("session id: ", req.sessionID)
 
-  // isAuthenticated(req: Request): boolean {
-  //   return !!req.session && !!req.session.user;
-  // }
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).send('Logout error');
+      }
+      else {
+        console.log("req bool after logout: ", !!req.isAuthenticated());
+        res.redirect(`http://localhost:${process.env.FRONT_PORT}/login`);
+      }
+    })
+
+  }
 
   twoFA(user: User) {
     const secret = speakeasy.generateSecret({

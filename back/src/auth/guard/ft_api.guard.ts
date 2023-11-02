@@ -6,9 +6,10 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class ApiAuthGuard extends AuthGuard('ft_api') {
   async canActivate(context: ExecutionContext) {
-    const activate = (await super.canActivate(context)) as boolean;
+    const result = (await super.canActivate(context)) as boolean;
     const request = context.switchToHttp().getRequest();
     await super.logIn(request);
-    return request.isAuthenticated();
+    // return request.isAuthenticated();
+    return result;
   }
 }
