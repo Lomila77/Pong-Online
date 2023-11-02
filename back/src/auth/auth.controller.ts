@@ -1,10 +1,12 @@
-import { Body, Controller, Post, Get, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, Fortytwo_dto } from './dto';
 import { ApiAuthGuard } from './guard/ft_api.guard';
 import { GetUser } from './decorator/get-user.decorator';
 import { JwtGuard } from './guard';
 import { User } from '@prisma/client';
+import { SessionAuthGuard } from './guard/session.guard';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -12,9 +14,20 @@ export class AuthController {
 
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
-  signin(@Req() req: {user: Fortytwo_dto}) {
-    return this.authService.handleIncommingUser(req.user);
+  async redirect(@Req() req: {user: Fortytwo_dto, request: Request}, @Res() res:Response) {
+    const token =  await this.authService.handleIncommingUser(req.user);
+    res.redirect((process.env.FRONT_HOME) + '/?token=' + token.access_token);
   }
+
+  @Get('logout')
+  logout(@Req() req, @Res() res): any {
+    this.authService.logout(req, res);
+  }
+
+  @UseGuards(SessionAuthGuard)
+  @Get('logouttest')
+  logouttest() { "sommetest"}
+
 
 // element here for debug need to delete in before correction
   @Get('prisma')
@@ -22,7 +35,6 @@ export class AuthController {
     this.authService.prismaPrintTable();
     return true;
   }
-
 
   @Get('/is2FA')
   @UseGuards(JwtGuard)

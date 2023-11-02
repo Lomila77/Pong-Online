@@ -26,11 +26,11 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile:AuthDto): Promise<Fortytwo_dto> {
+  async validate(accessToken: string): Promise<Fortytwo_dto> {
     try {
-      console.log("access token: ", accessToken);
-      console.log("refreshToken: ", refreshToken);
-      console.log("profile: ", profile);
+      // console.log("access token: ", accessToken);
+      // console.log("refreshToken: ", refreshToken);
+      // console.log("profile: ", profile);
 
       const  {data} : AxiosResponse<Fortytwo_dto, any> = await this.httpService
         .get('https://api.intra.42.fr/v2/me', {
@@ -39,19 +39,20 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
           },
         })
         .toPromise();
-      console.log(data.id);
+      // console.log(data.id);
+
       const userDto: Fortytwo_dto = {
         id: data.id,
         login: data.login,
         email: data.email,
         image: data.image,
       }
-      console.log("id: ", userDto.id);
-      console.log("login: ", userDto.login);
-      console.log("email: ", userDto.email);
-      console.log("image: ", userDto.image);
-      console.log("image: leaving strategy");
-      return userDto || null; // demander a gpt si null est utile ici
+      // console.log("id: ", userDto.id);
+      // console.log("login: ", userDto.login);
+      // console.log("email: ", userDto.email);
+      // console.log("image: ", userDto.image);
+      console.log(" ------ leaving strategy ------");
+      return userDto;
     } catch (error) {
       throw error;
     }

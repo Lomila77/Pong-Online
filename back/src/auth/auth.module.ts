@@ -10,14 +10,20 @@ import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'ft_api' }),
+    PassportModule.register({ defaultStrategy: 'ft_api', session: true }),
     JwtModule.register({}),
     PrismaModule,
     HttpModule,
   ],
 
-  controllers: [AuthController],
+  controllers: [
+    AuthController
+  ],
 
-  providers: [AuthService, JwtStrategy, PrismaService, ApiStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    PrismaService,
+    ApiStrategy],
 })
 export class AuthModule {}
