@@ -59,7 +59,7 @@ up:
 
 down: 
 	@echo "$(ON_GREEN)- Putting down ft_transcendence... -$(EOC)"
-	@docker compose -f $(YAML) down -t2
+	@docker compose -f $(YAML) down
 	@echo "$(BCYAN)---> Putting ft_transcendence down: [OK]$(EOC)"
 
 rm:
@@ -74,7 +74,7 @@ rmi:
 	
 stop: 
 	@echo "$(ON_GREEN)- Stopping ft_transcendence... -$(EOC)"
-	@docker compose -f $(YAML) stop
+	@docker compose -f $(YAML) stop -t2
 	@echo "$(BCYAN)---> ft_transcendence stopped: [OK]$(EOC)"
 
 clean: stop down
