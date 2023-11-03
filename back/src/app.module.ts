@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { PassportModule } from '@nestjs/passport';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    PassportModule.register({session: true}),
+    PassportModule.register({ session: true }),
+    ChatModule,
   ],
   controllers: [],
   providers: [],
