@@ -7,6 +7,7 @@ import * as passport from 'passport';
 import { configurePassport } from './config/passport.config';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 dotenv.config();
 console.log(process.env.DATABASE_URL);
@@ -50,12 +51,18 @@ async function bootstrap() {
       secret: app.get(ConfigService).get<string>('COOKIES_SECRET_KEY'),
       resave: false,
       saveUninitialized: true,
-      cookie: { httpOnly: true, maxAge: 3600000, sameSite: 'strict', signed: true,},
+      cookie: {
+        httpOnly: true,
+        maxAge: 3600000,
+        sameSite: 'strict',
+        signed: true,
+      },
       name: app.get(ConfigService).get<string>('COOKIES_NAME'),
     }),
   );
   app.use(passport.initialize());
   app.use(passport.session());
+  app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
 }
 bootstrap();

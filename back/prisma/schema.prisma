@@ -22,7 +22,7 @@ model User {
   secretOf2FA       String    @default("0")
   xp                Float     @default(0)
   ratio             Int       @default(0)
-  Channel           Channel[]
+  channel           Channel[]
   createdAt         DateTime  @default(now())
   updateAt          DateTime  @updatedAt
 
@@ -33,7 +33,7 @@ model Channel {
   owner           Int      @unique
   name            String   @unique
   type            Int
-  password        String
+  password        String?
   creationDate    DateTime
   user            User     @relation(fields: [userFortytwo_id], references: [fortytwo_id])
   userFortytwo_id Int

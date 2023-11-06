@@ -74,7 +74,7 @@ rmi:
 	
 stop: 
 	@echo "$(ON_GREEN)- Stopping ft_transcendence... -$(EOC)"
-	@docker compose -f $(YAML) stop
+	@docker compose -f $(YAML) stop -t 2
 	@echo "$(BCYAN)---> ft_transcendence stopped: [OK]$(EOC)"
 
 clean: stop down
