@@ -12,13 +12,13 @@ const MAX_FILE_SIZE: number = 1.3 * 1024 * 1024; // 1,3 Mo
 let fileSize: number = 0;
 let fileTest1: any;
 
-const ModalLogin = () => {
+const ModalSetting = () => {
   const hiddenFileInput = useRef(null);
   const [file, setFile] = useState(MGameWatch);
   const navigate = useNavigate();
   const {user, setUser} = useUser();
 
-  const uploadFile = (e: any) => {
+  const uploadFile = (e: React.MouseEvent<HTMLButtonElement>) => {
     hiddenFileInput.current.click();
   };
 
@@ -64,7 +64,7 @@ const ModalLogin = () => {
       ...data,
       avatar: file
     })
-    console.log(data);
+    console.log("data: " + data);
     createUser({...data, avatar: file});
   };
 
@@ -168,4 +168,4 @@ const ModalLogin = () => {
   );
 };
 
-export default ModalLogin;
+export default ModalSetting;

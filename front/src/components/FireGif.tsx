@@ -1,12 +1,8 @@
-import React from 'react';
-import Fire from "../images/Fire2.gif"
+import React from 'react'
+import Fire from '../images/Fire2.gif'
 
 const FireGif = () => {
-  return (
-    <div>
-      <img src={Fire} alt="GIF Alt Text" />
-    </div>
-  );
-};
+  return <img src={Fire} alt="GIF Alt Text" />
+}
 
-export default FireGif;
+export default FireGif

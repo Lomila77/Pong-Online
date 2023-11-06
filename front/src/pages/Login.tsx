@@ -7,17 +7,17 @@ import { useNavigate } from 'react-router-dom';
 function Login() {
   const navigate = useNavigate();
   const {user} = useUser();
-  console.log(user);
 
-  // useEffect(() => {
-  //   if (user) {
-  //     navigate("/");
-  //   }
-  // }, [user])
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user])
 
   return (
     <div className="Background">
       <div className="loginBtn">
+        {/* <ModalLogin/> */}
         <ButtonLogin/>
       </div>
     </div>
