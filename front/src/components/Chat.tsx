@@ -15,8 +15,8 @@ function Chat(): React.FC {
                 {/* Page content here */}
                 <label htmlFor="my-drawer-4" className="drawer-button btn btn-circle m-5 text-orangeNG text-xs font-display p-7 ">chat</label>
             </div>
-            <div className="drawer-side">
-                <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay"></label>
+            <div className="drawer-side mt-16">
+                <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
                     {/* Sidebar content here */}
                     <li><a>Sidebar Item 1</a></li>
