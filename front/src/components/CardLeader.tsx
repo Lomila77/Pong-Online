@@ -1,5 +1,5 @@
 import React from 'react';
-import ProfileModal from './ProfileComp'
+import ProfileModal from './ProfileComp';
 
 const CardLeader: React.FC = () => {
   const DisplayProfile = () => {
@@ -8,16 +8,13 @@ const CardLeader: React.FC = () => {
 
   return (
     <div>
-      <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl w-[40rem] h-[3rem] flex flex-row">
+      <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3rem]">
         <div className="bg-orangeNG font-display text-white text-center basis-1/5 pt-2">
           1
         </div>
-        <button
-          className="font-display text-bleuPseudo text-center basis-3/5"
-          onClick={DisplayProfile}
-        >
-          Pitouch
-        </button>
+        <div className="text-center basis-3/5 mt-2">
+          <span className="font-display text-bleuPseudo cursor-pointer" onClick={DisplayProfile}>Pitouch</span>
+        </div>
         <div className="bg-bleuPseudo font-display text-center text-white basis-1/5 pt-2">
           5 wins
         </div>
@@ -30,9 +27,9 @@ const CardLeader: React.FC = () => {
               ✕
             </button>
           </form>
-        <div>
-        <ProfileModal />
-        </div>
+          <div>
+            <ProfileModal />
+          </div>
         </div>
       </dialog>
     </div>

@@ -6,7 +6,7 @@ import {
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Home from './pages/Home';
-import Setting from './pages/Setting';
+import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
 
 const App = () => {
@@ -23,10 +23,10 @@ const App = () => {
           }
         />
         <Route
-          path="/setting"
+          path="/settings"
           element={
             <Layout>
-              <Setting />
+              <Settings />
             </Layout>
           }
         />
@@ -37,6 +37,10 @@ const App = () => {
               <Leaderboard />
             </Layout>
           }
+        />
+        <Route
+          path="/settingslock"
+          element={<Settings />}
         />
       </Routes>
     </Router>

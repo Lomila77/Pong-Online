@@ -1,8 +1,10 @@
 import React from 'react';
 import { useRef } from 'react';
+import { useEffect } from 'react';
 import { useState } from 'react';
 import MGameWatch from '../images/MGameWatch.png';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -18,6 +20,16 @@ const SettingComp: React.FC = () => {
   const [file, setFile] = useState(MGameWatch);
   const navigate = useNavigate();
   const { user, setUser } = useUser();
+  const location = useLocation();
+  const [settingsLock, setSettingsLock] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname === '/settingslock') {
+      setSettingsLock(true);
+    } else {
+      setSettingsLock(false);
+    }
+  }, [location.pathname]);
 
   const uploadFile = (
     e: React.MouseEvent<HTMLButtonElement>
@@ -32,15 +44,21 @@ const SettingComp: React.FC = () => {
   };
 
   const schema = Yup.object().shape({
-    pseudo: Yup.string()
-      .required('Nom d utilisateur obligatoire')
-      .min(3, 'Minimum 3 caractères')
-      .max(20, 'Maximum 20 caractères')
-      .matches(
-        /^[0-9a-zA-Z-_]*$/,
-        'Entrez des caractères valides'
-      ),
+
     isF2Active: Yup.boolean().required(''),
+    pseudo: Yup.string()
+    .when("settingsLock", {
+      is: false,
+      then: () => Yup.string()
+        .required('Nom d\'utilisateur obligatoire')
+        .min(3, 'Minimum 3 caractères')
+        .max(20, 'Maximum 20 caractères')
+        .matches(
+          /^[0-9a-zA-Z-_]*$/,
+          'Entrez des caractères valides'
+        ),
+      otherwise: () => Yup.string()
+    }),
     avatar: Yup.mixed().test(
       'fileSize',
       'Fichier trop volumineux',
@@ -70,11 +88,13 @@ const SettingComp: React.FC = () => {
     });
     console.log('data: ' + data);
     createUser({ ...data, avatar: file });
+    if (settingsLock)
+      navigate('/');
   };
   return (
     <div className="card-side card-bordered border-4 border-white bg-[#fbfaf3] shadow-xl p-12">
       <span className="font-display text-orangeNG text-3xl">
-        Setting
+        Settings
       </span>
       <div className="px-32">
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -110,7 +130,7 @@ const SettingComp: React.FC = () => {
             <div className="basis-1/2">
               <input
                 type="text"
-                placeholder="Nom d'utilisateur"
+                placeholder={settingsLock ? "Nom d'utilisateur" : "Pitouch"}
                 className="input input-bordered w-full mt-6"
                 {...register('pseudo')}
               />
