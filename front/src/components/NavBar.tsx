@@ -88,7 +88,7 @@ function NavBar() {
             <li>
               <button
                 className="font-display text-orangeNG hover:text-orangeNG"
-                onClick={() => goToPage('/setting')}
+                onClick={() => goToPage('/settings')}
               >
                 Settings
               </button>
