@@ -2,10 +2,11 @@ import Buildings from '../images/BUILDINGCLOUDS.png'
 import { useUser } from '../context/UserContext'
 import { useNavigate } from 'react-router-dom'
 import FireGif from '../components/FireGif'
+import Chat from "../components/Chat";
 
 function Home() {
-  const { user } = useUser()
-  const navigate = useNavigate()
+  const { user } = useUser();
+  const navigate = useNavigate();
 
   // useEffect(() => {
   //   if (!user)
@@ -31,6 +32,9 @@ function Home() {
         <button className="text-6xl font-display text-orangeNG hover:text-7xl ease-i-out duration-300 NewGame mb-32">
           NEW GAME
         </button>
+      </div>
+      <div>
+          <Chat />
       </div>
     </div>
   )

@@ -23,6 +23,7 @@ export interface User {
   pseudo: string;
   avatar: any;
   isF2Active: boolean;
+  friends: string[];
 }
 
 export async function getUser(): Promise<User> {
