@@ -44,3 +44,20 @@ export async function getUser(): Promise<User> {
     );
   }
 }
+
+export async function backRequest(url: string, method: string, params?: any) {
+  try {
+    const reqOptions: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: params ? JSON.stringify(params) : undefined
+    };
+    const response = await fetch('http://localhost:3333/' + url, reqOptions);
+    return response.status === 200 ? await response.json() : {}
+  }
+  catch (error) {
+    console.log(error);
+  }
+}

@@ -9,6 +9,7 @@ import { User } from '@prisma/client';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
 import {Request, Response, NextFunction} from 'express';
+import { endWith } from 'rxjs';
 
 @Injectable({})
 export class AuthService {
@@ -41,11 +42,21 @@ export class AuthService {
     if (!prismaRet) {
       await this.signup(incommingUser);
     }
+    // else if !prismaRet.pseudo {
+    else {
+      await this.prisma.user.update({
+        where: {
+          fortytwo_id: incommingUser.id,
+        },
+        data: {
+          connected: true,
+        }
+      });
+    }
     return this.signToken(incommingUser.id, incommingUser.email);
   }
 
   async signup(incommingUser: Fortytwo_dto) {
-    //save the new user in the db
     try {
       const user: User = await this.prisma.user.create({
         data: {
@@ -67,8 +78,8 @@ export class AuthService {
 
   async prismaPrintTable() {
     try {
-      const users = await this.prisma.user.findMany(); // Remplacez user par le nom de votre modèle Prisma
-      console.log(users); // Cela affichera le contenu de la table dans la console
+      const users = await this.prisma.user.findMany();
+      console.log(users);
     } catch (error) {
       console.error(error);
     }
@@ -84,39 +95,40 @@ export class AuthService {
     };
     const secret = this.config.get('JWT_SECRET');
     const token = await this.jwt.signAsync(data, {
-      expiresIn: '15m',
+      expiresIn: '60m',
       secret: secret,
     });
     return { access_token: token };
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
-    // req.session.destroy((err) => {
-    //   if (err) {
-    //     console.error("Erreur lors de la destruction de la session :", err);
-    //   } else {
-    //     console.log("Session détruite avec succès.");
-    //   }});
+  async logout(req: Request, res: Response, user: User): Promise<void> {
+    if (user) {
+      await this.prisma.user.update({
+        where: {
+          fortytwo_id: user.fortytwo_id,
+        },
+        data: {
+          connected: false,
+        }
+      });
+    }
     res.clearCookie(process.env.COOKIES_NAME)
-    // console.log(req.destroyed)
-    console.log(req.user)
-    // console.log(req.url)
-    console.log("session ID (logout)", req.sessionID)
-    // console.log(req.logOut)
-    console.log("logout called");
-    console.log("req bool: ", !!req.isAuthenticated());
-    console.log("session id: ", req.sessionID)
-
+    // console.log(req.user)
+    // console.log("session ID (logout)", req.sessionID)
+    // console.log("logout called");
+    // console.log("req bool: ", !!req.isAuthenticated());
+    // console.log("session id: ", req.sessionID);
+    // console.log("req.user: ", req.user);
     req.logout((err) => {
       if (err) {
         return res.status(500).send('Logout error');
       }
       else {
         console.log("req bool after logout: ", !!req.isAuthenticated());
-        res.redirect(`http://localhost:${process.env.FRONT_PORT}/login`);
+        res.status(200).json({success: true, messge: "Deconnected"});
+        // res.redirect(`http://localhost:${process.env.FRONT_PORT}/login`);
       }
     })
-
   }
 
   twoFA(user: User) {

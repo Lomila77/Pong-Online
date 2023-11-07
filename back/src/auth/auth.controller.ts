@@ -19,15 +19,16 @@ export class AuthController {
     res.redirect((process.env.FRONT_HOME) + '/?token=' + token.access_token);
   }
 
-  @Get('logout')
-  logout(@Req() req, @Res() res): any {
-    this.authService.logout(req, res);
+  @Post('logout')
+  logout(@Req() req, @Res() res, @GetUser() user: User): any {
+    this.authService.logout(req, res, user);
   }
 
-  @UseGuards(SessionAuthGuard)
   @Get('logouttest')
-  logouttest() { "sommetest"}
-
+  @UseGuards(SessionAuthGuard)
+  logouttest() {
+    return "if this is written the test passed"
+  }
 
 // element here for debug need to delete in before correction
   @Get('prisma')
