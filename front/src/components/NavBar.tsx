@@ -1,16 +1,20 @@
 import MGameWatch from '../images/MGameWatch.png';
 import { useNavigate } from 'react-router-dom';
+import { backRequest } from '../api/queries';
+
 
 function NavBar() {
   const navigate = useNavigate();
 
-  const goToPage = (path: string) => {
+  const goToPage = async (path: string) => {
     const elem = document.activeElement as HTMLElement;
 
     if(elem){
       elem?.blur();
     }
-
+    if (path === '/login') {
+      await backRequest('auth/logout', 'POST');
+    }
     navigate(path);
   }
 
@@ -27,7 +31,7 @@ function NavBar() {
       <button className="mr-4"
       onClick={() => goToPage('/leaderboard')}>
       <svg
-          width="35x"
+          width="35px"
           height="35px"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
@@ -90,9 +94,12 @@ function NavBar() {
               </button>
             </li>
             <li>
-              <a className="font-display text-orangeNG hover:text-orangeNG">
+              <button
+                className="font-display text-orangeNG hover:text-orangeNG"
+                onClick={() => goToPage('/login')}
+              >
                 Logout
-              </a>
+              </button>
             </li>
           </ul>
         </div>
