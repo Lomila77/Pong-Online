@@ -4,23 +4,12 @@ import { ValidationPipe } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as session from 'express-session';
 import * as passport from 'passport';
-import { configurePassport } from './config/passport.config';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { WsAdapter } from '@nestjs/platform-ws';
 
 dotenv.config();
 // configurePassport(passport);
-console.log(process.env.DATABASE_URL);
-console.log(process.env.DATABASE_URL);
-console.log(process.env.COOKIES_SECRET_KEY);
-console.log(process.env.POSTGRES_USER);
-console.log(process.env.POSTGRES_PASSWORD);
-console.log(process.env.POSTGRES_DB);
-console.log(process.env.DB_PORT);
-console.log(process.env.BACK_PORT);
-console.log(process.env.FRONT_PORT);
-console.log(process.env.DATABASE_URL);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

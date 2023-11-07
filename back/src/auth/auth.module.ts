@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { HttpModule } from '@nestjs/axios';
 import { SessionSerializer } from './serializer/session.serializer';
+import { UserService } from 'src/user/user.service';
 
 
 @Module({
@@ -27,7 +28,8 @@ import { SessionSerializer } from './serializer/session.serializer';
     JwtStrategy,
     PrismaService,
     ApiStrategy,
-    SessionSerializer
+    SessionSerializer,
+    UserService,
   ],
 })
 export class AuthModule {}

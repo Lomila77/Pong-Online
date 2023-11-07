@@ -1,49 +1,35 @@
+import { PrismaService } from 'src/prisma/prisma.service';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto, Fortytwo_dto } from './dto';
+// import { PrismaService } from '../prisma/prisma.service';
+import { Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { AxiosResponse } from 'axios';
 import { User } from '@prisma/client';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
-import {Request, Response, NextFunction} from 'express';
-import { endWith } from 'rxjs';
+import {Request, Response} from 'express';
+import { UserService } from 'src/user/user.service';
 
 @Injectable({})
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
-    private config: ConfigService,
+    private user: UserService,
   ) {}
+  async handleIncommingUser (incommingUser: Fortytwo_dto, res:Response){
+    let firstConnection: boolean = true;
+    const prismaRet = await this.user.getUserbyId(incommingUser.id);
+    // const prismaRet = await this.prisma.user.findUnique({
+    //   where: {
+    //     fortytwo_id: incommingUser.id,
+    //   },
+    // });
 
-  // async handleApiRet(apiRet: AxiosResponse<AuthDto, any>) {
-  //   const incommingUser = apiRet.data;
-  //   const prismaRet = await this.prisma.user.findUnique({
-  //     where: {
-  //       fortytwo_id: incommingUser.id,
-  //     },
-  //   });
-  //   if (!prismaRet) {
-  //     await this.signup(incommingUser);
-  //   }
-  //   return incommingUser;
-  // }
-
-  async handleIncommingUser(incommingUser :Fortytwo_dto) {
-    // const incommingUser = apiRet.data;
-    const prismaRet = await this.prisma.user.findUnique({
-      where: {
-        fortytwo_id: incommingUser.id,
-      },
-    });
     if (!prismaRet) {
       await this.signup(incommingUser);
     }
-    // else if !prismaRet.pseudo {
-    else {
+    else if (prismaRet.pseudo !== "") {
       await this.prisma.user.update({
         where: {
           fortytwo_id: incommingUser.id,
@@ -52,8 +38,11 @@ export class AuthService {
           connected: true,
         }
       });
+      firstConnection = false;
     }
-    return this.signToken(incommingUser.id, incommingUser.email);
+    const token = await this.signToken(incommingUser.id, incommingUser.email, firstConnection)
+    res.cookie('jwtToken', token);
+    return firstConnection;
   }
 
   async signup(incommingUser: Fortytwo_dto) {
@@ -85,17 +74,24 @@ export class AuthService {
     }
   }
 
-  async signToken(
-    userId: number,
-    email: string,
-  ): Promise<{ access_token: string }> {
+  async signToken(userId: number, email: string, firstConnection: boolean,): Promise<{ access_token: string }>
+  {
+    let validityTime: string;
+    switch (firstConnection) {
+      case true:
+        validityTime = '5m'
+        break;
+      case false:
+        validityTime = '120m'
+        break;
+    }
     const data = {
       sub: userId,
       email: email,
     };
-    const secret = this.config.get('JWT_SECRET');
+    const secret = process.env.JWT_SECRET;
     const token = await this.jwt.signAsync(data, {
-      expiresIn: '60m',
+      expiresIn: validityTime,
       secret: secret,
     });
     return { access_token: token };
