@@ -25,6 +25,7 @@ model User {
   channel           Channel[]
   createdAt         DateTime  @default(now())
   updateAt          DateTime  @updatedAt
+  connected         Boolean   @default(false)
 
   @@map("users")
 }

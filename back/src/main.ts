@@ -10,6 +10,7 @@ import * as dotenv from 'dotenv';
 import { WsAdapter } from '@nestjs/platform-ws';
 
 dotenv.config();
+// configurePassport(passport);
 console.log(process.env.DATABASE_URL);
 console.log(process.env.DATABASE_URL);
 console.log(process.env.COOKIES_SECRET_KEY);
@@ -45,7 +46,6 @@ async function bootstrap() {
     next();
   });
 
-  configurePassport(passport);
   app.use(
     session({
       secret: app.get(ConfigService).get<string>('COOKIES_SECRET_KEY'),
