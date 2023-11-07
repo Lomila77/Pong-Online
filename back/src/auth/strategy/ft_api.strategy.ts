@@ -7,6 +7,7 @@ import { HttpService } from '@nestjs/axios';
 import { AuthDto, Fortytwo_dto } from '../dto/auth.dto';
 import { AxiosResponse } from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { lastValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
@@ -19,39 +20,34 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
     super({
       authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
       tokenURL: 'https://api.intra.42.fr/oauth/token',
-      clientID: config.get('UID'),
-      clientSecret: config.get('API_SECRET'),
-      callbackURL: 'http://localhost:3333/auth/callback',
+      clientID: process.env.UID,
+      clientSecret: process.env.API_SECRET,
+      callbackURL: process.env.CALLBACK_URL,
       scope: ['public'],
     });
   }
 
   async validate(accessToken: string): Promise<Fortytwo_dto> {
     try {
-      // console.log("access token: ", accessToken);
-      // console.log("refreshToken: ", refreshToken);
-      // console.log("profile: ", profile);
-
-      const  {data} : AxiosResponse<Fortytwo_dto, any> = await this.httpService
-        .get('https://api.intra.42.fr/v2/me', {
+      const response = await lastValueFrom(
+        this.httpService.get('https://api.intra.42.fr/v2/me', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        })
-        .toPromise();
-      // console.log(data.id);
-
+        }).pipe(
+          map((res) => res.data)
+        )
+      );
       const userDto: Fortytwo_dto = {
-        id: data.id,
-        login: data.login,
-        email: data.email,
-        image: data.image,
-      }
-      // console.log("id: ", userDto.id);
-      // console.log("login: ", userDto.login);
-      // console.log("email: ", userDto.email);
-      // console.log("image: ", userDto.image);
-      console.log(" ------ leaving strategy ------");
+        id: response.id,
+        login: response.login,
+        email: response.email,
+        image: response.image,
+      };
+      console.log(userDto.email);
+      console.log(userDto.id);
+      console.log(userDto.login);
+      console.log(userDto.image);
       return userDto;
     } catch (error) {
       throw error;

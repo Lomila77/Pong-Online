@@ -7,6 +7,8 @@ import { ApiStrategy, JwtStrategy } from './strategy';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { HttpModule } from '@nestjs/axios';
+import { SessionSerializer } from './serializer/session.serializer';
+
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { HttpModule } from '@nestjs/axios';
     AuthService,
     JwtStrategy,
     PrismaService,
-    ApiStrategy],
+    ApiStrategy,
+    SessionSerializer
+  ],
 })
 export class AuthModule {}
