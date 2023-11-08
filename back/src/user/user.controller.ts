@@ -9,17 +9,17 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Get('me')
+  @Get('/me')
   getMe(@GetUser() user: User) {
     return user;
   }
 
-  @Get('profil')
+  @Get('/profil')
   getProfil(@GetUser() user: User) {
     return this.userService.profil(user);
   }
 
-  @Get('users')
+  @Get('/all')
   getUsers() {
     return this.userService.getUsers();
   }

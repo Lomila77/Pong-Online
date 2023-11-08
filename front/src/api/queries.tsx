@@ -29,7 +29,7 @@ export interface User {
 export async function getUser(): Promise<User> {
   try {
     const response = await fetch(
-      'http://localhost:3333/user/profil', {
+      'http://localhost:3333/users/profil', {
         method: 'GET',
       }
     );
@@ -49,7 +49,7 @@ export async function getUser(): Promise<User> {
 export async function getUsers() {
   try {
     const response = await fetch(
-        'http://localhost:3333/user/users', {
+        'http://localhost:3333/users/all', {
           method: 'GET',
         }
     );
