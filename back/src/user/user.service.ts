@@ -11,9 +11,7 @@ interface userUpdate{
 
 @Injectable()
 export class UserService {
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getUserbyId(userId:number): Promise<User | null> {
     try {
@@ -72,5 +70,9 @@ export class UserService {
         isF2Active: user.isF2Active,
       },
     };
+  }
+
+  getUsers() {
+    return this.prisma.user.findMany();
   }
 }

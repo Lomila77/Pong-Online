@@ -1,4 +1,3 @@
-import { authTokenInterface } from './dto/auth.dto';
 import { Body, Controller, Post, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, Fortytwo_dto,  } from './dto';
@@ -29,9 +28,6 @@ export class AuthController {
   @UseGuards(SessionAuthGuard)
   @UseGuards(JwtGuard)
   async changeSettings(@Req() req: Request, @Body() dto: AuthDto, @GetUser() user: User) {
-    // console.log("WE ARE INSITE UPDATESETTINGS", req);
-    console.log("cookie extracted : ", req.cookies);
-    console.log("user extracted : ", user);
     return await this.authService.postSettings(user, dto);
   }
 

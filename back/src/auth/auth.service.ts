@@ -1,13 +1,12 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-// import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto, Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 import { HttpStatus } from '@nestjs/common';
 
@@ -18,7 +17,7 @@ export class AuthService {
     private jwt: JwtService,
     private user: UserService,
   ) {}
-  async handleIncommingUser (incommingUser: Fortytwo_dto, res:Response){
+  async handleIncommingUser(incommingUser: Fortytwo_dto, res: Response) {
     let firstConnection: boolean = true;
     const prismaRet = await this.user.getUserbyId(incommingUser.id);
 
@@ -69,10 +68,10 @@ export class AuthService {
     let validityTime: string;
     switch (firstConnection) {
       case true:
-        validityTime = '5m'
+        validityTime = '5m';
         break;
       case false:
-        validityTime = '120m'
+        validityTime = '120m';
         break;
     }
     const data = {
@@ -95,7 +94,7 @@ export class AuthService {
         },
         data: {
           connected: false,
-        }
+        },
       });
     }
     res.clearCookie(process.env.COOKIES_NAME)
@@ -104,15 +103,14 @@ export class AuthService {
         return res.status(500).send('Logout error');
       }
       else {
-        console.log("req bool after logout: ", !!req.isAuthenticated());
         res.status(200).json({success: true, messge: "Deconnected"});
       }
-    })
+    });
   }
 
   async postSettings(user: User, dto: AuthDto) {
-    console.log("dto = ", dto);
     const updatedUser = await this.user.updateUser(user.fortytwo_id, dto);
+    console.log("authService : updated User is now : ", updatedUser);
     return {
       status: HttpStatus.OK,
       message: 'Resource successfully updated',

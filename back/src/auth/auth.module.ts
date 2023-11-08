@@ -10,7 +10,6 @@ import { HttpModule } from '@nestjs/axios';
 import { SessionSerializer } from './serializer/session.serializer';
 import { UserService } from 'src/user/user.service';
 
-
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'ft_api', session: true }),
@@ -19,9 +18,7 @@ import { UserService } from 'src/user/user.service';
     HttpModule,
   ],
 
-  controllers: [
-    AuthController
-  ],
+  controllers: [AuthController],
 
   providers: [
     AuthService,

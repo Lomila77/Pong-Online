@@ -1,21 +1,18 @@
-import { AuthService } from '../auth.service';
+// import { AuthService } from '../auth.service';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+// import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
 import { HttpService } from '@nestjs/axios';
-import { AuthDto, Fortytwo_dto } from '../dto/auth.dto';
-import { AxiosResponse } from 'axios';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Fortytwo_dto } from '../dto/auth.dto';
+// import { AxiosResponse } from 'axios';
+// import { PrismaService } from 'src/prisma/prisma.service';
 import { lastValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
   constructor(
-    private readonly config: ConfigService,
     private readonly httpService: HttpService,
-    private readonly prisma: PrismaService,
-    private readonly authservice: AuthService,
   ) {
     super({
       authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
@@ -44,10 +41,6 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
         email: response.email,
         image: response.image,
       };
-      console.log(userDto.email);
-      console.log(userDto.id);
-      console.log(userDto.login);
-      console.log(userDto.image);
       return userDto;
     } catch (error) {
       throw error;
