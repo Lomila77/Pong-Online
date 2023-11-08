@@ -1,9 +1,14 @@
 import { IsBoolean, IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-interface Photo {
-  value: string
+export interface authTokenInterface {
+  jwt: string;
+  firstConnection: boolean;
 }
-export class Fortytwo_dto{
+interface Photo {
+  value: string;
+}
+
+export class Fortytwo_dto {
   @IsNotEmpty()
   id: number;
   @IsNotEmpty()

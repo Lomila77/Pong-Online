@@ -30,11 +30,11 @@ COPY prisma ./prisma/
 
 RUN npm install
 RUN npm install -g prisma
-RUN prisma generate
+# RUN prisma generate
 
 COPY . .
 
-CMD [ "npm", "run", "start:dev" ]
+# CMD [ "npm", "run", "start:dev" ]
 
 # Debug
 # CMD tail -f /dev/null

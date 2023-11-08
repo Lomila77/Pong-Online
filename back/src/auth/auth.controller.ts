@@ -1,6 +1,6 @@
-import { Body, Controller, Post, Get, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, Fortytwo_dto } from './dto';
+import { Fortytwo_dto } from './dto';
 import { ApiAuthGuard } from './guard/ft_api.guard';
 import { GetUser } from './decorator/get-user.decorator';
 import { JwtGuard } from './guard';
@@ -14,9 +14,22 @@ export class AuthController {
 
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
-  async redirect(@Req() req: {user: Fortytwo_dto, request: Request}, @Res() res:Response) {
-    const token =  await this.authService.handleIncommingUser(req.user);
-    res.redirect((process.env.FRONT_HOME) + '/?token=' + token.access_token);
+  async redirect(
+    @Req() req: { user: Fortytwo_dto; request: Request },
+    @Res() res: Response,
+  ) {
+    const ret: boolean = await this.authService.handleIncommingUser(
+      req.user,
+      res,
+    );
+
+    // const token =  await this.authService.handleIncommingUser(req.user);
+    console.log('ret de handleIncomming', ret);
+    if (ret) {
+      res.redirect(process.env.FRONT_HOME + '/settingslock');
+    } else {
+      res.redirect(process.env.FRONT_HOME);
+    }
   }
 
   @Post('logout')
@@ -27,12 +40,12 @@ export class AuthController {
   @Get('logouttest')
   @UseGuards(SessionAuthGuard)
   logouttest() {
-    return "if this is written the test passed"
+    return 'if this is written the test passed';
   }
 
-// element here for debug need to delete in before correction
+  // element here for debug need to delete in before correction
   @Get('prisma')
-  prismaPrintTable(){
+  prismaPrintTable() {
     this.authService.prismaPrintTable();
     return true;
   }
