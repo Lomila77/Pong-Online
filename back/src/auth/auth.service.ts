@@ -1,7 +1,7 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 // import { PrismaService } from '../prisma/prisma.service';
-import { Fortytwo_dto } from './dto';
+import { AuthDto, Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -9,6 +9,7 @@ import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
 import {Request, Response} from 'express';
 import { UserService } from 'src/user/user.service';
+import { HttpStatus } from '@nestjs/common';
 
 @Injectable({})
 export class AuthService {
@@ -20,28 +21,16 @@ export class AuthService {
   async handleIncommingUser (incommingUser: Fortytwo_dto, res:Response){
     let firstConnection: boolean = true;
     const prismaRet = await this.user.getUserbyId(incommingUser.id);
-    // const prismaRet = await this.prisma.user.findUnique({
-    //   where: {
-    //     fortytwo_id: incommingUser.id,
-    //   },
-    // });
 
     if (!prismaRet) {
       await this.signup(incommingUser);
     }
     else if (prismaRet.pseudo !== "") {
-      await this.prisma.user.update({
-        where: {
-          fortytwo_id: incommingUser.id,
-        },
-        data: {
-          connected: true,
-        }
-      });
+      await this.user.toggleConnectionStatus(incommingUser.id, true);
       firstConnection = false;
     }
     const token = await this.signToken(incommingUser.id, incommingUser.email, firstConnection)
-    res.cookie('jwtToken', token);
+    res.cookie('jwtToken', token.access_token);
     return firstConnection;
   }
 
@@ -69,12 +58,13 @@ export class AuthService {
     try {
       const users = await this.prisma.user.findMany();
       console.log(users);
+      return users;
     } catch (error) {
       console.error(error);
     }
   }
 
-  async signToken(userId: number, email: string, firstConnection: boolean,): Promise<{ access_token: string }>
+  async signToken(userId: number, email: string, firstConnection: boolean,): Promise<{ access_token: string } | null>
   {
     let validityTime: string;
     switch (firstConnection) {
@@ -109,12 +99,6 @@ export class AuthService {
       });
     }
     res.clearCookie(process.env.COOKIES_NAME)
-    // console.log(req.user)
-    // console.log("session ID (logout)", req.sessionID)
-    // console.log("logout called");
-    // console.log("req bool: ", !!req.isAuthenticated());
-    // console.log("session id: ", req.sessionID);
-    // console.log("req.user: ", req.user);
     req.logout((err) => {
       if (err) {
         return res.status(500).send('Logout error');
@@ -122,9 +106,18 @@ export class AuthService {
       else {
         console.log("req bool after logout: ", !!req.isAuthenticated());
         res.status(200).json({success: true, messge: "Deconnected"});
-        // res.redirect(`http://localhost:${process.env.FRONT_PORT}/login`);
       }
     })
+  }
+
+  async postSettings(user: User, dto: AuthDto) {
+    console.log("dto = ", dto);
+    const updatedUser = await this.user.updateUser(user.fortytwo_id, dto);
+    return {
+      status: HttpStatus.OK,
+      message: 'Resource successfully updated',
+      data: updatedUser,
+    };
   }
 
   twoFA(user: User) {
@@ -196,3 +189,15 @@ export class AuthService {
 //     };
 //   }
 // }
+
+
+/* reminder : stastus code error
+200 OK : Indique que la requête a été traitée avec succès.
+201 Created : Indique que la requête a été traitée avec succès et qu'une nouvelle ressource a été créée en conséquence.
+204 No Content : Indique que la requête a été traitée avec succès, mais qu'il n'y a pas de contenu à renvoyer dans la réponse.
+400 Bad Request : Indique que la requête du client est incorrecte ou malformée.
+401 Unauthorized : Indique que l'utilisateur doit être authentifié pour accéder à la ressource demandée, mais l'authentification a échoué ou n'a pas été fournie.
+403 Forbidden : Indique que l'utilisateur est authentifié, mais n'a pas les autorisations nécessaires pour accéder à la ressource demandée.
+404 Not Found
+500 Internal Server Error
+*/

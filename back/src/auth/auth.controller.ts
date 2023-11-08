@@ -17,15 +17,22 @@ export class AuthController {
   @UseGuards(ApiAuthGuard)
   async redirect(@Req() req: {user: Fortytwo_dto, request: Request}, @Res() res:Response) {
     const ret: boolean = await this.authService.handleIncommingUser(req.user, res);
-
-    // const token =  await this.authService.handleIncommingUser(req.user);
-    console.log("ret de handleIncomming", ret);
     if (ret) {
       res.redirect((process.env.FRONT_HOME) + '/settingslock');
     }
     else {
       res.redirect((process.env.FRONT_HOME));
     }
+  }
+
+  @Post('update')
+  @UseGuards(SessionAuthGuard)
+  @UseGuards(JwtGuard)
+  async changeSettings(@Req() req: Request, @Body() dto: AuthDto, @GetUser() user: User) {
+    // console.log("WE ARE INSITE UPDATESETTINGS", req);
+    console.log("cookie extracted : ", req.cookies);
+    console.log("user extracted : ", user);
+    return await this.authService.postSettings(user, dto);
   }
 
   @Post('logout')
@@ -42,8 +49,7 @@ export class AuthController {
 // element here for debug need to delete in before correction
   @Get('prisma')
   prismaPrintTable(){
-    this.authService.prismaPrintTable();
-    return true;
+    return this.authService.prismaPrintTable();
   }
 
   @Get('/is2FA')
