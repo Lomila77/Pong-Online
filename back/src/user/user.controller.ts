@@ -18,4 +18,9 @@ export class UserController {
   getProfil(@GetUser() user: User) {
     return this.userService.profil(user);
   }
+
+  @Get('users')
+  getUsers() {
+    return this.userService.getUsers();
+  }
 }
