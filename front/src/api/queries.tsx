@@ -46,6 +46,26 @@ export async function getUser(): Promise<User> {
   }
 }
 
+export async function getUsers() {
+  try {
+    const response = await fetch(
+        'http://localhost:3333/user/users', {
+          method: 'GET',
+        }
+    );
+    if (!response.ok) {
+      throw new Error('Échec de la requête');
+    }
+    const data: User[] = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error(
+        "Une erreur s'est produite lors de la récupération des données : " +
+        error.message
+    );
+  }
+}
+
 export async function backRequest(url: string, method: string, params?: any) {
   try {
     const reqOptions: RequestInit = {
