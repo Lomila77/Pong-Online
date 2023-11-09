@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -24,6 +25,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    credentials: true,
   };
   app.enableCors(corsOptions);
   app.use((req, res, next) => {
@@ -32,6 +34,7 @@ async function bootstrap() {
       'Access-Control-Allow-Methods',
       'GET,HEAD,PUT,PATCH,POST,DELETE',
     );
+    // res.header('Access-Control-Allow-Credentials', 'true');
     next();
   });
 
@@ -51,6 +54,7 @@ async function bootstrap() {
   );
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use(cookieParser());
   app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
 }

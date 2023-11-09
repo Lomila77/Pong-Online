@@ -13,7 +13,11 @@ function NavBar() {
       elem?.blur();
     }
     if (path === '/login') {
-      await backRequest('auth/logout', 'POST');
+      try {
+        await backRequest('auth/logout', 'POST');
+      } catch (error) {
+        console.log("error in navBar: ", error);
+      }
     }
     navigate(path);
   }

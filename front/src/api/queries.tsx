@@ -1,9 +1,10 @@
 export const createUser = async (params: any) => {
   try {
     const response = await fetch(
-      'http://localhost:3333/auth/signup',
+      'http://localhost:3333/auth/update',
       {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -29,7 +30,7 @@ export interface User {
 export async function getUser(): Promise<User> {
   try {
     const response = await fetch(
-      'http://localhost:3333/user/profil', {
+      'http://localhost:3333/users/profil', {
         method: 'GET',
       }
     );
@@ -49,7 +50,7 @@ export async function getUser(): Promise<User> {
 export async function getUsers() {
   try {
     const response = await fetch(
-        'http://localhost:3333/user/users', {
+        'http://localhost:3333/users/all', {
           method: 'GET',
         }
     );
@@ -84,6 +85,13 @@ export async function backRequestTest(url: string, method: string, params?: any)
 }
 
 
+
+
+export interface ApiRet {
+  status: number;
+  data?: any;
+}
+
 export async function backRequest(url: string, method: string, params?: any) {
   try {
     const reqOptions: RequestInit = {
@@ -94,9 +102,24 @@ export async function backRequest(url: string, method: string, params?: any) {
       body: params ? JSON.stringify(params) : undefined
     };
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
-    return response.status === 200 ? await response.json() : {}
+
+    const apiRet: ApiRet = {
+      status: response.status,
+      data: response.status === 200 ? await response.json() : undefined,
+    }
+    return apiRet;
+    // return response.status === 200 ? await response.json() : {}
   }
   catch (error) {
     console.log(error);
   }
 }
+/* backRequest est a utiliser de la facon suivante :
+  try {
+    const response: ApiResponse = await backRequest('endpoint', 'GET');
+    if (response.status === 200 && response.data) {
+      console.log(response.data);
+    }
+  } catch (error) ...
+
+*/
