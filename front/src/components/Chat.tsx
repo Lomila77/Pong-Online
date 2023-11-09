@@ -3,14 +3,14 @@ import React from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
 import { getUsers, User } from "../api/queries";
+import {useQuery} from "@tanstack/react-query";
 
 
-function Chat(): React.FC {
+function Chat() {
     const { data = { users: [] } } = useQuery({
         queryKey: ['getUsers'],
-        queryFn: () => backRequestTest('leaderboard', 'GET'),
+        queryFn: () => getUsers(),
     });
-    const users = await getUsers(); //TODO A remplacer par amis
     const [chatIsOpen, setChatIsOpen] = useState(false);
     const [windowIsOpen, setWindowIsOpen] = useState(false);
 
@@ -33,7 +33,7 @@ function Chat(): React.FC {
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content ">
                     {/* Sidebar content here */}
-                    { users.map((element) => {
+                    { data.users.map((element) => {
                         <li><button className="btn btn-ghost font-display text-orangeNG" onClick={toggleWindow}>{element.pseudo}</button></li>
                         })
                     }
