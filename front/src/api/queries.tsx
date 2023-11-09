@@ -19,7 +19,6 @@ export const createUser = async (params: any) => {
   }
 };
 
-
 export interface User {
   pseudo: string;
   avatar: any;
@@ -68,6 +67,28 @@ export async function getUsers() {
   }
 }
 
+export async function backRequestTest(url: string, method: string, params?: any) {
+  try {
+    const reqOptions: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: params ? JSON.stringify(params) : undefined
+    };
+    const response = await fetch('http://localhost:5173/' + url, reqOptions);
+    return response.status === 200 ? await response.json() : {}
+  }
+  catch (error) {
+    console.log(error);
+  }
+}
+
+export interface ApiRetData {
+  status: string,
+  message: string,
+  data: User,
+};
 
 export interface ApiRet {
   status: number;
@@ -78,6 +99,7 @@ export async function backRequest(url: string, method: string, params?: any) {
   try {
     const reqOptions: RequestInit = {
       method,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

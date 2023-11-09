@@ -119,7 +119,7 @@ export class AuthService {
     return {
       status: HttpStatus.OK,
       message: 'Resource successfully updated',
-      data: updatedUser,
+      user: updatedUser,
     };
   }
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import MGameWatch from '../images/MGameWatch.png';
 
-const ProfileComp: React.FC = () => {
+const ProfileComp: React.FC = ({user}) => {
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
       <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
@@ -9,7 +9,7 @@ const ProfileComp: React.FC = () => {
       </div>
       <div className="text-center">
         <span className="font-display text-2xl text-bleuPseudo pseudoProfil">
-          Pitouch
+        {user.name}
         </span>
         <br></br>
         <span className="font-display text-sm text-vertOnLine">
@@ -53,7 +53,7 @@ const ProfileComp: React.FC = () => {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="font-display text-3xl text-orangeNG self-end">1</span>
+        <span className="font-display text-3xl text-orangeNG self-end">{user.rank}</span>
       </div>
       <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white">Add to friend</button>
     </div>
