@@ -1,38 +1,28 @@
 import React from 'react';
 import ProfileModal from './ProfileComp';
 
-const CardLeader: React.FC = () => {
+
+
+const CardLeader: React.FC = ({name, rank, numberOfWin, onClickUser}) => {
   const DisplayProfile = () => {
+    {onClickUser()}
     document.getElementById('my_modal_3').showModal();
   };
 
+
   return (
-    <div>
-      <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3rem]">
-        <div className="bg-orangeNG font-display text-white text-center basis-1/5 pt-2">
-          1
+      <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3.5rem] overflow-hidden">
+        <div className="bg-orangeNG font-display text-white text-center basis-1/6 pt-3 skew-x-[40deg] scale-150 -translate-x-6">
+          <div className="-skew-x-[40deg] translate-x-6 scale-75"> {rank}</div>
         </div>
-        <div className="text-center basis-3/5 mt-2">
-          <span className="font-display text-bleuPseudo cursor-pointer" onClick={DisplayProfile}>Pitouch</span>
+        <div className="text-center basis-4/6 mt-3">
+          <span className="font-display text-bleuPseudo cursor-pointer" onClick={DisplayProfile}>{name}</span>
         </div>
-        <div className="bg-bleuPseudo font-display text-center text-white basis-1/5 pt-2">
-          5 wins
+        <div className="bg-bleuPseudo font-display text-center text-white basis-1/5 pt-3 skew-x-[40deg] scale-150">
+          <div className="-skew-x-[40deg] scale-75">{numberOfWin} wins</div>
         </div>
       </div>
 
-      <dialog id="my_modal_3" className="modal">
-        <div className="modal-box shrink w-64">
-          <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-              ✕
-            </button>
-          </form>
-          <div>
-            <ProfileModal />
-          </div>
-        </div>
-      </dialog>
-    </div>
   );
 };
 
