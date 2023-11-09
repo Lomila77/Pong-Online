@@ -51,6 +51,7 @@ export async function getUsers() {
   try {
     const response = await fetch(
         'http://localhost:3333/users/all', {
+          credentials: 'include',
           method: 'GET',
         }
     );
