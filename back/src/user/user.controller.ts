@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Req, UseGuards, ValidationPipe } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 import { User } from '@prisma/client';
@@ -22,5 +22,23 @@ export class UserController {
   @Get('/all')
   async getUsers() {
     return this.userService.getUsers();
+  }
+
+  @Get('/del/:id')
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.delId(id)
+  }
+  @Get('/gnr')
+  async generate() {
+    return await this.userService.generateRdn();
+  }
+
+  @Get('/clear')
+  async clear() {
+    return await this.userService.deleteAllUsers();
+  }
+  @Get('/print')
+  async print() {
+    return await this.userService.print();
   }
 }
