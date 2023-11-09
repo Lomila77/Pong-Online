@@ -2,7 +2,7 @@
 import React from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
-import { getUsers, User } from "../api/queries";
+import { getUsers } from "../api/queries";
 import {useQuery} from "@tanstack/react-query";
 
 
