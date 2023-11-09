@@ -1,14 +1,13 @@
-import { Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 
 export class JwtGuard extends AuthGuard('jwt') {
-
   constructor() {
     super({
-        jwtGuardwtFromRequest: (request: Request) => {
+      //overload of the way to get the token
+      jwtGuardwtFromRequest: (request: Request) => {
         return request.cookies.jwtToken;
-        },
+      },
     });
   }
 }

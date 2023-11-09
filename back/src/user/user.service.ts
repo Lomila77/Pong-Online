@@ -1,33 +1,31 @@
-import { IsBoolean } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-interface userUpdate{
-  pseudo: string,
-  avatar: string,
-  isF2Active: boolean,
+interface userUpdate {
+  pseudo: string;
+  avatar: string;
+  isF2Active: boolean;
 }
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserbyId(userId:number): Promise<User | null> {
+  async getUserbyId(userId: number): Promise<User | null> {
     try {
       return await this.prisma.user.findUnique({
         where: {
-          fortytwo_id: userId
+          fortytwo_id: userId,
         },
       });
-    }
-    catch (error) {
-      console.log("Error user service: ", error);
+    } catch (error) {
+      console.log('Error user service: ', error);
       throw error;
     }
   }
 
-  async toggleConnectionStatus(userId:number, status: boolean) {
+  async toggleConnectionStatus(userId: number, status: boolean) {
     try {
       return await this.prisma.user.update({
         where: {
@@ -35,16 +33,15 @@ export class UserService {
         },
         data: {
           connected: status,
-        }
-      })
-    }
-    catch (error){
-      console.log("Error user service: ", error);
+        },
+      });
+    } catch (error) {
+      console.log('Error user service: ', error);
       throw error;
     }
   }
 
-  async updateUser(userId:number, update: userUpdate) {
+  async updateUser(userId: number, update: userUpdate) {
     try {
       const user = await this.prisma.user.update({
         where: {

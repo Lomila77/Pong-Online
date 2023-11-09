@@ -11,9 +11,7 @@ import { lastValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
-  constructor(
-    private readonly httpService: HttpService,
-  ) {
+  constructor(private readonly httpService: HttpService) {
     super({
       authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
       tokenURL: 'https://api.intra.42.fr/oauth/token',
@@ -27,13 +25,13 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
   async validate(accessToken: string): Promise<Fortytwo_dto> {
     try {
       const response = await lastValueFrom(
-        this.httpService.get('https://api.intra.42.fr/v2/me', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }).pipe(
-          map((res) => res.data)
-        )
+        this.httpService
+          .get('https://api.intra.42.fr/v2/me', {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          })
+          .pipe(map((res) => res.data)),
       );
       const userDto: Fortytwo_dto = {
         id: response.id,

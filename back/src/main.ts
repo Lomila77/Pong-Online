@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as session from 'express-session';
 import * as passport from 'passport';
-import * as cookieParser from 'cookie-parser'
+import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { WsAdapter } from '@nestjs/platform-ws';

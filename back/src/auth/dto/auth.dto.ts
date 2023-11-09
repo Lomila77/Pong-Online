@@ -28,4 +28,3 @@ export class AuthDto {
   @IsNotEmpty()
   avatar: string;
 }
-

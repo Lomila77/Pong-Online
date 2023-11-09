@@ -23,12 +23,15 @@ export class AuthService {
 
     if (!prismaRet) {
       await this.signup(incommingUser);
-    }
-    else if (prismaRet.pseudo !== "") {
+    } else if (prismaRet.pseudo !== '') {
       await this.user.toggleConnectionStatus(incommingUser.id, true);
       firstConnection = false;
     }
-    const token = await this.signToken(incommingUser.id, incommingUser.email, firstConnection)
+    const token = await this.signToken(
+      incommingUser.id,
+      incommingUser.email,
+      firstConnection,
+    );
     res.cookie('jwtToken', token.access_token);
     return firstConnection;
   }
@@ -63,8 +66,11 @@ export class AuthService {
     }
   }
 
-  async signToken(userId: number, email: string, firstConnection: boolean,): Promise<{ access_token: string } | null>
-  {
+  async signToken(
+    userId: number,
+    email: string,
+    firstConnection: boolean,
+  ): Promise<{ access_token: string } | null> {
     let validityTime: string;
     switch (firstConnection) {
       case true:
@@ -97,20 +103,19 @@ export class AuthService {
         },
       });
     }
-    res.clearCookie(process.env.COOKIES_NAME)
+    res.clearCookie(process.env.COOKIES_NAME);
     req.logout((err) => {
       if (err) {
         return res.status(500).send('Logout error');
-      }
-      else {
-        res.status(200).json({success: true, messge: "Deconnected"});
+      } else {
+        res.status(200).json({ success: true, messge: 'Deconnected' });
       }
     });
   }
 
   async postSettings(user: User, dto: AuthDto) {
     const updatedUser = await this.user.updateUser(user.fortytwo_id, dto);
-    console.log("authService : updated User is now : ", updatedUser);
+    console.log('authService : updated User is now : ', updatedUser);
     return {
       status: HttpStatus.OK,
       message: 'Resource successfully updated',
@@ -187,7 +192,6 @@ export class AuthService {
 //     };
 //   }
 // }
-
 
 /* reminder : stastus code error
 200 OK : Indique que la requête a été traitée avec succès.
