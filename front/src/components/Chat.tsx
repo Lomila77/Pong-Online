@@ -1,16 +1,11 @@
-// @ts-ignore
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
 import { getUsers } from "../api/queries";
-import {useQuery} from "@tanstack/react-query";
-
 
 function Chat() {
-    const { data = { users: [] } } = useQuery({
-        queryKey: ['getUsers'],
-        queryFn: () => getUsers(),
-    });
+
+    const [users, setUsers] = useState([])
     const [chatIsOpen, setChatIsOpen] = useState(false);
     const [windowIsOpen, setWindowIsOpen] = useState(false);
 
@@ -21,6 +16,13 @@ function Chat() {
     const toggleWindow = () => {
         setWindowIsOpen(windowIsOpen !== true)
     }
+
+    useEffect(() => {
+        // Utilisez useEffect pour charger les données des utilisateurs une fois que le composant est monté
+        getUsers().then((data) => {
+            setUsers(data);
+        });
+    }, []);
 
     return (
         <div className="drawer drawer-end flex flex-col-reverse h-full items-end">
@@ -33,12 +35,12 @@ function Chat() {
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content ">
                     {/* Sidebar content here */}
-                    { data.users.map((element) => {
-                        <li><button className="btn btn-ghost font-display text-orangeNG" onClick={toggleWindow}>{element.pseudo}</button></li>
-                        })
-                    }
+                    {users.map((user) => (
+                        <li key={user.pseudo}><button className="btn btn-ghost font-display text-orangeNG" onClick={toggleWindow}>{user.pseudo}</button></li>
+                    ))}
                     <li><button className="btn btn-ghost font-display text-orangeNG" onClick={toggleWindow}>User 1</button></li>
                     <li><button className="btn btn-ghost font-display text-orangeNG" onClick={toggleWindow}>User 2</button></li>
+
                 </ul>
                 {windowIsOpen && (
                    <WindowChat/>
