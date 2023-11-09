@@ -27,7 +27,7 @@ export interface User {
   friends: string[];
 }
 
-export async function getUser(): Promise<User> {
+export async function getUser() {
   try {
     const response = await fetch(
       'http://localhost:3333/users/profil', {
@@ -51,6 +51,7 @@ export async function getUsers() {
   try {
     const response = await fetch(
         'http://localhost:3333/users/all', {
+          credentials: 'include',
           method: 'GET',
         }
     );

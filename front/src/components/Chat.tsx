@@ -2,11 +2,15 @@
 import React from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
-import {getUsers, User} from "../api/queries";
+import { getUsers, User } from "../api/queries";
 
 
-async function Chat(): React.FC {
-    const users: User[] = await getUsers(); //A remplacer par amis
+function Chat(): React.FC {
+    const { data = { users: [] } } = useQuery({
+        queryKey: ['getUsers'],
+        queryFn: () => backRequestTest('leaderboard', 'GET'),
+    });
+    const users = await getUsers(); //TODO A remplacer par amis
     const [chatIsOpen, setChatIsOpen] = useState(false);
     const [windowIsOpen, setWindowIsOpen] = useState(false);
 
