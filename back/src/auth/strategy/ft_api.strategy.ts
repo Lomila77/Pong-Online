@@ -4,8 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
 import { HttpService } from '@nestjs/axios';
-import { AuthDto, Fortytwo_dto } from '../dto/auth.dto';
-import { AxiosResponse } from 'axios';
+import { Fortytwo_dto } from '../dto/auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { lastValueFrom, map } from 'rxjs';
 
