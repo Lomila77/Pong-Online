@@ -19,7 +19,6 @@ export const createUser = async (params: any) => {
   }
 };
 
-
 export interface User {
   pseudo: string;
   avatar: any;
@@ -65,6 +64,23 @@ export async function getUsers() {
         "Une erreur s'est produite lors de la récupération des données : " +
         error.message
     );
+  }
+}
+
+export async function backRequestTest(url: string, method: string, params?: any) {
+  try {
+    const reqOptions: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: params ? JSON.stringify(params) : undefined
+    };
+    const response = await fetch('http://localhost:5173/' + url, reqOptions);
+    return response.status === 200 ? await response.json() : {}
+  }
+  catch (error) {
+    console.log(error);
   }
 }
 
