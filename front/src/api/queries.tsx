@@ -67,6 +67,11 @@ export async function getUsers() {
   }
 }
 
+export interface ApiRetData {
+  status: string,
+  message: string,
+  data: User,
+};
 
 export interface ApiRet {
   status: number;
@@ -77,6 +82,7 @@ export async function backRequest(url: string, method: string, params?: any) {
   try {
     const reqOptions: RequestInit = {
       method,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

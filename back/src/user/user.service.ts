@@ -46,7 +46,7 @@ export class UserService {
 
   async updateUser(userId:number, update: userUpdate) {
     try {
-      return await this.prisma.user.update({
+      const user = await this.prisma.user.update({
         where: {
           fortytwo_id: userId,
         },
@@ -56,6 +56,13 @@ export class UserService {
           isF2Active: update.isF2Active,
         }
       })
+      return {
+        data: {
+          pseudo: user.pseudo,
+          avatar: user.avatar,
+          isF2Active: user.isF2Active,
+        },
+      }
     } catch (error){
       console.log("Error user service: ", error);
       throw error;
