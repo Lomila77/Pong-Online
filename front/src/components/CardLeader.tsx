@@ -2,13 +2,11 @@ import React from 'react';
 import ProfileModal from './ProfileComp';
 
 
-
 const CardLeader: React.FC = ({name, rank, numberOfWin, onClickUser}) => {
   const DisplayProfile = () => {
-    {onClickUser()}
+    onClickUser();
     document.getElementById('my_modal_3').showModal();
   };
-
 
   return (
       <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3.5rem] overflow-hidden">

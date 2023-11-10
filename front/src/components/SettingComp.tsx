@@ -11,18 +11,17 @@ import * as Yup from 'yup';
 import { createUser } from '../api/queries';
 import { useUser } from '../context/UserContext';
 
-const MAX_FILE_SIZE: number = 1.3 * 1024 * 1024; // 1,3 Mo
+const MAX_FILE_SIZE: number = 4 * 1024 * 1024; // 4 Mo
 let fileSize: number = 0;
 let fileTest1: any;
 
 const SettingComp: React.FC = () => {
   const hiddenFileInput = useRef(null);
-  const [file, setFile] = useState(MGameWatch);
   const navigate = useNavigate();
-  const { user, setUser } = useUser();
+  const { user } = useUser();
   const location = useLocation();
   const [settingsLock, setSettingsLock] = useState(false);
-
+ 
   useEffect(() => {
     if (location.pathname === '/settingslock') {
       setSettingsLock(true);
@@ -30,6 +29,10 @@ const SettingComp: React.FC = () => {
       setSettingsLock(false);
     }
   }, [location.pathname]);
+
+  const [file, setFile] = useState(
+    location.pathname === '/settingslock' ? MGameWatch : null
+  );
 
   const uploadFile = (
     e: React.MouseEvent<HTMLButtonElement>
@@ -77,17 +80,19 @@ const SettingComp: React.FC = () => {
     defaultValues: {
       pseudo: '',
       isF2Active: false,
-      avatar: { MGameWatch },
+      avatar: {MGameWatch},
     },
   });
 
   const onSubmit = async (data: any) => {
-    setUser({
-      ...data,
-      avatar: file,
-    });
-    console.log('data: ' + data);
-    createUser({ ...data, avatar: file });
+    if (!settingsLock && data.pseudo === '')
+      data.pseudo = user.pseudo
+    if (file === null && user?.avatar !== null)
+      data.avatar = user.avatar
+    else
+      data.avatar = file;
+    createUser({ ...data });
+    console.log(data);
     if (settingsLock)
       navigate('/');
   };
@@ -101,7 +106,7 @@ const SettingComp: React.FC = () => {
           <div className="flex flex-col pt-8 gap-y-3">
             <div className="avatar place-self-center ml-12">
               <div className="w-64 rounded-full ring ring-white ring-8 ring-offset-base-100 drop-shadow-md ring-offset-2">
-                <img src={file} />
+              <img src={file || user?.avatar} alt="avatar" />
               </div>
               <button
                 className="Download bg-secondary rounded-full justify-center items-center"
@@ -130,7 +135,7 @@ const SettingComp: React.FC = () => {
             <div className="basis-1/2">
               <input
                 type="text"
-                placeholder={settingsLock ? "Nom d'utilisateur" : "Pitouch"}
+                placeholder={settingsLock ? "Nom d'utilisateur" : user?.pseudo}
                 className="input input-bordered w-full mt-6"
                 {...register('pseudo')}
               />

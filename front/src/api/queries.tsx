@@ -31,6 +31,7 @@ export async function getUser() {
     const response = await fetch(
       'http://localhost:3333/users/profil', {
         method: 'GET',
+        credentials: 'include',
       }
     );
     if (!response.ok) {

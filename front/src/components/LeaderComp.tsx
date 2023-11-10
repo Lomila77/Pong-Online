@@ -11,10 +11,8 @@ const LeaderComp: React.FC = () => {
     queryFn: () => backRequestTest('leaderboard', 'GET'),
   });
 
-  const [userToDisplay, setUserToDisplay] = useState('');
-  // const [selectedUserIndex, setSelectedUserIndex] = useState(null);
-  // const userToDisplay = data.users[selectedUserIndex];
-
+  const [selectedUserIndex, setSelectedUserIndex] = useState(null);
+  const userToDisplay = data.users[selectedUserIndex];
   return (
     <>
       <div className="card-side card-bordered border-4 border-white bg-[#fbfaf3] shadow-xl p-12">
@@ -28,8 +26,7 @@ const LeaderComp: React.FC = () => {
               name={user.name}
               rank={user.rank}
               numberOfWin={user.numberOfWin}
-              onClickUser={() => setUserToDisplay(user)}
-              // onClickUser={() => setSelectedUserIndex(index)}
+              onClickUser={() => setSelectedUserIndex(index)}
             />
           ))}
         </div>
