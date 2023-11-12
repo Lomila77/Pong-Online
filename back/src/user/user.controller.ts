@@ -24,6 +24,11 @@ export class UserController {
     return this.userService.getUsers();
   }
 
+  @Get('/checkpseudo/:pseudo')
+  async checkpseudo(@Param('pseudo') pseudo: string) {
+    return this.userService.checkPseudo(pseudo)
+  }
+
   @Get('/del/:id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.userService.delId(id)

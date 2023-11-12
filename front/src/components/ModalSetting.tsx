@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-import { createUser } from '../api/queries';
+import { backRequest, createUser } from '../api/queries';
 import { useUser } from '../context/UserContext';
 
 const MAX_FILE_SIZE: number = 1.3 * 1024 * 1024; // 1,3 Mo
@@ -65,7 +65,8 @@ const ModalSetting = () => {
       avatar: file
     })
     console.log("data: " + data);
-    createUser({...data, avatar: file});
+    // createUser({...data, avatar: file});
+    backRequest( 'auth/update', 'POST', {...data, avatar: file})
   };
 
   return (
