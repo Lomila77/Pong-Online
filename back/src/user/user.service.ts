@@ -1,3 +1,4 @@
+import { backResInterface } from './../shared/shared.interface';
 import { IsBoolean } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
@@ -67,7 +68,7 @@ export class UserService {
     }
   }
 
-  async checkPseudo(userPseudo: string) : Promise<boolean> {
+  async checkPseudo(userPseudo: string) : Promise<backResInterface> {
     try {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -75,9 +76,10 @@ export class UserService {
         },
       })
       if (user) {
-        return false
+        return {isOk: false,}
       }
-      return true
+      return  { isOk: true,}
+      //return true
     } catch(error) {
       console.log("Error user service: ", error);
       throw error;

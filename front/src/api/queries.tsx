@@ -84,25 +84,26 @@ export async function backRequestTest(url: string, method: string, params?: any)
   }
 }
 
-/*
+/* ****************************************************************************
   * backRequest
-  * exemple d'utilisation :
-  try {
-    const response: backResInterface = await backRequest('endpoint', 'GET', params);
-    console.log(response.pseudo)
-    }
-  } catch (error){...}
+    * exemple d'utilisation :
+      try {
+        const response: backResInterface = await backRequest('endpoint', 'GET', params);
+        console.log(response.pseudo)
+        }
+      } catch (error){...}
 
-  * params :
-    - ce sont les elements a transmettre au back en fonction du endpoint emprunte. Type : frontReqInterface.
+    * params :
+      - ce sont les elements a transmettre au back en fonction du endpoint emprunte. Type : frontReqInterface.
 
-  * Return :
-    - la reponse du back devrait etre un backResInterface comme dans l'exemple
-    - mais il est egalement possible de faire : const result: { pseudo: string, autre: string } = await backRequest(..., ..., ...);
-    - en fonction du endpoint emprunte, les champs peuvent etre undefined
-  * erreur :
-    - si error, check terminal
-*/
+    * Return :
+      - la reponse du back devrait etre un backResInterface comme dans l'exemple
+      - mais il est egalement possible de faire : const result: { pseudo: string, autre: string } = await backRequest(..., ..., ...);
+      - en fonction du endpoint emprunte, les champs peuvent etre undefined
+      
+    * erreur :
+      - si error, check terminal
+**************************************************************************** */
 
 export interface frontReqInterface {
   pseudo?: string;
