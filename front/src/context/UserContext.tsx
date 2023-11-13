@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getUser } from '../api/queries';
+import { backRequest, getUser } from '../api/queries';
 import { useEffect } from 'react';
 
 const UserContext = createContext(null);
@@ -10,8 +10,9 @@ export const UserProvider = ({ children }) => {
 
   const { data: userData, isLoading, isError } = useQuery({
     queryKey: ['getUser'],
-    queryFn: getUser,
+    queryFn: () => backRequest('users/profil', 'GET'),
   });
+  console.log("🚀 ~ file: UserContext.tsx:15 ~ UserProvider ~ userData:", userData)
 
   useEffect(() => {
     if (
