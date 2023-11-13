@@ -21,7 +21,7 @@ const SettingComp: React.FC = () => {
   const { user } = useUser();
   const location = useLocation();
   const [settingsLock, setSettingsLock] = useState(false);
- 
+
   useEffect(() => {
     if (location.pathname === '/settingslock') {
       setSettingsLock(true);
@@ -86,9 +86,9 @@ const SettingComp: React.FC = () => {
 
   const onSubmit = async (data: any) => {
     if (!settingsLock && data.pseudo === '')
-      data.pseudo = user.pseudo
+      data.pseudo = user?.pseudo
     if (file === null && user?.avatar !== null)
-      data.avatar = user.avatar
+      data.avatar = user?.avatar
     else
       data.avatar = file;
     createUser({ ...data });
