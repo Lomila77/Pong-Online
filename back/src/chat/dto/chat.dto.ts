@@ -1,37 +1,50 @@
-import {
-  IsDate,
-  IsNotEmpty,
-  IsNumber,
-  IsObject,
-  IsString,
-} from 'class-validator';
-import { User } from '@prisma/client';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsEmail, IsArray, IsNumber } from 'class-validator';
+import { Tag } from '../chat.type';
 
-export enum ChannelType {
-  Private,
-  Public,
-  Direct,
-  Protected,
-}
-export class ChatDto {
+export class ChannelCreateDto {
+  @IsString()
   @IsNotEmpty()
-  @IsNumber()
-  owner: number;
+  chatName: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isPrivate: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isPassword: boolean;
 
   @IsString()
-  name: string;
+  @IsOptional()
+  Password: string;
 
-  type: ChannelType;
+  @IsArray()
+  @IsOptional()
+  members: Array<Tag>
+}
 
-  @IsString()
-  password: string;
-
-  @IsDate()
-  creationDate: Date;
-
-  @IsObject()
-  user: User;
+export class sendMsgDto {
+  @IsEmail()
+  @IsOptional()
+  email: string
 
   @IsNumber()
-  userFortytwo_id: number;
+  @IsNotEmpty()
+  chatId: number
+
+  @IsString()
+  @IsNotEmpty()
+  msg: string
+
+}
+
+export class DmDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  targetId: number;
+
 }
