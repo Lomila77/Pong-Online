@@ -85,18 +85,43 @@ export async function backRequestTest(url: string, method: string, params?: any)
   }
 }
 
-export interface ApiRetData {
-  status: string,
-  message: string,
-  data: User,
-};
+/* ****************************************************************************
+  * backRequest
+    * exemple d'utilisation :
+      try {
+        const response: backResInterface = await backRequest('endpoint', 'GET', params);
+        console.log(response.pseudo)
+        }
+      } catch (error){...}
 
-export interface ApiRet {
-  status: number;
-  data?: any;
+    * params :
+      - ce sont les elements a transmettre au back en fonction du endpoint emprunte. Type : frontReqInterface.
+
+    * Return :
+      - la reponse du back devrait etre un backResInterface comme dans l'exemple
+      - mais il est egalement possible de faire : const result: { pseudo: string, autre: string } = await backRequest(..., ..., ...);
+      - en fonction du endpoint emprunte, les champs peuvent etre undefined
+      
+    * erreur :
+      - si error, check terminal
+**************************************************************************** */
+
+export interface frontReqInterface {
+  pseudo?: string;
+  avatar?: any;
+  isF2Active?: boolean;
 }
 
-export async function backRequest(url: string, method: string, params?: any) {
+export interface backResInterface {
+  pseudo?: string;
+  isOk?: boolean;
+  avatar?: any;
+  isF2Active?: boolean;
+  friends?: string[];
+  allUser?: User[]
+}
+
+export async function backRequest(url: string, method: string, params?: frontReqInterface) {
   try {
     const reqOptions: RequestInit = {
       method,
@@ -108,23 +133,10 @@ export async function backRequest(url: string, method: string, params?: any) {
     };
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
 
-    const apiRet: ApiRet = {
-      status: response.status,
-      data: response.status === 200 ? await response.json() : undefined,
-    }
-    return apiRet;
-    // return response.status === 200 ? await response.json() : {}
+    return response.ok ? await response.json() : {}
   }
   catch (error) {
     console.log(error);
   }
 }
-/* backRequest est a utiliser de la facon suivante :
-  try {
-    const response: ApiResponse = await backRequest('endpoint', 'GET');
-    if (response.status === 200 && response.data) {
-      console.log(response.data);
-    }
-  } catch (error) ...
 
-*/
