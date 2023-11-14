@@ -1,26 +1,29 @@
 import MGameWatch from '../images/MGameWatch.png';
 import { useNavigate } from 'react-router-dom';
-import { backRequest } from '../api/queries';
-
+import { backRequest, getUser } from '../api/queries';
+import { useQuery } from '@tanstack/react-query';
+import { useUser } from '../context/UserContext';
+import { useEffect } from 'react';
 
 function NavBar() {
   const navigate = useNavigate();
+  const { user } = useUser();
 
   const goToPage = async (path: string) => {
     const elem = document.activeElement as HTMLElement;
 
-    if(elem){
+    if (elem) {
       elem?.blur();
     }
     if (path === '/login') {
       try {
         await backRequest('auth/logout', 'POST');
       } catch (error) {
-        console.log("error in navBar: ", error);
+        console.log('error in navBar: ', error);
       }
     }
     navigate(path);
-  }
+  };
 
   return (
     <div className="navbar h-70 bg-gradient-to-b from-navbar to-white">
@@ -32,9 +35,11 @@ function NavBar() {
           PONG
         </button>
       </div>
-      <button className="mr-4"
-      onClick={() => goToPage('/leaderboard')}>
-      <svg
+      <button
+        className="mr-4"
+        onClick={() => goToPage('/leaderboard')}
+      >
+        <svg
           width="35px"
           height="35px"
           viewBox="0 0 24 24"
@@ -74,15 +79,15 @@ function NavBar() {
 
       <div className="flex-none gap-2">
         <span className="font-display text-orangeNG text-xs pseudo mr-3">
-          Pitouch
+          {user?.pseudo}
         </span>
         <div className="dropdown dropdown-end">
           <label
             tabIndex={0}
-            className="btn btn-ghost btn-circle avatar online ring ring-white drop-shadow-md ring-offset-base-100 mr-5 bg-white"
+            className="btn btn-ghost btn-circle avatar online drop-shadow-md mr-5 bg-white"
           >
             <div className="w-10 rounded-full">
-              <img src={MGameWatch} />
+              <img src={user?.avatar} />
             </div>
           </label>
           <ul

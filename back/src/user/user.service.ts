@@ -1,3 +1,5 @@
+import { backResInterface } from './../shared/shared.interface';
+import { IsBoolean } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -61,6 +63,24 @@ export class UserService {
         },
       }
     } catch (error){
+      console.log("Error user service: ", error);
+      throw error;
+    }
+  }
+
+  async checkPseudo(userPseudo: string) : Promise<backResInterface> {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          pseudo: userPseudo,
+        },
+      })
+      if (user) {
+        return {isOk: false,}
+      }
+      return  { isOk: true,}
+      //return true
+    } catch(error) {
       console.log("Error user service: ", error);
       throw error;
     }
@@ -135,27 +155,21 @@ export class UserService {
         }
       });
       console.log(`Suppression réussie de ${deleteResult.count} utilisateurs.`);
-      try {
-        const users = await this.prisma.user.findMany();
-        console.log(users);
-        return users;
-      } catch (error) {
-        console.error(error);
-      }
+      const users = await this.prisma.user.findMany();
+      console.log(users);
+      return users;
     } catch (error) {
       console.error('Erreur lors de la suppression des utilisateurs :', error);
     }
   }
 
   async print() {
-      try {
-        const users = await this.prisma.user.findMany();
-        console.log(users);
-        return users;
-      } catch (error) {
-        console.error(error);
-      }
+    try {
+      const users = await this.prisma.user.findMany();
+      console.log("****** PRINTING ALL USERS ******\n", users);
+      return users;
     } catch (error) {
-      console.error('Erreur lors de la suppression des utilisateurs :', error);
+      console.error(error);
     }
+  }
 }

@@ -1,9 +1,38 @@
 import React, { createContext, useState, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { backRequest, backResInterface, getUser } from '../api/queries';
+import { useEffect } from 'react';
 
-const UserContext = createContext(null);
+// const UserContext = createContext(null);
+
+const UserContext = createContext<{
+  user: backResInterface | null;
+  setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
+} | null>(null);
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<backResInterface | null>(null);
+
+  const { data: userData, isLoading, isError } = useQuery({
+    queryKey: ['getUser'],
+    queryFn: () => backRequest('users/profil', 'GET'),
+  });
+  console.log("🚀 ~ file: UserContext.tsx:15 ~ UserProvider ~ userData:", userData)
+
+  useEffect(() => {
+    if (
+      userData &&
+      userData.data &&
+      userData.data.pseudo !== user?.pseudo &&
+      userData.data.avatar !== user?.avatar
+    ) {
+      setUser({
+        pseudo: userData.data.pseudo,
+        avatar: userData.data.avatar,
+        isF2Active: userData.data.isF2Active,
+      });
+    }
+  }, [userData, setUser, user]);
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
