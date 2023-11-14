@@ -1,8 +1,9 @@
 import { backResInterface } from './../shared/shared.interface';
-import { IsBoolean } from 'class-validator';
+import { IsBoolean, validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CheckPseudoDto } from './dto/user.dto';
 
 interface userUpdate {
   pseudo: string;
@@ -68,21 +69,30 @@ export class UserService {
     }
   }
 
-  async checkPseudo(userPseudo: string) : Promise<backResInterface> {
+  /* reminder :
+     here we are declaring an objet and me mandatory tell ts that its type is CheckPseudoDto
+     const pseudoDto : CheckPseudoDto = {pseudo : inputPseudo};
+     here we are declaring an instant thus validate will work on it
+     let pseudoDto = new CheckPseudoDto
+  */
+  async checkPseudo(inputPseudo: string) : Promise<backResInterface> {
     try {
+      const pseudoDto = new CheckPseudoDto;
+      pseudoDto.pseudo = inputPseudo;
+      const  errors = await validate(pseudoDto);
+
+      if (errors.length > 0)
+          return {isOk: false, message: Object.values(errors[0].constraints)[0]};
       const user = await this.prisma.user.findFirst({
         where: {
-          pseudo: userPseudo,
+          pseudo: pseudoDto.pseudo,
         },
-      })
-      if (user) {
-        return {isOk: false,}
-      }
-      return  { isOk: true,}
-      //return true
+      });
+      return user ? {isOk: false, message: "credential is taken"}
+                  : {isOk: true}
     } catch(error) {
       console.log("Error user service: ", error);
-      throw error;
+      return {isOk: false, message: error.message};
     }
   }
 

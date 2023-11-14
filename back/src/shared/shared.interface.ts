@@ -8,6 +8,7 @@ export interface User {
 export interface backResInterface {
 	pseudo?: string;
 	isOk?: boolean;
+	message?: string;
 	avatar?: any;
 	isF2Active?: boolean;
 	friends?: string[];

@@ -1,5 +1,5 @@
 import { backResInterface } from './../shared/shared.interface';
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 import { User } from '@prisma/client';
@@ -25,10 +25,7 @@ export class UserController {
     return this.userService.getUsers();
   }
 
-  @Get('/checkpseudo/:pseudo')
-  // async checkpseudo(@Param('pseudo') pseudo: string) {
-  //   return this.userService.checkPseudo(pseudo)
-  // }
+  @Put('/checkpseudo')
   async checkpseudo(@Body() body: backResInterface) {
     return this.userService.checkPseudo(body.pseudo)
   }
