@@ -26,6 +26,9 @@ function Chat() {
     }, [channelUser]);
 
 
+    console.log("CHANNELS: ", channels);
+    console.log("USERS: ", users)
+
     return (
         <div className="drawer drawer-end flex flex-col-reverse h-full items-end border border-2">
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
@@ -35,13 +38,13 @@ function Chat() {
             <div className="drawer-side mt-16 flex flex-row-reverse items-end">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-60 min-h-full bg-base-200 text-base-content">
-                    {users.map((user) => (
+                    {users.map((user, index) => (
                         <li key={user.pseudo}><button className="btn btn-ghost font-display text-orangeNG" onClick={() => setSelectedUser(user)}>{user.pseudo}</button></li>
                     ))}
                 </ul>
                 <div className="mb-32 flex flex-row-reverse">
-                    {channels.map((userChannel) => (
-                        userChannel && (
+                    {channels.map((userChannel, index) => (
+                        userChannel && ( index => console.log(index)) (
                             <div key={userChannel.pseudo} className="px-5">
                                 <WindowChat user={userChannel}/>
                             </div>
