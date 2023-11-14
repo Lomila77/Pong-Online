@@ -68,6 +68,27 @@ export async function getUsers() {
   }
 }
 
+export async function getMe() {
+  try {
+    const response = await fetch(
+        'http://localhost:3333/users/me', {
+          credentials: 'include',
+          method: 'GET',
+        }
+    );
+    if (!response.ok) {
+      throw new Error('Échec de la requête');
+    }
+    const data: User = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error(
+        "Une erreur s'est produite lors de la récupération des données : " +
+        error.message
+    );
+  }
+}
+
 export async function backRequestTest(url: string, method: string, params?: any) {
   try {
     const reqOptions: RequestInit = {
