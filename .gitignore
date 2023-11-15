@@ -4,3 +4,5 @@
 #NODE_MODULES
 node_modules
 
+/back/prisma/migrations/migration_lock.toml
+/back/prisma/migrations/20231115125845_new_migration/migration.sql
