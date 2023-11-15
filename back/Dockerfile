@@ -29,7 +29,7 @@ COPY ./tsconfig.json .
 COPY prisma ./prisma/
 
 RUN npm install
-RUN npm install -g prisma
+RUN npm install curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash-g prisma class-validator bcrypt
 # RUN prisma generate
 
 COPY . .
