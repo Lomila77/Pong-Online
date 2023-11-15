@@ -4,5 +4,3 @@
 #NODE_MODULES
 node_modules
 
-/back/prisma/migrations/migration_lock.toml
-/back/prisma/migrations/
