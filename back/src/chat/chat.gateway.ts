@@ -7,7 +7,6 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ChatService } from './chat.service';
 import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto, DmMsgSend } from './dto/msg.dto';
@@ -313,14 +312,14 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('CreateDm')
-  async createDm(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
-    const dmchannel = await this.chatService.createDmChannel(this.clients[client.id].fortytwo_userName, data.username)
+  async createDm(@ConnectedSocket() client: Socket, @MessageBody() data: DmMsgSend) {
+    const dmchannel = await this.chatService.createDmChannel(this.clients[client.id].fortytwo_userName, data.target)
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_userName === data.target) {
         this.server.to(key).emit("DM Created", { channelName: this.clients[client.id].fortytwo_userName, id: dmchannel.id })
       }
     }
-    this.server.to(client.id).emit("DM Created", { channelName: data.username, id: dmchannel.id })
+    this.server.to(client.id).emit("DM Created", { channelName: data.target, id: dmchannel.id })
     return;
   }
 
