@@ -7,6 +7,7 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ChatService } from './chat.service';
 import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto, DmMsgSend } from './dto/msg.dto';
@@ -25,9 +26,9 @@ export interface User {
 @UsePipes(new ValidationPipe())
 @WebSocketGateway({
   cors: {
-    origin: `${process.env.SOCKET_URL}`,
+    origin: `${process.env.BACK_URL}`,
   },
-  namespace: 'chat',
+  // namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -117,7 +118,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (ret === 0 || ret === 5) {
       client.join(data.chatId.toString());
       if (ret !== 5)
-        client.to(data.chatId.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, status: user.status, avatarUrl: user.avatar })
+        client.to(data.chatId.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
       this.server.to(client.id).emit("Joined", { chatId: data.chatId });
     }
     else if (ret == 1)
