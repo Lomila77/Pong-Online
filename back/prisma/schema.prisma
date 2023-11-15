@@ -28,7 +28,7 @@ model User {
   connected Boolean  @default(false)
 
   messages      Message[]
-  ownerId       Int
+  ownerId       Int?
   owner         User?         @relation("Ownership", fields: [ownerId], references: [fortytwo_id])
   ownedUsers    User[]        @relation("Ownership")
   admins        Channel[]     @relation("admins")
