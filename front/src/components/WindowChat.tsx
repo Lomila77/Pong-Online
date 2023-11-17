@@ -1,6 +1,6 @@
 // @ts-ignore
 import React, {useEffect, useState} from "react";
-import {getMe} from "../api/queries";
+import {getMe, getMessage} from "../api/queries";
 import Message from "./Message";
 import {io} from "socket.io-client";
 import Send from "../images/send.svg"
@@ -9,16 +9,30 @@ function WindowChat({user, destroyChannel}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
+
+    const [channelId, setChannelId] = useState(0);
     const [me, setMe] = useState(null);
     const socket= io('http://localhost:5173');
+    const [isChecked, setIsChecked] = useState(false);
+
+    socket.emit('CreateDm', socket, {target: user.fortytwo_userName, msg: message});
+
+    const handleCheckboxChange = () => {
+        setIsChecked(!isChecked);
+    };
+
 
     useEffect(() => {
         getMe().then(data => setMe(data))
     }, []);
 
     useEffect(() => {
-        socket.on('message', (msg) => {
-            setMessages([...messages, msg]);
+        socket.on('update', (data) => {
+            console.log("coucou");
+            if (data === 'chan updated') {
+                getMessage().then(data =>
+                    setMessages([...messages, data]))
+            }
         });
         scrollToBottom();
 
@@ -30,7 +44,7 @@ function WindowChat({user, destroyChannel}) {
     const sendMessage= () => {
         if (!message)
             return;
-        socket.emit('message', message);
+        socket.emit('sendMsgtoC', {msg: message}, socket)
         setMessages([...messages, message]);
         setMyMessages([...myMessages, message]);
         setMessage('');
@@ -50,8 +64,8 @@ function WindowChat({user, destroyChannel}) {
     if (!user)
         return null;
     return (
-        <div className="collapse bg-base-200 px-5 w-80 bottom-0">
-            <input type="checkbox" className="h-4"/>
+        <div className={`collapse bg-base-200 px-5 w-80 bottom-0 window-chat ${isChecked ? 'checked' : ''}`}>
+            <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
             <div className="collapse-title text-orangeNG font-display">
                 {user.pseudo}
             </div>

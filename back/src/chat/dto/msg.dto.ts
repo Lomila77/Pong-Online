@@ -13,12 +13,8 @@ export class ChannelMessageSendDto {
 
 export class DmMsgSend {
 	@IsNotEmpty()
-	@IsEmail()
+	@IsString()
 	public target: string = "";
-
-	@IsNotEmpty()
-	@IsEmail()
-	public mail: string = "";
 
 	@IsNotEmpty()
 	@IsString()

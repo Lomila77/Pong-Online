@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
 import {getUsers} from "../api/queries";
+import Messagerie from "../images/chat.svg";
 
 function Chat() {
     const [users, setUsers] = useState([]);
@@ -27,20 +28,24 @@ function Chat() {
             setDestroyChannel(-1);
         }}, [destroyChannel]);
 
-    console.log("CHANNELS: ", channels);
-    console.log("USERS: ", users)
-
     return (
-        <div className="drawer drawer-end flex flex-col-reverse h-full items-end border border-2">
+        <div className="drawer drawer-end flex flex-col-reverse h-full items-end">
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
             <div className="drawer-content">
-                <label htmlFor="my-drawer-4" className="drawer-button btn btn-circle m-5 text-orangeNG text-xs font-display p-7">chat</label>
+                <label htmlFor="my-drawer-4"
+                       className="drawer-button btn btn-circle m-5 text-orangeNG text-xs font-display p-7 justify-center">
+                    <img src={Messagerie} alt={"chat"}/>
+                </label>
             </div>
             <div className="drawer-side mt-16 flex flex-row-reverse items-end">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-60 min-h-full bg-base-200 text-base-content">
                     {users.map((user, index) => (
-                        <li key={index}><button className="btn btn-ghost font-display text-orangeNG" onClick={() => setSelectedUser(user)}>{user.pseudo}</button></li>
+                        <li key={index}>
+                            <button className="btn btn-ghost font-display text-orangeNG"
+                                    onClick={() => setSelectedUser(user)}>{user.pseudo}
+                            </button>
+                        </li>
                     ))}
                 </ul>
                 <div className="mb-32 flex flex-row-reverse">
@@ -50,7 +55,6 @@ function Chat() {
                             </div>
                         )
                     )}
-
                 </div>
             </div>
         </div>
