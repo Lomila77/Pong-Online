@@ -10,12 +10,10 @@ function WindowChat({user, destroyChannel}) {
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
 
+    const socket= io('http://localhost:5173');
     const [channelId, setChannelId] = useState(0);
     const [me, setMe] = useState(null);
-    const socket= io('http://localhost:5173');
     const [isChecked, setIsChecked] = useState(false);
-
-    socket.emit('CreateDm', socket, {target: user.fortytwo_userName, msg: message});
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
@@ -27,19 +25,21 @@ function WindowChat({user, destroyChannel}) {
     }, []);
 
     useEffect(() => {
-        socket.on('update', (data) => {
-            console.log("coucou");
-            if (data === 'chan updated') {
-                getMessage().then(data =>
-                    setMessages([...messages, data]))
-            }
-        });
+        socket.on('connect', () => {
+            socket.emit('CreateDm', {target: user.fortytwo_userName, msg: message});
+            socket.on('update', (data) => {
+                console.log("coucou");
+                if (data === 'chan updated') {
+                    getMessage().then(data =>
+                        setMessages([...messages, data]))
+                }
+            });
+        })
+
         scrollToBottom();
 
-        return () => {
-            socket.disconnect();
-        }
-    }, [messages]);
+
+    }, []);
 
     const sendMessage= () => {
         if (!message)
