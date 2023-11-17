@@ -7,7 +7,7 @@ import * as passport from 'passport';
 import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
-import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 dotenv.config();
 // configurePassport(passport);
@@ -55,7 +55,7 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(cookieParser());
-  app.useWebSocketAdapter(new WsAdapter(app));
+  app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
 }
 bootstrap();
