@@ -5,30 +5,23 @@ import Message from "./Message";
 import {io} from "socket.io-client";
 import Send from "../images/send.svg"
 
-function WindowChat({user, destroyChannel}) {
+function WindowChat({user, me, destroyChannel}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
+
     const [message, setMessage] = useState('');
 
-    const socket= io('http://localhost:5173');
-    const [channelId, setChannelId] = useState(0);
-    const [me, setMe] = useState(null);
+    const socket= io('http://localhost:3333');
     const [isChecked, setIsChecked] = useState(false);
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
-
-    useEffect(() => {
-        getMe().then(data => setMe(data))
-    }, []);
-
     useEffect(() => {
         socket.on('connect', () => {
             socket.emit('CreateDm', {target: user.fortytwo_userName, msg: message});
             socket.on('update', (data) => {
-                console.log("coucou");
                 if (data === 'chan updated') {
                     getMessage().then(data =>
                         setMessages([...messages, data]))
@@ -78,7 +71,6 @@ function WindowChat({user, destroyChannel}) {
             <div id={"message-container" + user.pseudo} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => (
                     <Message srcMsg={msg}
-                             srcAvatar={isMyMessage(msg) ? me.avatar : user.avatar}
                              srcPseudo={isMyMessage(msg) ? me.pseudo : user.pseudo}
                              myMessage={!!isMyMessage(msg)}
                              key={index}
