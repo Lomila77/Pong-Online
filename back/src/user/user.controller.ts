@@ -49,10 +49,6 @@ export class UserController {
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.userService.delId(id)
   }
-  @Get('/gnr')
-  async generate() {
-    return await this.userService.generateRdn();
-  }
 
   @Get('/clear')
   async clear() {

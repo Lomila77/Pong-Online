@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import WindowChat from "./WindowChat";
-import {getUsers, User} from "../api/queries";
+import {getUsers} from "../api/queries";
 
 function Chat() {
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState();
-    const [channelUser, setChannelUser] = useState([])
     const [channels, setChannels] = useState([]);
-
+    const [destroyChannel, setDestroyChannel] = useState(-1);
 
     useEffect(() => {
         getUsers().then((data) => {
@@ -17,14 +16,19 @@ function Chat() {
     }, []);
 
     useEffect(() => {
-        if (selectedUser && !channelUser.find(user => user.pseudo === selectedUser.pseudo))
-            setChannelUser([...channelUser, selectedUser]);
+        if (selectedUser && !channels.find(user => user.pseudo === selectedUser.pseudo))
+            setChannels([...channels, selectedUser]);
     }, [selectedUser]);
 
     useEffect(() => {
-        setChannels([...channels, selectedUser])
-    }, [channelUser]);
+        if (destroyChannel != -1) {
+            setChannels((prevChannels) =>
+                prevChannels.filter((channel, index) => index !== destroyChannel));
+            setDestroyChannel(-1);
+        }}, [destroyChannel]);
 
+    console.log("CHANNELS: ", channels);
+    console.log("USERS: ", users)
 
     return (
         <div className="drawer drawer-end flex flex-col-reverse h-full items-end border border-2">
@@ -35,18 +39,17 @@ function Chat() {
             <div className="drawer-side mt-16 flex flex-row-reverse items-end">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className="menu p-4 w-60 min-h-full bg-base-200 text-base-content">
-                    {users.map((user) => (
-                        <li key={user.pseudo}><button className="btn btn-ghost font-display text-orangeNG" onClick={() => setSelectedUser(user)}>{user.pseudo}</button></li>
+                    {users.map((user, index) => (
+                        <li key={index}><button className="btn btn-ghost font-display text-orangeNG" onClick={() => setSelectedUser(user)}>{user.pseudo}</button></li>
                     ))}
                 </ul>
                 <div className="mb-32 flex flex-row-reverse">
-                    {channels.map((userChannel) => (
-                        userChannel && (
-                            <div key={userChannel.pseudo} className="px-5">
-                                <WindowChat user={userChannel}/>
+                    {channels.map((userChannel, index) => (
+                            <div key={index} className="px-5">
+                                <WindowChat user={userChannel} destroyChannel={() => setDestroyChannel(index)}/>
                             </div>
                         )
-                    ))}
+                    )}
 
                 </div>
             </div>

@@ -5,7 +5,7 @@ import Message from "./Message";
 import {io} from "socket.io-client";
 import Send from "../images/send.svg"
 
-function WindowChat({user}) {
+function WindowChat({user, destroyChannel}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
@@ -37,7 +37,7 @@ function WindowChat({user}) {
     }
 
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container');
+        const messageContainer = document.getElementById('message-container' + user.pseudo);
 
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
@@ -55,13 +55,20 @@ function WindowChat({user}) {
             <div className="collapse-title text-orangeNG font-display">
                 {user.pseudo}
             </div>
-            <div id="message-container" className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
+            <div className="absolute top-0 right-0">
+                <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
+                        onClick={destroyChannel}>
+                    x
+                </button>
+            </div>
+            <div id={"message-container" + user.pseudo} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => (
                     <Message srcMsg={msg}
                              srcAvatar={isMyMessage(msg) ? me.avatar : user.avatar}
                              srcPseudo={isMyMessage(msg) ? me.pseudo : user.pseudo}
                              myMessage={!!isMyMessage(msg)}
-                             key={index}/>
+                             key={index}
+                    />
                 ))}
             </div>
             <div className="flex flex-row justify-between py-4">
@@ -70,7 +77,7 @@ function WindowChat({user}) {
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)} />
-                <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 justify-center content-center"
+                <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
                         onClick={sendMessage}><
                     img src={Send} alt="Send"/>
                 </button>
