@@ -154,12 +154,13 @@ export async function backRequest(url: string, method: string, params?: frontReq
       body: params ? JSON.stringify(params) : undefined
     };
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
-
-    return response.ok ? await response.json() : {}
+    console.log("response of url ", url ," : ", response);
+    return response.ok ? await response.json() : {isOk:false, message:response.status}
   }
   catch (error) {
     console.log(error);
-    throw error;
+    return {isOk: false, message: error}
+    // throw error;
   }
 }
 

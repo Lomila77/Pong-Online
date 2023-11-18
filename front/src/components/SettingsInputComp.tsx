@@ -36,9 +36,12 @@ const SettingsInput: React.FC<SettingsInputProps> = (props) => {
   };
 
   useEffect(() => {
-	console.log("checking validity for userImput", userInput)
-	backRequest("users/checkpseudo", "PUT", { pseudo: userInput }).then(ret => setInputValidity(
-		{isValid: ret.isOk, message: ret.message}));
+  if (userInput && userInput != user?.pseudo) {
+	  // console.log("checking validity for userImput", userInput)
+	  // console.log("checking validity for userImput", user?.pseudo)
+	  backRequest("users/checkpseudo", "PUT", { pseudo: userInput }).then(ret => setInputValidity(
+	  {isValid: ret.isOk, message: ret.message}));
+  }
   }, [userInput]);
 
   return (
@@ -52,7 +55,7 @@ const SettingsInput: React.FC<SettingsInputProps> = (props) => {
         minLength={3} maxLength={15}
         pattern={"[A-Za-z]+"}
       />
-      {userInput !== '' && userInput !== undefined && inputValidity !== undefined && (
+      {userInput !== undefined && inputValidity !== undefined && userInput !== '' && (
         <span
           style={{
             color: inputValidity.isValid ? 'green' : 'red',

@@ -15,6 +15,7 @@ import { JwtGuard } from './guard';
 import { User } from '@prisma/client';
 import { SessionAuthGuard } from './guard/session.guard';
 import { Request, Response } from 'express';
+import { frontReqInterface } from 'src/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -33,30 +34,35 @@ export class AuthController {
     if (ret) {
       res.redirect(process.env.FRONT_HOME + '/settingslock');
     } else {
-      res.redirect(process.env.FRONT_HOME);
+      res.redirect(process.env.FRONT_HOME + '/login');
     }
   }
 
-  @Post('update')
+  @Post('settingslock')
   @UseGuards(SessionAuthGuard)
-  @UseGuards(JwtGuard)
-  async changeSettings(
-    @Req() req: Request,
-    @Body() dto: AuthDto,
+  async settingslock(
+    @Body() frontReq: frontReqInterface,
     @GetUser() user: User,
+    @Res() res: Response,
   ) {
-    return await this.authService.postSettings(user, dto);
+    try {
+      res.status(200).send(await this.authService.postAuthSettings(user, frontReq, res ));
+    }
+    catch (error) {
+      return {message: "error"}
+    }
   }
+
+  @Get('checkJwt')
+  async checkJwt() {
+    return true;
+  }
+
 
   @Post('logout')
-  logout(@Req() req, @Res() res, @GetUser() user: User): any {
+  @UseGuards(JwtGuard)
+  logout(@Req() req:Request, @Res() res:Response, @GetUser() user: User): any {
     this.authService.logout(req, res, user);
-  }
-
-  @Get('logouttest')
-  @UseGuards(SessionAuthGuard)
-  logouttest() {
-    return 'if this is written the test passed';
   }
 
   // element here for debug need to delete in before correction
@@ -82,14 +88,4 @@ export class AuthController {
   verify(@GetUser() user: User, code: string) {
     return this.authService.verify(user, code);
   }
-
-  // @Post('signup')
-  // signup(@Body() dto: AuthDto) {
-  //   return this.authService.signup(dto);
-  // }
-
-  // @Post('signin')
-  // signin(@Body() dto: AuthDto) {
-  //   return this.authService.signin(dto);
-  // }
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import SettingComp from '../components/SettingComp';
 
 function Settings() {

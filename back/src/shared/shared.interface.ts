@@ -5,6 +5,13 @@ export interface User {
 	friends?: string[];
   }
 
+
+export interface frontReqInterface {
+	pseudo?: string;
+	avatar?: any;
+	isF2Active?: boolean;
+}
+
 export interface backResInterface {
 	pseudo?: string;
 	isOk?: boolean;

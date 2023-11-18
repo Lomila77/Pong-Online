@@ -1,15 +1,15 @@
-import { backResInterface } from './../shared/shared.interface';
+import { backResInterface, frontReqInterface } from './../shared/shared.interface';
 import { IsBoolean, validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CheckPseudoDto } from './dto/user.dto';
 
-interface userUpdate {
-  pseudo: string;
-  avatar: string;
-  isF2Active: boolean;
-}
+// interface userUpdate {
+//   pseudo: string;
+//   avatar: string;
+//   isF2Active: boolean;
+// }
 
 @Injectable()
 export class UserService {
@@ -44,8 +44,10 @@ export class UserService {
     }
   }
 
-  async updateUser(userId: number, update: userUpdate) {
+  async updateUser(userId: number, update: frontReqInterface) :Promise<backResInterface>{
     try {
+      // if ((await this.checkPseudo(update.pseudo)).isOk)
+      //   return {isOk: false}
       const user = await this.prisma.user.update({
         where: {
           fortytwo_id: userId,
@@ -57,15 +59,14 @@ export class UserService {
         }
       })
       return {
-        data: {
           pseudo: user.pseudo,
           avatar: user.avatar,
           isF2Active: user.isF2Active,
-        },
+          isOk: true
       }
     } catch (error){
       console.log("Error user service: ", error);
-      throw error;
+      throw new error;
     }
   }
 
@@ -79,7 +80,7 @@ export class UserService {
     try {
       const pseudoDto = new CheckPseudoDto;
       pseudoDto.pseudo = inputPseudo;
-      const  errors = await validate(pseudoDto);
+      const errors = await validate(pseudoDto);
 
       if (errors.length > 0)
           return {isOk: false, message: Object.values(errors[0].constraints)[0]};

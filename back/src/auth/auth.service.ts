@@ -9,6 +9,7 @@ import * as qrcode from 'qrcode';
 import { Request, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 import { HttpStatus } from '@nestjs/common';
+import { backResInterface, frontReqInterface } from 'src/shared';
 
 @Injectable({})
 export class AuthService {
@@ -25,14 +26,9 @@ export class AuthService {
       await this.signup(incommingUser);
     } else if (prismaRet.pseudo !== '') {
       await this.user.toggleConnectionStatus(incommingUser.id, true);
+      await this.handleCookies(incommingUser.id, res);
       firstConnection = false;
     }
-    const token = await this.signToken(
-      incommingUser.id,
-      incommingUser.email,
-      firstConnection,
-    );
-    res.cookie('jwtToken', token.access_token);
     return firstConnection;
   }
 
@@ -66,27 +62,18 @@ export class AuthService {
     }
   }
 
-  async signToken(
-    userId: number,
-    email: string,
-    firstConnection: boolean,
-  ): Promise<{ access_token: string } | null> {
-    let validityTime: string;
-    switch (firstConnection) {
-      case true:
-        validityTime = '5m';
-        break;
-      case false:
-        validityTime = '120m';
-        break;
-    }
+  private async handleCookies(id: number, res: Response){
+    const token = await this.signToken(id);
+    res.cookie('jwtToken', token.access_token);
+  }
+
+  private async signToken(userId: number): Promise<{ access_token: string } | null> {
     const data = {
       sub: userId,
-      email: email,
     };
     const secret = process.env.JWT_SECRET;
     const token = await this.jwt.signAsync(data, {
-      expiresIn: validityTime,
+      expiresIn: '120m',
       secret: secret,
     });
     return { access_token: token };
@@ -104,23 +91,29 @@ export class AuthService {
       });
     }
     res.clearCookie(process.env.COOKIES_NAME);
-    req.logout((err) => {
+    req.session.destroy((err) => {
       if (err) {
-        return res.status(500).send('Logout error');
+        return res.status(500).json({isOk: false, message: 'error during logout' });
       } else {
-        res.status(200).json({ success: true, messge: 'Deconnected' });
+        console.log("user: ", user.pseudo, "successfully disconnected")
+        return res.status(200).json({ isOk: true, message: 'disconnected' });
       }
     });
   }
 
-  async postSettings(user: User, dto: AuthDto) {
-    const updatedUser = await this.user.updateUser(user.fortytwo_id, dto);
-    console.log('authService : updated User is now : ', updatedUser);
-    return {
-      status: HttpStatus.OK,
-      message: 'Resource successfully updated',
-      user: updatedUser,
-    };
+  async postAuthSettings(user: User, frontReq: frontReqInterface, res: Response) : Promise<backResInterface>{
+    try {
+      if (user && !user.pseudo) {
+        const updatedUser = await this.user.updateUser(user.fortytwo_id, frontReq);
+        await this.handleCookies(user.fortytwo_id, res)
+        await this.user.toggleConnectionStatus(user.fortytwo_id, true);
+        return updatedUser;
+      }
+      return {isOk: false};
+    } catch (error) {
+
+      return { isOk: false, message: error}
+    }
   }
 
   twoFA(user: User) {
@@ -142,56 +135,6 @@ export class AuthService {
     });
   }
 }
-
-// async postPseudo(dto: AuthDto) {
-//   try {
-//     const user = await this.prisma.user.create({
-//       data: {
-//         pseudo: dto.pseudo,
-//         isF2Active: dto.isF2Active,
-//         avatar: dto.avatar,
-//       },
-//     });
-//     console.log('SUCCESS');
-//     return this.signToken(user.fortytwo_id, user.pseudo);
-//   } catch (error) {
-//     if (error instanceof PrismaClientKnownRequestError) {
-//       if (error.code === 'P2002') {
-//         throw new ForbiddenException('Credentials taken');
-//       }
-//     }
-//     throw error;
-//   }
-// }
-
-//   async signgin(dto: AuthDto) {
-//     const user = await this.prisma.user.findUnique({
-//       where: {
-//         pseudo: dto.pseudo,
-//       },
-//     });
-//     if (!user) throw new ForbiddenException('Credential incorrect');
-//     return this.signToken(user.fortytwo_id, user.pseudo);
-//   }
-
-//   async signToken(
-//     userFortytwo_id: number,
-//     pseudo: string,
-//   ): Promise<{ access_token: string }> {
-//     const payload = {
-//       sub: userFortytwo_id,
-//       pseudo,
-//     };
-//     const secret = this.config.get('JWT_SECRET');
-//     const token = await this.jwt.signAsync(payload, {
-//       expiresIn: '15m',
-//       secret: secret,
-//     });
-//     return {
-//       access_token: token,
-//     };
-//   }
-// }
 
 /* reminder : stastus code error
 200 OK : Indique que la requête a été traitée avec succès.

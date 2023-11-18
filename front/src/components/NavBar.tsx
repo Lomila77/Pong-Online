@@ -4,10 +4,12 @@ import { backRequest, getUser } from '../api/queries';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '../context/UserContext';
 import { useEffect } from 'react';
+import Cookies from 'js-cookie';
+
 
 function NavBar() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
 
   const goToPage = async (path: string) => {
     const elem = document.activeElement as HTMLElement;
@@ -15,15 +17,25 @@ function NavBar() {
     if (elem) {
       elem?.blur();
     }
-    if (path === '/login') {
-      try {
-        await backRequest('auth/logout', 'POST');
-      } catch (error) {
-        console.log('error in navBar: ', error);
-      }
-    }
     navigate(path);
   };
+
+  const handlelogout = async () => {
+    const ret = await backRequest('auth/logout', 'POST');
+
+    if (ret.isOk) {
+      Cookies.remove("jwtToken");
+      setUser(null);
+    } else {
+      console.log('error in navBar: ', ret.message);
+    }
+  }
+  useEffect(() => {
+      if (!user) {
+      // console.log("\n\n\n\n user null found: ", user)
+        navigate('login');
+      }
+  }, [user])
 
   return (
     <div className="navbar h-70 bg-gradient-to-b from-navbar to-white">
@@ -105,7 +117,7 @@ function NavBar() {
             <li>
               <button
                 className="font-display text-orangeNG hover:text-orangeNG"
-                onClick={() => goToPage('/login')}
+                onClick={() => handlelogout()}
               >
                 Logout
               </button>
