@@ -25,9 +25,9 @@ export interface User {
 @UsePipes(new ValidationPipe())
 @WebSocketGateway({
   cors: {
-    origin: `${process.env.BACK_URL}`,
+    origin: true,
   },
-  // namespace: 'chat',
+  namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
