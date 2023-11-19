@@ -4,6 +4,7 @@ import {getMe} from "../api/queries";
 import Message from "./Message";
 import {io} from "socket.io-client";
 import Send from "../images/send.svg"
+import Cookies from "js-cookie";
 
 function WindowChat({user, destroyChannel}) {
     const [messages, setMessages] = useState([]);
