@@ -10,8 +10,12 @@ function WindowChat({user, destroyChannel}) {
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [me, setMe] = useState(null);
-    const socket= io('http://localhost:5173');
-
+    const token = Cookies.get('jwtToken');
+    const socket = io('http://localhost:3333/chat', {
+        auth: {
+            token: token
+        }
+    });
     useEffect(() => {
         getMe().then(data => setMe(data))
     }, []);
