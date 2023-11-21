@@ -163,6 +163,7 @@ export interface backResInterface {
   isF2Active?: boolean;
   friends?: string[];
   allUser?: User[]
+  channels?: string[];
 }
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{

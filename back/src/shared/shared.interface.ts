@@ -19,5 +19,6 @@ export interface backResInterface {
 	avatar?: any;
 	isF2Active?: boolean;
 	friends?: string[];
-	allUser?: User[]
+	allUser?: User[];
+	channels?: string[];
   }
