@@ -27,6 +27,8 @@ import { PrismaClient, User } from "@prisma/client";
 import { channel } from "diagnostics_channel";
 import { QuitChanDto } from "./dto/edit-chat.dto"
 import { Response } from "express";
+import { JwtGuard } from '../auth/guard';
+import { GetUser } from '../auth/decorator';
 
 @Controller("chat")
 export class ChatController {
@@ -145,9 +147,10 @@ export class ChatController {
 		return (listUsers);
 	}
 	
-	@Get('/friends/:id')
-	async getUserFriends(@Param('id') id: string) {
-		const friends = await this.chat_service.getUserFriends(parseInt(id));
+	@Get('/friends/')
+	@UseGuards(JwtGuard)
+	async getUserFriends(@GetUser() user: User) {
+		const friends = await this.chat_service.getUserFriends(user.fortytwo_id);
 		return friends;
 	}
 }
