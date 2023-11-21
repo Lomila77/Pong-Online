@@ -16,6 +16,7 @@ import { PrismaClient } from '@prisma/client';
 import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edit-chat.dto"
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
+import * as jwt from 'jsonwebtoken';
 
 export interface User {
   id: number;
@@ -24,10 +25,8 @@ export interface User {
 }
 @UsePipes(new ValidationPipe())
 @WebSocketGateway({
-  cors: {
-    origin: `${process.env.BACK_URL}`,
-  },
-  // namespace: 'chat',
+  cors: true,
+  namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -38,25 +37,41 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly chatService: ChatService,
     private readonly prisma: PrismaClient,
     private readonly userService: UserService,
-  ) {
-    this.server = new Server();
-  }
+  ) { }
 
 
 
   async handleConnection(client: Socket): Promise<any> {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: {
-          fortytwo_id: client.handshake.auth.token,
-        },
-        select: {
-          fortytwo_id: true,
-          fortytwo_userName: true,
-          fortytwo_email: true,
-        }
-      })
-      this.clients[client.id] = user;
+      const token = client.handshake.auth.token;
+      if (!token) {
+        console.log('Token is missing');
+        client.disconnect();
+        return;
+      }
+
+      // Décoder le token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      if (typeof decoded === 'object' && 'sub' in decoded) {
+        const userId = decoded.sub;
+
+        const user = await this.prisma.user.findUnique({
+          where: {
+            fortytwo_id: Number(userId),
+          },
+          select: {
+            fortytwo_id: true,
+            fortytwo_userName: true,
+            fortytwo_email: true,
+          }
+        })
+        this.clients[client.id] = user;
+      } else {
+        console.log('Invalid token');
+        client.disconnect();
+        return;
+      }
     }
     catch (e) {
       console.log(e);
@@ -67,8 +82,9 @@ export class ChatGateway implements OnGatewayConnection {
 
 
   handleDisconnect(client: Socket) {
-    // console.log("Disconnect")
+    console.log("Disconnect")
     delete this.clients[client.id];
+    client.disconnect();
   }
 
   @SubscribeMessage('create channel')
@@ -140,7 +156,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (this.clients[client.id] === undefined)
       return;
     const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
-    const userIsInChan = await this.chatService.userIsInChan(user.refresh_token, data);
+    const userIsInChan = await this.chatService.userIsInChan(String(user.fortytwo_id), data);
     if (userIsInChan)
       client.join(data.toString());
     else {
@@ -313,10 +329,12 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('CreateDm')
   async createDm(@ConnectedSocket() client: Socket, @MessageBody() data: DmMsgSend) {
+    console.log("CreateDm");
     const dmchannel = await this.chatService.createDmChannel(this.clients[client.id].fortytwo_userName, data.target)
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_userName === data.target) {
         this.server.to(key).emit("DM Created", { channelName: this.clients[client.id].fortytwo_userName, id: dmchannel.id })
+        console.log("DM Created");
       }
     }
     this.server.to(client.id).emit("DM Created", { channelName: data.target, id: dmchannel.id })

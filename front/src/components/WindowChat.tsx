@@ -1,18 +1,22 @@
 // @ts-ignore
-import React, {useEffect, useState} from "react";
-import {getMe, getMessage} from "../api/queries";
+import React, { useEffect, useState } from "react";
+import { getMe, getMessage } from "../api/queries";
 import Message from "./Message";
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 import Send from "../images/send.svg"
+import Cookies from "js-cookie";
 
 function WindowChat({user, me, destroyChannel}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
-
     const [message, setMessage] = useState('');
-
-    const socket= io('http://localhost:3333');
+    const token = Cookies.get('jwtToken');
     const [isChecked, setIsChecked] = useState(false);
+    const socket = io('http://localhost:3333/chat', {
+        auth: {
+            token: token
+        }
+    });
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
@@ -31,13 +35,15 @@ function WindowChat({user, me, destroyChannel}) {
 
         scrollToBottom();
 
+        return () => {
+            socket.disconnect();
+        }
+    }, [messages]);
 
-    }, []);
-
-    const sendMessage= () => {
+    const sendMessage = () => {
         if (!message)
             return;
-        socket.emit('sendMsgtoC', {msg: message}, socket)
+        socket.emit('message', message);
         setMessages([...messages, message]);
         setMyMessages([...myMessages, message]);
         setMessage('');
@@ -52,7 +58,7 @@ function WindowChat({user, me, destroyChannel}) {
     };
 
     const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => {return myMsg === msg});
+        return myMessages.find(myMsg => { return myMsg === msg });
     }
     if (!user)
         return null;
@@ -78,14 +84,14 @@ function WindowChat({user, me, destroyChannel}) {
                 ))}
             </div>
             <div className="flex flex-row justify-between py-4">
-                <input  className="input input-bordered input-sm max-w-xs w-60"
-                        placeholder="Tapez votre message..."
-                        type="text"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)} />
+                <input className="input input-bordered input-sm max-w-xs w-60"
+                    placeholder="Tapez votre message..."
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        onClick={sendMessage}><
-                    img src={Send} alt="Send"/>
+                    onClick={sendMessage}><
+                        img src={Send} alt="Send" />
                 </button>
             </div>
         </div>
