@@ -1,3 +1,4 @@
+import React from "react";
 import LeaderComp from '../components/LeaderComp';
 
 function Leaderboard() {

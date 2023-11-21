@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import Buildings from '../images/BUILDINGCLOUDS.png'
 import { useUser } from '../context/UserContext'
 import { useNavigate } from 'react-router-dom'
@@ -8,10 +9,10 @@ function Home() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   if (!user)
-  //     navigate("/login");
-  // }, [user]);
+  useEffect(() => {
+    if (!user)
+      navigate("/login");
+  }, [user]);
 
   const renderFire = (
     <>

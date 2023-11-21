@@ -8,8 +8,9 @@ import { useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-import { createUser } from '../api/queries';
+import { backRequest } from '../api/queries';
 import { useUser } from '../context/UserContext';
+import SettingsInput from './SettingsInputComp';
 
 const MAX_FILE_SIZE: number = 4 * 1024 * 1024; // 4 Mo
 let fileSize: number = 0;
@@ -18,7 +19,7 @@ let fileTest1: any;
 const SettingComp: React.FC = () => {
   const hiddenFileInput = useRef(null);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const location = useLocation();
   const [settingsLock, setSettingsLock] = useState(false);
 
@@ -91,11 +92,19 @@ const SettingComp: React.FC = () => {
       data.avatar = user?.avatar
     else
       data.avatar = file;
-    createUser({ ...data });
-    console.log(data);
-    if (settingsLock)
+    const backRes = settingsLock ? await backRequest("auth/settingslock", "POST", {...data})
+                                 : await backRequest("users/update", "POST", {...data})
+    if((backRes?.isOk)){
+      setUser((prevUser) => ({
+        ...prevUser,
+        pseudo: backRes.pseudo,
+        avatar: backRes.avatar,
+        isF2Active: backRes.isF2Active
+      }));
       navigate('/');
+    }
   };
+
   return (
     <div className="card-side card-bordered border-4 border-white bg-[#fbfaf3] shadow-xl p-12">
       <span className="font-display text-orangeNG text-3xl">
@@ -133,22 +142,7 @@ const SettingComp: React.FC = () => {
               ></input>
             </div>
             <div className="basis-1/2">
-              <input
-                type="text"
-                placeholder={settingsLock ? "Nom d'utilisateur" : user?.pseudo}
-                className="input input-bordered w-full mt-6"
-                {...register('pseudo')}
-              />
-              {errors.pseudo && (
-                <span
-                  style={{
-                    color: '#db7706',
-                    fontSize: '13px',
-                  }}
-                >
-                  {errors.pseudo.message}
-                </span>
-              )}
+              <SettingsInput settingsLock={settingsLock} register={register} errors={errors} />
               <hr className="border-neutral-500 mt-5" />
               <div className="form-control mt-3">
                 <label className="label cursor-pointer">
@@ -158,6 +152,7 @@ const SettingComp: React.FC = () => {
                   <input
                     type="checkbox"
                     className="toggle toggle-secondary"
+                    defaultChecked={user?.isF2Active? true : false}
                     {...register('isF2Active')}
                   />
                 </label>

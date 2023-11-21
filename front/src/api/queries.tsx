@@ -144,7 +144,7 @@ export async function backRequestTest(url: string, method: string, params?: any)
       - la reponse du back devrait etre un backResInterface comme dans l'exemple
       - mais il est egalement possible de faire : const result: { pseudo: string, autre: string } = await backRequest(..., ..., ...);
       - en fonction du endpoint emprunte, les champs peuvent etre undefined
-      
+
     * erreur :
       - si error, check terminal
 **************************************************************************** */
@@ -158,13 +158,14 @@ export interface frontReqInterface {
 export interface backResInterface {
   pseudo?: string;
   isOk?: boolean;
+  message?: string;
   avatar?: any;
   isF2Active?: boolean;
   friends?: string[];
   allUser?: User[]
 }
 
-export async function backRequest(url: string, method: string, params?: frontReqInterface) {
+export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
   try {
     const reqOptions: RequestInit = {
       method,
@@ -175,11 +176,13 @@ export async function backRequest(url: string, method: string, params?: frontReq
       body: params ? JSON.stringify(params) : undefined
     };
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
-
-    return response.ok ? await response.json() : {}
+    console.log("response of url ", url ," : ", response);
+    return response.ok ? await response.json() : {isOk:false, message:response.status}
   }
   catch (error) {
     console.log(error);
+    return {isOk: false, message: error}
+    // throw error;
   }
 }
 
