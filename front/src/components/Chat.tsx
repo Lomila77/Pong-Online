@@ -10,6 +10,13 @@ import {backRequest, getUsers} from "../api/queries";
 import Cookies from "js-cookie";
 
 function Chat() {
+    const token = Cookies.get('jwtToken');
+    const socket = io('http://localhost:3333/chat', {
+        auth: {
+            token: token
+        }
+    });
+
     const {user, setUser} = useUser();
     const [selectedUser, setSelectedUser] = useState('');
     const [friends, setFriends] = useState([]);
@@ -20,17 +27,12 @@ function Chat() {
     }, []);
     const [channels, setChannels] = useState([]);
     useEffect(() => {
-        backRequest('/chat/channels', 'GET').then((data) => {
+        backRequest('chat/channels', 'GET').then((data) => {
             setChannels(data.channels);
         })
     }, []);
 
-    const token = Cookies.get('jwtToken');
-    const socket = io('http://localhost:3333/chat', {
-        auth: {
-            token: token
-        }
-    });
+
 
     const [destroyWindowChat, setDestroyWindowChat] = useState(-1);
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);

@@ -153,6 +153,7 @@ export interface frontReqInterface {
   pseudo?: string;
   avatar?: any;
   isF2Active?: boolean;
+  token?: string;
 }
 
 export interface backResInterface {
@@ -161,6 +162,7 @@ export interface backResInterface {
   message?: string;
   avatar?: any;
   isF2Active?: boolean;
+  fortytwo_id?: string;
   friends?: string[];
   allUser?: User[]
   channels?: string[];
