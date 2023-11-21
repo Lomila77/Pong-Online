@@ -144,5 +144,10 @@ export class ChatController {
 		const listUsers = await this.chat_service.getUserToDm(req.headers["authorization"])
 		return (listUsers);
 	}
-
+	
+	@Get('/friends/:id')
+	async getUserFriends(@Param('id') id: string) {
+		const friends = await this.chat_service.getUserFriends(parseInt(id));
+		return friends;
+	}
 }
