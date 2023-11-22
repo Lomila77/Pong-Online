@@ -19,28 +19,36 @@ function Chat() {
 
     const {user, setUser} = useUser();
     const [selectedUser, setSelectedUser] = useState('');
+    const [dm, setDm] = useState([]);
     const [friends, setFriends] = useState([]);
     useEffect(() => {
         backRequest('chat/friends', 'GET').then((data) => {
-            setFriends(data.friends);
+            if (data.friends)
+                setFriends(data.friends);
         })
     }, []);
     const [channels, setChannels] = useState([]);
     useEffect(() => {
         backRequest('chat/channels', 'GET').then((data) => {
-            setChannels(data.channels);
+            if (data.channels)
+                setChannels(data.channels.MyChannels);
         })
     }, []);
-
-
 
     const [destroyWindowChat, setDestroyWindowChat] = useState(-1);
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState(friends);
-
-    console.log("map display: " + drawerContent);
-
+    const [drawerContent, setDrawerContent] = useState([]); // TODO change by friends after tests
+    // ===========================================================
+    const [users, setUsers] = useState([]);
+    useEffect(() => {
+        getUsers().then((data) => {
+            const pseudos = data.map((user) => user.pseudo);
+            setUsers(pseudos);
+            setDrawerContent(pseudos);
+        })
+    }, []);
+    // =============================================================
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true)
     }
@@ -50,19 +58,19 @@ function Chat() {
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "", text: "text-orangeNG"});
         // TODO usercontext channels and friends
-        setDrawerContent(displayChannelDrawer ? channels : friends);
+        setDrawerContent(displayChannelDrawer ? channels : users); // TODO change by friends after tests
     }, [displayChannelDrawer]);
 
 
     useEffect(() => {
-        if (selectedUser && !channels.find(user => user.pseudo === selectedUser))
-            setChannels([...channels, selectedUser]);
+        if (selectedUser && !dm.find(pseudo => pseudo === selectedUser))
+            setDm([...dm, selectedUser]);
     }, [selectedUser]);
 
     useEffect(() => {
         if (destroyWindowChat != -1) {
-            setChannels((prevChannels) =>
-                prevChannels.filter((channel, index) => index !== destroyWindowChat));
+            setDm((prevDm) =>
+                prevDm.filter((dm, index) => index !== destroyWindowChat));
             setDestroyWindowChat(-1);
         }}, [destroyWindowChat]);
 
@@ -85,7 +93,7 @@ function Chat() {
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
-                                    <img src={Play} alt={"play"}/>
+                                    <img src={Play} alt={"play"} className={"w-10"}/>
                                 </button>
                             )}
                         </li>
@@ -100,9 +108,9 @@ function Chat() {
                     </div>
                 </ul>
                 <div className="mb-32 flex flex-row-reverse">
-                    {channels.map((userChannel, index) => (
+                    {dm.map((userDm, index) => (
                             <div key={index} className="px-5">
-                                <WindowChat user={userChannel}
+                                <WindowChat user={userDm}
                                             me={user}
                                             destroyWindowChat={() => setDestroyWindowChat(index)}
                                             socket={socket}/>

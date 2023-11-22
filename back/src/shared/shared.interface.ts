@@ -5,6 +5,11 @@ export interface User {
 	friends?: string[];
   }
 
+export interface Channel {
+	MyDms: string[];
+	MyChannels: string[];
+	ChannelsToJoin: string[];
+}
 
 export interface frontReqInterface {
 	pseudo?: string;
@@ -22,5 +27,5 @@ export interface backResInterface {
 	fortytwo_id?: string;
 	friends?: string[];
 	allUser?: User[];
-	channels?: string[];
+	channels?: Channel;
   }
