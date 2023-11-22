@@ -20,9 +20,11 @@ export const createUser = async (params: any) => {
 };
 
 export interface User {
+  fortytwo_userName: string;
   pseudo: string;
   avatar: any;
   isF2Active: boolean;
+  userChannels: {channelId: number }[];
   friends: string[];
 }
 
@@ -81,6 +83,26 @@ export async function getMe() {
     }
     const data: User = await response.json();
     return data;
+  } catch (error) {
+    throw new Error(
+        "Une erreur s'est produite lors de la récupération des données : " +
+        error.message
+    );
+  }
+}
+
+export async function getMessage() {
+  try {
+    const response = await fetch(
+        'http://localhost:3333/channels/:id/msg', {
+          credentials: 'include',
+          method: 'GET',
+        }
+    );
+    if (!response.ok) {
+      throw new Error('Échec de la requête');
+    }
+    return await response.json();
   } catch (error) {
     throw new Error(
         "Une erreur s'est produite lors de la récupération des données : " +

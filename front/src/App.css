@@ -115,3 +115,12 @@
   margin: 50px 10px 0;
   height: 700px;
 }
+
+.window-chat {
+  transition-property: transform;
+  transition-duration: 0.3s;
+}
+
+.window-chat.checked {
+  transform: translateY(85%);
+}

@@ -1,25 +1,38 @@
 // @ts-ignore
-import React, {useEffect, useState} from "react";
-import {getMe} from "../api/queries";
+import React, { useEffect, useState } from "react";
+import { getMe, getMessage } from "../api/queries";
 import Message from "./Message";
-import {io} from "socket.io-client";
-// import Send from "../images/send.svg"
+import { io } from "socket.io-client";
+import Send from "../images/send.svg"
+import Cookies from "js-cookie";
 
-function WindowChat({user, destroyChannel}) {
+function WindowChat({user, me, destroyChannel}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
-    const [me, setMe] = useState(null);
-    const socket= io('http://localhost:5173');
+    const token = Cookies.get('jwtToken');
+    const [isChecked, setIsChecked] = useState(false);
+    const socket = io('http://localhost:3333/chat', {
+        auth: {
+            token: token
+        }
+    });
+
+    const handleCheckboxChange = () => {
+        setIsChecked(!isChecked);
+    };
 
     useEffect(() => {
-        getMe().then(data => setMe(data))
-    }, []);
+        socket.on('connect', () => {
+            socket.emit('CreateDm', {target: user.fortytwo_userName, msg: message});
+            socket.on('update', (data) => {
+                if (data === 'chan updated') {
+                    getMessage().then(data =>
+                        setMessages([...messages, data]))
+                }
+            });
+        })
 
-    useEffect(() => {
-        socket.on('message', (msg) => {
-            setMessages([...messages, msg]);
-        });
         scrollToBottom();
 
         return () => {
@@ -27,7 +40,7 @@ function WindowChat({user, destroyChannel}) {
         }
     }, [messages]);
 
-    const sendMessage= () => {
+    const sendMessage = () => {
         if (!message)
             return;
         socket.emit('message', message);
@@ -45,13 +58,13 @@ function WindowChat({user, destroyChannel}) {
     };
 
     const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => {return myMsg === msg});
+        return myMessages.find(myMsg => { return myMsg === msg });
     }
     if (!user)
         return null;
     return (
-        <div className="collapse bg-base-200 px-5 w-80 bottom-0">
-            <input type="checkbox" className="h-4"/>
+        <div className={`collapse bg-base-200 px-5 w-80 bottom-0 window-chat ${isChecked ? 'checked' : ''}`}>
+            <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
             <div className="collapse-title text-orangeNG font-display">
                 {user.pseudo}
             </div>
@@ -64,7 +77,6 @@ function WindowChat({user, destroyChannel}) {
             <div id={"message-container" + user.pseudo} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => (
                     <Message srcMsg={msg}
-                             srcAvatar={isMyMessage(msg) ? me.avatar : user.avatar}
                              srcPseudo={isMyMessage(msg) ? me.pseudo : user.pseudo}
                              myMessage={!!isMyMessage(msg)}
                              key={index}
@@ -72,14 +84,14 @@ function WindowChat({user, destroyChannel}) {
                 ))}
             </div>
             <div className="flex flex-row justify-between py-4">
-                <input  className="input input-bordered input-sm max-w-xs w-60"
-                        placeholder="Tapez votre message..."
-                        type="text"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)} />
+                <input className="input input-bordered input-sm max-w-xs w-60"
+                    placeholder="Tapez votre message..."
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        onClick={sendMessage}><
-                    img src={Send} alt="Send"/>
+                    onClick={sendMessage}><
+                        img src={Send} alt="Send" />
                 </button>
             </div>
         </div>

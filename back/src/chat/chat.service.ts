@@ -21,6 +21,24 @@ export class ChatService {
     private readonly auth: AuthService,
   ) { }
 
+  async getUserFriends(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { fortytwo_id: id },
+      select: { friends: true }
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const friends = await this.prisma.user.findMany({
+      where: { fortytwo_id: { in: user.friends } },
+      select: { pseudo: true }
+    });
+
+    return friends.map(friend => friend.pseudo);
+  }
+
   async newChannel(info: ChannelCreateDto, username: string) {
 
     let hash = null;
@@ -657,7 +675,7 @@ export class ChatService {
     return messages;
   }
 
-  async get__UserBanIn(id: number) {
+  async getUserBanIn(id: number) {
     try {
       const source = await this.prisma.channel.findMany({
         where: {

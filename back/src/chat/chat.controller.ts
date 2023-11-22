@@ -134,8 +134,7 @@ export class ChatController {
 	@Get('/channels/users/ban/:id')
 	async getChannelUsersBan(@Param("id") id : string)
 	{
-		const idChan : number = parseInt(id); 
-		const users = await this.chat_service.get__UserBanIn(idChan);
+		const users = await this.chat_service.getUserBanIn(parseInt(id));
 		return users[0].banned;
 	}
 
@@ -144,5 +143,10 @@ export class ChatController {
 		const listUsers = await this.chat_service.getUserToDm(req.headers["authorization"])
 		return (listUsers);
 	}
-
+	
+	@Get('/friends/:id')
+	async getUserFriends(@Param('id') id: string) {
+		const friends = await this.chat_service.getUserFriends(parseInt(id));
+		return friends;
+	}
 }
