@@ -153,6 +153,13 @@ export interface frontReqInterface {
   pseudo?: string;
   avatar?: any;
   isF2Active?: boolean;
+  token?: string;
+}
+
+export interface Channel {
+  MyDms: string[];
+  MyChannels: string[];
+  ChannelsToJoin: string[];
 }
 
 export interface backResInterface {
@@ -161,8 +168,10 @@ export interface backResInterface {
   message?: string;
   avatar?: any;
   isF2Active?: boolean;
+  fortytwo_id?: string;
   friends?: string[];
   allUser?: User[]
+  channels?: Channel;
 }
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{

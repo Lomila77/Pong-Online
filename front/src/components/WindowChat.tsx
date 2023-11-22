@@ -1,22 +1,14 @@
 // @ts-ignore
 import React, { useEffect, useState } from "react";
-import { getMe, getMessage } from "../api/queries";
+import { getMessage } from "../api/queries";
 import Message from "./Message";
-import { io } from "socket.io-client";
 import Send from "../images/send.svg"
-import Cookies from "js-cookie";
 
-function WindowChat({user, me, destroyChannel}) {
+function WindowChat({user, me, destroyChannel, socket}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
-    const token = Cookies.get('jwtToken');
     const [isChecked, setIsChecked] = useState(false);
-    const socket = io('http://localhost:3333/chat', {
-        auth: {
-            token: token
-        }
-    });
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);

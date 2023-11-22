@@ -5,22 +5,50 @@ import Messagerie from "../images/chat.svg";
 import Play from "../images/play.svg"
 import Channel from "../images/channel.svg"
 import {useUser} from "../context/UserContext";
+import {io} from "socket.io-client";
+import {backRequest, getUsers} from "../api/queries";
+import Cookies from "js-cookie";
 
 function Chat() {
-    const {user, setUser} = useUser();
-    console.log("user: " + user);
+    const token = Cookies.get('jwtToken');
+    const socket = io('http://localhost:3333/chat', {
+        auth: {
+            token: token
+        }
+    });
 
+    const {user, setUser} = useUser();
     const [selectedUser, setSelectedUser] = useState('');
+    const [dm, setDm] = useState([]);
+    const [friends, setFriends] = useState([]);
+    useEffect(() => {
+        backRequest('chat/friends', 'GET').then((data) => {
+            if (data.friends)
+                setFriends(data.friends);
+        })
+    }, []);
     const [channels, setChannels] = useState([]);
+    useEffect(() => {
+        backRequest('chat/channels', 'GET').then((data) => {
+            if (data.channels)
+                setChannels(data.channels.MyChannels);
+        })
+    }, []);
 
     const [destroyWindowChat, setDestroyWindowChat] = useState(-1);
-
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
-
     const [colorDrawer, setColorDrawer] = useState({drawer: "", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState(user.friends);
-    console.log("map display: " + drawerContent);
-
+    const [drawerContent, setDrawerContent] = useState([]); // TODO change by friends after tests
+    // ===========================================================
+    const [users, setUsers] = useState([]);
+    useEffect(() => {
+        getUsers().then((data) => {
+            const pseudos = data.map((user) => user.pseudo);
+            setUsers(pseudos);
+            setDrawerContent(pseudos);
+        })
+    }, []);
+    // =============================================================
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true)
     }
@@ -29,19 +57,20 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? user.channels : user.friends);
+        // TODO usercontext channels and friends
+        setDrawerContent(displayChannelDrawer ? channels : users); // TODO change by friends after tests
     }, [displayChannelDrawer]);
 
 
     useEffect(() => {
-        if (selectedUser && !channels.find(user => user.pseudo === selectedUser))
-            setChannels([...channels, selectedUser]);
+        if (selectedUser && !dm.find(pseudo => pseudo === selectedUser))
+            setDm([...dm, selectedUser]);
     }, [selectedUser]);
 
     useEffect(() => {
         if (destroyWindowChat != -1) {
-            setChannels((prevChannels) =>
-                prevChannels.filter((channel, index) => index !== destroyWindowChat));
+            setDm((prevDm) =>
+                prevDm.filter((dm, index) => index !== destroyWindowChat));
             setDestroyWindowChat(-1);
         }}, [destroyWindowChat]);
 
@@ -64,21 +93,27 @@ function Chat() {
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
-                                    <img src={Play} alt={"play"}/>
+                                    <img src={Play} alt={"play"} className={"w-10"}/>
                                 </button>
                             )}
                         </li>
                     ))}
                     <div className="self-center flex flex-row items-center justify-around mb-36 absolute bottom-0 border border-2 rounded-lg p-2">
                         <img src={Messagerie} alt={"chat"} className="mx-5 w-10"/>
-                        <input type="checkbox" className="toggle toggle-md" defaultChecked={false} onChange={toggleDisplayChannel}/>
+                        <input type="checkbox"
+                               className="toggle toggle-md"
+                               defaultChecked={false}
+                               onChange={toggleDisplayChannel}/>
                         <img src={Channel} alt={"channel"} className="mx-5 w-10"/>
                     </div>
                 </ul>
                 <div className="mb-32 flex flex-row-reverse">
-                    {channels.map((userChannel, index) => (
+                    {dm.map((userDm, index) => (
                             <div key={index} className="px-5">
-                                <WindowChat user={userChannel} me={user} destroyWindowChat={() => setDestroyWindowChat(index)}/>
+                                <WindowChat user={userDm}
+                                            me={user}
+                                            destroyWindowChat={() => setDestroyWindowChat(index)}
+                                            socket={socket}/>
                             </div>
                         )
                     )}
