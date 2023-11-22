@@ -191,7 +191,6 @@ export async function backRequest(url: string, method: string, params?: frontReq
   catch (error) {
     console.log(error);
     return {isOk: false, message: error}
-    // throw error;
   }
 }
 
