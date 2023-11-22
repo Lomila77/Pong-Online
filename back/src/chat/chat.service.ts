@@ -747,24 +747,6 @@ export class ChatService {
       return (2);
   }
 
-  async getUserFriends(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { fortytwo_id: id },
-      select: { friends: true }
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const friends = await this.prisma.user.findMany({
-      where: { fortytwo_id: { in: user.friends } },
-      select: { pseudo: true }
-    });
-
-    return friends.map(friend => friend.pseudo);
-  }
-
   async userIsInChan(token: string, id_channel: number): Promise<boolean> {
     const channels = await this.prisma.user.findUnique({
       where: {
