@@ -25,17 +25,18 @@ function NavBar() {
 
     if (ret.isOk) {
       Cookies.remove("jwtToken");
-      setUser(null);
+      // navigate('login');
+      // setUser(null);
     } else {
       console.log('error in navBar: ', ret.message);
     }
   }
-  useEffect(() => {
-      if (!user) {
-      // console.log("\n\n\n\n user null found: ", user)
-        navigate('login');
-      }
-  }, [user])
+  // useEffect(() => {
+  //     if (!user) {
+  //     // console.log("\n\n\n\n user null found: ", user)
+  //       navigate('login');
+  //     }
+  // }, [user])
 
   return (
     <div className="navbar h-70 bg-gradient-to-b from-navbar to-white">

@@ -34,7 +34,7 @@ export class AuthController {
     if (ret) {
       res.redirect(process.env.FRONT_HOME + '/settingslock');
     } else {
-      res.redirect(process.env.FRONT_HOME + '/login');
+      res.redirect(process.env.FRONT_HOME + '/');
     }
   }
 
