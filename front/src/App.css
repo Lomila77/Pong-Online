@@ -109,3 +109,21 @@
   margin: 50px 10px 0;
   height: 700px;
 }
+
+.slider-thumb-orange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px; /* Taille du thumb */
+  height: 25px; /* Taille du thumb */
+  background: orange; /* Couleur du thumb */
+  border-radius: 50%; /* Rend le thumb rond */
+  cursor: pointer; /* Curseur en forme de pointeur */
+}
+
+.slider-thumb-orange::-moz-range-thumb {
+  width: 25px; /* Taille du thumb */
+  height: 25px; /* Taille du thumb */
+  background: blueviolet; /* Couleur du thumb */
+  border-radius: 50%; /* Rend le thumb rond */
+  cursor: pointer; /* Curseur en forme de pointeur */
+}

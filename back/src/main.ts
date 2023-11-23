@@ -7,7 +7,6 @@ import * as passport from 'passport';
 import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
-import { WsAdapter } from '@nestjs/platform-ws';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
 dotenv.config();
@@ -22,7 +21,7 @@ async function bootstrap() {
   );
 
   const corsOptions: CorsOptions = {
-    origin: 'http://localhost:5173',
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,

@@ -36,7 +36,7 @@
     "@nestjs/platform-express": "^10.2.7",
     "@nestjs/platform-socket.io": "^10.2.7",
     "@nestjs/platform-ws": "^10.2.8",
-    "@nestjs/websockets": "^10.2.7",
+    "@nestjs/websockets": "^10.2.8",
     "argon2": "^0.31.1",
     "axios": "^1.6.0",
     "bcrypt": "^5.1.1",
@@ -56,6 +56,7 @@
     "qrcode": "^1.5.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.7.2",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {
