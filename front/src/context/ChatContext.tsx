@@ -16,6 +16,7 @@ const ChatContext = createContext<{
   friends: string[]
   connectedFriends: string[]
   disconnectedFriends: string[]
+  channels: string[]
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -83,7 +84,7 @@ export const ChatProvider = ({ children }) => {
   }, [user])
 
   return (
-    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends }}>
+    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels }}>
       {children}
     </ChatContext.Provider>
   );
