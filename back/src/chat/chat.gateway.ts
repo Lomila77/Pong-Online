@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { ChannelCreateDto } from './dto/chat.dto';
-import { ChannelMessageSendDto, DmMsgSend } from './dto/msg.dto';
+import { ChannelMessageSendDto } from './dto/msg.dto';
 import { ValidationPipe, UsePipes } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PrismaClient } from '@prisma/client';
@@ -31,15 +31,13 @@ export interface User {
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
-  private clients: { [id: string]: { fortytwo_id: number; fortytwo_userName: string; fortytwo_email: string; } } = {};
+  private clients: { [id: string]: { fortytwo_id: number; fortytwo_userName; pseudo: string; } } = {};
 
   constructor(
     private readonly chatService: ChatService,
     private readonly prisma: PrismaClient,
     private readonly userService: UserService,
   ) { }
-
-
 
   async handleConnection(client: Socket): Promise<any> {
     try {
@@ -62,8 +60,8 @@ export class ChatGateway implements OnGatewayConnection {
           },
           select: {
             fortytwo_id: true,
-            fortytwo_userName: true,
-            fortytwo_email: true,
+            fortytwo_userName : true,
+            pseudo: true,
           }
         })
         this.clients[client.id] = user;
@@ -80,7 +78,6 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
-
   handleDisconnect(client: Socket) {
     console.log("Disconnect")
     delete this.clients[client.id];
@@ -88,25 +85,26 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('create channel')
-  async chat(
-    @MessageBody() data: ChannelCreateDto,
+  async createChannel(
+    @MessageBody() data: { info: ChannelCreateDto, pseudo2: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const chat = await this.chatService.newChannel(data, this.clients[client.id].fortytwo_userName);
-    if (!chat.isPrivate)
-      this.server.emit("Channel Created", { channelName: data.chatName, id: chat.id, client_id: client.id });
+    let channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.pseudo2);
+    if (!channel.isPrivate && !channel.isDM)
+      this.server.emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
     else
-      this.server.to(client.id).emit("Channel Created", { channelName: data.chatName, id: chat.id, client_id: client.id });
+      this.server.to(client.id).emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
+    return;
   }
 
-  @SubscribeMessage('sendMsgtoC')
-  async MsgtoC(
+  @SubscribeMessage('sendMessage')
+  async sendMessage(
     @MessageBody() data: ChannelMessageSendDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const chat = await this.chatService.newMsg(data, this.clients[client.id].fortytwo_id);
-    const except_user = await this.chatService.getExceptUser(data.chatId, this.clients[client.id].fortytwo_id);
-    let except = await this.server.in(data.chatId.toString()).fetchSockets().then((sockets) => {
+    const chat = await this.chatService.newMsg(data, this.clients[client.id].pseudo);
+    const except_user = await this.chatService.getExceptUser(data.channelId, this.clients[client.id].fortytwo_id);
+    let except = await this.server.in(data.channelId.toString()).fetchSockets().then((sockets) => {
       let except_user_socket = [];
       sockets.forEach((socket) => {
         if (except_user.some((user) => user.fortytwo_userName === this.clients[socket.id].fortytwo_userName))
@@ -116,7 +114,7 @@ export class ChatGateway implements OnGatewayConnection {
     });
     if (chat == null)
       return "error";
-    this.server.to(data.chatId.toString()).except(except).emit("NewMessage", chat); // emit to the room
+    this.server.to(data.channelId.toString()).except(except).emit("Message Created", chat);
   }
 
   @SubscribeMessage('joinNewChannel')
@@ -156,7 +154,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (this.clients[client.id] === undefined)
       return;
     const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
-    const userIsInChan = await this.chatService.userIsInChan(String(user.fortytwo_id), data);
+    const userIsInChan = await this.chatService.userIsInChan(user.fortytwo_id, data);
     if (userIsInChan)
       client.join(data.toString());
     else {
@@ -325,20 +323,6 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatService.unmute_Chan(data.username, data.chatId);
     this.server.to(data.chatId.toString()).emit("unmute", { username: data.username });
     // console.log("chan unmuteed");
-  }
-
-  @SubscribeMessage('CreateDm')
-  async createDm(@ConnectedSocket() client: Socket, @MessageBody() data: DmMsgSend) {
-    console.log("CreateDm");
-    const dmchannel = await this.chatService.createDmChannel(this.clients[client.id].fortytwo_userName, data.target)
-    for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.target) {
-        this.server.to(key).emit("DM Created", { channelName: this.clients[client.id].fortytwo_userName, id: dmchannel.id })
-        console.log("DM Created");
-      }
-    }
-    this.server.to(client.id).emit("DM Created", { channelName: data.target, id: dmchannel.id })
-    return;
   }
 
   @SubscribeMessage('set-admin')

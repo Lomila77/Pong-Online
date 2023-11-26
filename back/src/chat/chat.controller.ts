@@ -132,7 +132,6 @@ export class ChatController {
 		return peopleToInvite.filter((value:any) => value !== undefined);
 	}
 
-	// Not use
 	@Get('/channels/users/ban/:id')
 	async getChannelUsersBan(@Param("id") id : string)
 	{
@@ -149,7 +148,7 @@ export class ChatController {
 	@Get('/friends/')
 	@UseGuards(JwtGuard)
 	async getUserFriends(@GetUser() user: User) {
-		const friends = await this.chat_service.getUserFriends(user.fortytwo_id);
+		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		return friends;
 	}
 }
