@@ -1,35 +1,21 @@
-import { ChatGateway } from "src/chat/chat.gateway";
 import { UserService } from "src/user/user.service";
 import {
-	BadRequestException,
-	Body,
-	ConflictException,
 	Controller,
-	Delete,
-	ForbiddenException,
-	InternalServerErrorException,
 	Logger,
 	Param,
-	Patch,
 	Get,
-	Post,
 	Req,
 	UseGuards,
-	UsePipes,
-	ValidationPipe,
 	Res,
 } from "@nestjs/common";
 //import { ChatMessage, DirectMessage } from "@prisma/client";
 import { ChatService } from "src/chat/chat.service";
-import { ChannelCreateDto , sendMsgDto } from './dto/chat.dto';
-import { ChannelMessageSendDto } from './dto/msg.dto';
 import { PrismaClient, User } from "@prisma/client";
-import { channel } from "diagnostics_channel";
-import { QuitChanDto } from "./dto/edit-chat.dto"
 import { Response } from "express";
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 
+@UseGuards(JwtGuard)
 @Controller("chat")
 export class ChatController {
 	private readonly _logger: Logger;
