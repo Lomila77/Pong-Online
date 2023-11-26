@@ -1,53 +1,97 @@
-import React, { createContext, useState, useContext } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { backRequest, backResInterface, getUser } from '../api/queries';
-import { useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { backRequest, backResInterface} from '../api/queries';
 import Cookies from 'js-cookie';
+import { ChatProvider } from './ChatContext';
+
 
 const UserContext = createContext<{
   user: backResInterface | null;
   setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
-  // toggleAuthStatus: (status: boolean) => void; //is a function that takes nothing and returns void
+  updateUser: (fistConnection: boolean, newData: any) => void;
+  disconnectUser: () => void
 } | null>(null);
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState<backResInterface | null>(null);
-  // const [authStatus, setAuthStatus] = useState<boolean>(false)
+  const queryClient = useQueryClient();
 
-  // const toggleAuthStatus = (status: boolean) => {
-  //   setAuthStatus(status)}
-
-  const isAuthenticated = () => {
+    /***************************** */
+    /* useQuery is for GET request*/
+    /***************************** */
+  const isJwtToken = () => {
     const jwtToken = Cookies.get("jwtToken")
+    console.log("\n looking for coockies\n", jwtToken)
     return jwtToken ? true : false;
   }
 
-  const { data: userData, isLoading, isError } = useQuery({
-    queryKey: ['backRequest'],
-    queryFn: () => backRequest('users/profil', 'GET'),
-    enabled: isAuthenticated(),
+  const { data: userData, status} = useQuery({
+  queryKey: ["userData"],
+  queryFn: () => backRequest('users/profil', 'GET'),
+  enabled: isJwtToken(),
   });
-  console.log("🚀 ~ file: UserContext.tsx:15 ~ UserProvider ~ userData:", userData/*, authStatus*/)
+
+  const handleQuerySuccess = (updatedData : backResInterface) => {
+    setUser(updatedData);
+    console.log("🚀 ~ file: UserContext.tsx:41 ~ afteruser :", user)
+  }
 
   useEffect(() => {
-    if (
-      isAuthenticated() &&
-      userData &&
-      userData.data &&
-      userData.data.pseudo !== user?.pseudo &&
-      userData.data.avatar !== user?.avatar
-    ) {
-      setUser({
-        pseudo: userData.data.pseudo,
-        avatar: userData.data.avatar,
-        isF2Active: userData.data.isF2Active,
-      });
+    if (status === 'success'){
+      handleQuerySuccess(userData);
     }
-  }, [userData, setUser, user, isAuthenticated]);
+    // else if (status === 'error'){}
+  }, [status, userData, isJwtToken])
+
+      /******************************** */
+     /* useMutation is for post request*/
+    /******************************** */
+  const mutation = useMutation(
+    {
+      mutationFn: async ({ fistConnection, params }: { fistConnection: boolean, params?: any }) => {
+      const ret =  fistConnection
+      ? await backRequest("auth/settingslock", "POST", params)
+      : await backRequest("users/update", 'POST', params);
+      return ret;
+    },
+      onSuccess: (newData) => {
+        if (newData.isOk) {
+          queryClient.invalidateQueries(["userData"]);
+          setUser(newData)
+        }
+      },
+    }
+  );
+
+  const handleUpdateUser = (fistConnection: boolean, newData) => {
+    mutation.mutate({ fistConnection, params: newData });
+  };
+
+  const handleDisconnectUser = () => {
+    Cookies.remove("jwtToken");
+    setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
+    console.log("\n\n\nhandout logout user : ", user);
+  }
+
+  useEffect(() => {
+    return () => {
+      //todo : gerer le demontage 
+      console.log("UserProvider component is unmounting");
+    };
+  }, []); // Le tableau de dépendances vide signifie que cela s'exécutera uniquement lors du démontage
+
+
 
   return (
-    <UserContext.Provider value={{ user, setUser/*, toggleAuthStatus*/ }}>
-      {children}
+    <UserContext.Provider value={{
+    user,
+    setUser,
+    updateUser: handleUpdateUser,
+    disconnectUser: handleDisconnectUser
+    }}>
+       {/* {status === 'pending' && <p>Loading...</p>} */}
+      {/* {children} */}
+      <ChatProvider>{children}</ChatProvider>
     </UserContext.Provider>
   );
 };

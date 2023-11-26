@@ -9,10 +9,10 @@ function Home() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user)
-      navigate("/login");
-  }, [user]);
+  // useEffect(() => {
+  //   if (!user)
+  //     navigate("/login");
+  // }, [user]);
 
   const renderFire = (
     <>

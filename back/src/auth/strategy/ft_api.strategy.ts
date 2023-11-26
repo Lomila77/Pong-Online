@@ -1,12 +1,8 @@
-// import { AuthService } from '../auth.service';
 import { Injectable } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
 import { HttpService } from '@nestjs/axios';
 import { Fortytwo_dto } from '../dto/auth.dto';
-// import { AxiosResponse } from 'axios';
-// import { PrismaService } from 'src/prisma/prisma.service';
 import { lastValueFrom, map } from 'rxjs';
 
 @Injectable()
@@ -41,7 +37,11 @@ export class ApiStrategy extends PassportStrategy(OAuth2Strategy, 'ft_api') {
       };
       return userDto;
     } catch (error) {
-      throw error;
+      if (error.response && error.response.status === 401) {
+        throw new Error('Invalid access token');
+      } else {
+        throw new Error('Unexpected error during validation');
+      }
     }
   }
 }

@@ -28,4 +28,5 @@ export interface backResInterface {
 	friends?: string[];
 	allUser?: User[];
 	channels?: Channel;
+	isAuthenticated?: boolean;
   }

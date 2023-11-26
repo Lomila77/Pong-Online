@@ -14,9 +14,9 @@ const queryClient = new QueryClient()
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-    <UserProvider>
-    <App/>
-    </UserProvider>
+      <UserProvider>
+        <App/>
+      </UserProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 )
