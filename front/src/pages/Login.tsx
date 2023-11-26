@@ -9,12 +9,12 @@ function Login() {
   const navigate = useNavigate();
   const {user} = useUser();
 
-  // console.log("insige login: user = ", user)
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user])
+  // useEffect(() => {
+  //   if (user?.isAuthenticated) {
+  //     console.log("insige login: user = ", user)
+  //     navigate("/");
+  //   }
+  // }, [user])
 
   return (
     <div className="Background">

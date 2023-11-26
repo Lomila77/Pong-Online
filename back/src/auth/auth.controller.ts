@@ -21,20 +21,25 @@ import { frontReqInterface } from 'src/shared';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
   async redirect(
     @Req() req: { user: Fortytwo_dto; request: Request },
     @Res() res: Response,
   ) {
-    const ret: boolean = await this.authService.handleIncommingUser(
-      req.user,
-      res,
-    );
-    if (ret) {
-      res.redirect(process.env.FRONT_HOME + '/settingslock');
-    } else {
-      res.redirect(process.env.FRONT_HOME + '/');
+    try {
+      const ret: boolean = await this.authService.handleIncommingUser(
+        req.user,
+        res,
+      );
+      if (ret) {
+        res.redirect(process.env.FRONT_HOME + '/settingslock');
+      } else {
+        res.redirect(process.env.FRONT_HOME + '/');
+      }
+    } catch (error){
+      console.log(error);
     }
   }
 

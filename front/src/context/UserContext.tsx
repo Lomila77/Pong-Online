@@ -1,13 +1,15 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { backRequest, backResInterface, getUser } from '../api/queries';
+import { backRequest, backResInterface} from '../api/queries';
 import Cookies from 'js-cookie';
+import { ChatProvider } from './ChatContext';
 
 
 const UserContext = createContext<{
   user: backResInterface | null;
   setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
   updateUser: (fistConnection: boolean, newData: any) => void;
+  disconnectUser: () => void
 } | null>(null);
 
 export const UserProvider = ({ children }) => {
@@ -17,28 +19,29 @@ export const UserProvider = ({ children }) => {
     /***************************** */
     /* useQuery is for GET request*/
     /***************************** */
-    const isAuthenticated = () => {
-      const jwtToken = Cookies.get("jwtToken")
-     return jwtToken ? true : false;
-    }
+  const isJwtToken = () => {
+    const jwtToken = Cookies.get("jwtToken")
+    console.log("\n looking for coockies\n", jwtToken)
+    return jwtToken ? true : false;
+  }
 
-    const handleQuerySuccess = (updatedData : backResInterface) => {
-      setUser(updatedData);
-      console.log("🚀 ~ file: UserContext.tsx:41 ~ after user :", user)
-    }
-
-    const { data: userData, status} = useQuery({
-    queryKey: ["userData"],
-    queryFn: () => backRequest('users/profil', 'GET'),
-    enabled: isAuthenticated(),
+  const { data: userData, status} = useQuery({
+  queryKey: ["userData"],
+  queryFn: () => backRequest('users/profil', 'GET'),
+  enabled: isJwtToken(),
   });
+
+  const handleQuerySuccess = (updatedData : backResInterface) => {
+    setUser(updatedData);
+    console.log("🚀 ~ file: UserContext.tsx:41 ~ afteruser :", user)
+  }
 
   useEffect(() => {
     if (status === 'success'){
-      handleQuerySuccess(userData.data);
+      handleQuerySuccess(userData);
     }
-  }, [status, userData, isAuthenticated])
-
+    // else if (status === 'error'){}
+  }, [status, userData, isJwtToken])
 
       /******************************** */
      /* useMutation is for post request*/
@@ -49,7 +52,6 @@ export const UserProvider = ({ children }) => {
       const ret =  fistConnection
       ? await backRequest("auth/settingslock", "POST", params)
       : await backRequest("users/update", 'POST', params);
-      // console.log("ret is giving back : ", ret)
       return ret;
     },
       onSuccess: (newData) => {
@@ -65,9 +67,31 @@ export const UserProvider = ({ children }) => {
     mutation.mutate({ fistConnection, params: newData });
   };
 
+  const handleDisconnectUser = () => {
+    Cookies.remove("jwtToken");
+    setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
+    console.log("\n\n\nhandout logout user : ", user);
+  }
+
+  useEffect(() => {
+    return () => {
+      //todo : gerer le demontage 
+      console.log("UserProvider component is unmounting");
+    };
+  }, []); // Le tableau de dépendances vide signifie que cela s'exécutera uniquement lors du démontage
+
+
+
   return (
-    <UserContext.Provider value={{ user, setUser, updateUser: handleUpdateUser }}>
-      {children}
+    <UserContext.Provider value={{
+    user,
+    setUser,
+    updateUser: handleUpdateUser,
+    disconnectUser: handleDisconnectUser
+    }}>
+       {/* {status === 'pending' && <p>Loading...</p>} */}
+      {/* {children} */}
+      <ChatProvider>{children}</ChatProvider>
     </UserContext.Provider>
   );
 };

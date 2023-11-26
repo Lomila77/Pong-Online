@@ -62,7 +62,8 @@ export class UserService {
           pseudo: user.pseudo,
           avatar: user.avatar,
           isF2Active: user.isF2Active,
-          isOk: true
+          isOk: true,
+          isAuthenticated: user.connected,
       }
     } catch (error){
       console.log("Error user service: ", error);
@@ -97,14 +98,14 @@ export class UserService {
     }
   }
 
-  profil(user: User) {
+  profil(user: User) : backResInterface{
     return {
-      data: {
         pseudo: user.pseudo,
         avatar: user.avatar,
         isF2Active: user.isF2Active,
-      },
-    };
+        isOk: true,
+        isAuthenticated: user.connected,
+    }
   }
 
   async getUsers() {
@@ -120,6 +121,8 @@ export class UserService {
   }
 
   // this function is meant to be deleted before correction.
+
+
   async delId(userId: number) {
     try {
       await this.prisma.user.delete({

@@ -105,7 +105,6 @@ const SettingComp: React.FC = () => {
       data.avatar = user?.avatar
     else
       data.avatar = file;
-    // console.log("getting data : \n\n\n\n", {...data})
     updateUser(settingsLock, {...data});
     if (settingsLock)
       navigate('/');

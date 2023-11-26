@@ -172,6 +172,7 @@ export interface backResInterface {
   friends?: string[];
   allUser?: User[]
   channels?: Channel;
+	isAuthenticated?: boolean;
 }
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
