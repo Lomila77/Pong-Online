@@ -21,6 +21,10 @@ export class ChannelCreateDto {
   @IsArray()
   @IsOptional()
   members: Array<Tag>
+
+  @IsString()
+  @IsOptional()
+  pseudo2: string;
 }
 
 export class sendMsgDto {
