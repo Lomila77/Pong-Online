@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 
-function NewChannel({socket, close, formData, setFormData}) {
+function NewChannel({socket, close}) {
 
     const toggleCreateChannel = () => {
         socket.emit('create channel', formData);

@@ -13,12 +13,6 @@ import Cookies from "js-cookie";
 import CreateChannel from "./CreateChannel";
 
 function Chat() {
-    //const token = Cookies.get('jwtToken');
-    //const socket = io('http://localhost:3333/chat', {
-    //    auth: {
-    //        token: token
-    //    }
-    //});
     const {socket, friends, connectedFriends, disconnectedFriends } = useChat() as {
         socket: Socket | null;
         friends: string[];
@@ -169,7 +163,7 @@ function Chat() {
                     )}
                 </div>
                 {createChannel && (
-                    <CreateChannel socket={socket} close={toggleCreateChannel} formData={channelData} setFormData={setChannelData}/>
+                    <CreateChannel socket={socket} close={toggleCreateChannel}/>
                 )}
             </div>
         </div>
