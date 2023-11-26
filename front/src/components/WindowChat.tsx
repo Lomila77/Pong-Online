@@ -9,12 +9,13 @@ function WindowChat({user, me, destroyChannel, socket}) {
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
-    socket.emit('CreateDm', {target: user});
+    socket.emit('CreateDm', {target: user}); // TODO: Create Channel
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
+    // TODO: comment le back fait il pour savoir qui parle ? (brnacher sur socket snas cible)
     useEffect(() => {
         socket.on('update', (data) => {
             if (data === 'chan updated') {

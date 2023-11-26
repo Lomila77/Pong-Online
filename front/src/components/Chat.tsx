@@ -9,11 +9,10 @@ import {useUser} from "../context/UserContext";
 import {useChat} from "../context/ChatContext";
 import {io, Socket} from "socket.io-client";
 import {backRequest, getUsers} from "../api/queries";
-import Cookies from "js-cookie";
 import CreateChannel from "./CreateChannel";
 
 function Chat() {
-    const {socket, friends, connectedFriends, disconnectedFriends } = useChat() as {
+    const {socket, friends, connectedFriends, disconnectedFriends, channels } = useChat() as {
         socket: Socket | null;
         friends: string[];
         connectedFriends: string[];
@@ -80,7 +79,6 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "", text: "text-orangeNG"});
-        // TODO usercontext channels and friends
         setDrawerContent(displayChannelDrawer ? channels : users); // TODO change by friends after tests
     }, [displayChannelDrawer]);
 
@@ -95,7 +93,7 @@ function Chat() {
     }, []);
     // DELETE =============================================================
 
-    // Ajoute au dm ouvert le dm concernet par selectedUser afin de gerer son affichage en bas de page
+    // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
         if (selectedUser && !openDm.find(pseudo => pseudo === selectedUser))
             setOpenDm([...openDm, selectedUser]);

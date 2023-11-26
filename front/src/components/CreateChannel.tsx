@@ -1,7 +1,15 @@
 import {useEffect, useState} from "react";
+import {useChat} from "../context/ChatContext";
+import {Socket} from "socket.io-client";
 
 function NewChannel({socket, close}) {
-
+    const [formData, setFormData] = useState({
+        chatName: '',
+        isPrivate: false,
+        isPassword: false,
+        Password: '',
+        members: [],
+    })
     const toggleCreateChannel = () => {
         socket.emit('create channel', formData);
         close();
