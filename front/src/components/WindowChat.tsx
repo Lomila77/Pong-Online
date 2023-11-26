@@ -9,27 +9,28 @@ function WindowChat({user, me, destroyChannel, socket}) {
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
+    socket.emit('CreateDm', {target: user, msg: message});
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
     useEffect(() => {
-        socket.on('connect', () => {
-            socket.emit('CreateDm', {target: user.fortytwo_userName, msg: message});
-            socket.on('update', (data) => {
-                if (data === 'chan updated') {
-                    getMessage().then(data =>
-                        setMessages([...messages, data]))
-                }
-            });
-        })
+        socket.on('update', (data) => {
+            if (data === 'chan updated') {
+                getMessage().then(data =>
+                    setMessages([...messages, data]))
+            }
+            scrollToBottom();
+        });
 
-        scrollToBottom();
+        //return () => {
+        //    socket.disconnect();
+        //}
+    }, []);
 
-        return () => {
-            socket.disconnect();
-        }
+    useEffect(() => {
+
     }, [messages]);
 
     const sendMessage = () => {
@@ -42,7 +43,7 @@ function WindowChat({user, me, destroyChannel, socket}) {
     }
 
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container' + user.pseudo);
+        const messageContainer = document.getElementById('message-container' + user);
 
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
@@ -55,10 +56,10 @@ function WindowChat({user, me, destroyChannel, socket}) {
     if (!user)
         return null;
     return (
-        <div className={`collapse bg-base-200 px-5 w-80 bottom-0 window-chat ${isChecked ? 'checked' : ''}`}>
+        <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
             <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
             <div className="collapse-title text-orangeNG font-display">
-                {user.pseudo}
+                {user}
             </div>
             <div className="absolute top-0 right-0">
                 <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
@@ -66,10 +67,10 @@ function WindowChat({user, me, destroyChannel, socket}) {
                     x
                 </button>
             </div>
-            <div id={"message-container" + user.pseudo} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
+            <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => (
                     <Message srcMsg={msg}
-                             srcPseudo={isMyMessage(msg) ? me.pseudo : user.pseudo}
+                             srcPseudo={isMyMessage(msg) ? me.pseudo : user}
                              myMessage={!!isMyMessage(msg)}
                              key={index}
                     />

@@ -107,7 +107,7 @@ function Chat() {
                         <img src={Channel} alt={"channel"} className="mx-5 w-10"/>
                     </div>
                 </ul>
-                <div className="mb-32 flex flex-row-reverse">
+                <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse">
                     {dm.map((userDm, index) => (
                             <div key={index} className="px-5">
                                 <WindowChat user={userDm}
