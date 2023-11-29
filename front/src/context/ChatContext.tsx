@@ -19,6 +19,7 @@ export interface IChatMsg {
 
 export interface IChatWindow {
   id: number;
+  name: string;
   members: string[];
   history: IChatMsg[];
 }
@@ -38,7 +39,7 @@ export const ChatProvider = ({ children }) => {
   const [friends, setFriends] = useState<string[]>([])
   const [connectedFriends, setConnectedFriends] = useState<string[]>([])
   const [disconnectedFriends, setDisconnectedFriends] = useState<string[]>([])
-  const [channels, setChannels] = useState<IChannels | null>(null);
+  const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>()
 
   // const [openedWindows, setOpenedWindows] = useState<Map<number, IChatWindow> >()
@@ -79,6 +80,18 @@ export const ChatProvider = ({ children }) => {
       newSocket?.on('sendMessage', (message) => {
         //add message in the right conversation.
       })
+
+      newSocket?.on('Channel Created', (id:number, name: string, members: string[], type: string) => {
+        switch (type){
+          case 'dm' :
+            
+          case 'private' :
+          case 'public' :
+        }
+        // set channel liste
+        // set opnedWindows
+        //setChannels((prev) => [...prev, channel]);
+      });
       // newSocket?.on('channelUpdate', (channel) => {
       //   setChannels((prev) => [...prev, channel]);
       // });
@@ -114,13 +127,17 @@ export const ChatProvider = ({ children }) => {
     return foundElem;
   };
 
-  const handleOpenWindow = async (id : number, password?: string) => {
-    if (openedWindows && findIdInList(openedWindows, id))
+
+    const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
+    if (openedWindows && chatId && findIdInList(openedWindows, chatId))
       return
-    const newWindow: IChatWindow = (await (backRequest('channels/' + id + '/chatWindow', 'GET'))).data
-    setOpenedWindows(current => {return([...current || [], newWindow])})
-    console.log("newWindow : ", newWindow);
-    socket?.emit('JoinChannel', {chatId: id, Password: password});
+    if (chatId) { //case it has an history
+      const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
+      setOpenedWindows(current => {return([...current || [], newWindow])})
+      console.log("newWindow : ", newWindow);
+    }
+    // TODO: in case there is no history, I will have to listen to socket to check newly created chan.
+    socket?.emit('JoinChannel', {pseudo: pseudo, chatId: chatId, Password: password});
     }
 
   // const handleCloseWindow = (id : string) => {
