@@ -11,20 +11,20 @@ datasource db {
 }
 
 model User {
-  fortytwo_id       Int     @id @unique
+  fortytwo_id       Int      @id @unique
   fortytwo_picture  String?
-  fortytwo_userName String  @unique
-  fortytwo_email    String  @unique
-  pseudo            String  @default("") @db.VarChar(20)
-  refresh_token     String  @default("0")
-  avatar            String  @default("0")
-  isF2Active        Boolean @default(false)
-  secretOf2FA       String  @default("0")
-  xp                Float   @default(0)
-  ratio             Int     @default(0)
-  createdAt DateTime @default(now())
-  updateAt  DateTime @updatedAt
-  connected Boolean  @default(false)
+  fortytwo_userName String   @unique
+  fortytwo_email    String   @unique
+  pseudo            String   @default("") @db.VarChar(20)
+  refresh_token     String   @default("0")
+  avatar            String   @default("0")
+  isF2Active        Boolean  @default(false)
+  secretOf2FA       String   @default("0")
+  xp                Float    @default(0)
+  ratio             Int      @default(0)
+  createdAt         DateTime @default(now())
+  updateAt          DateTime @updatedAt
+  connected         Boolean  @default(false)
 
   messages      Message[]
   ownerId       Int?
@@ -60,8 +60,8 @@ model Channel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  channelName String
-  password    String?
+  name     String
+  password String?
 
   isPassword Boolean @default(false)
   isDM       Boolean @default(false)

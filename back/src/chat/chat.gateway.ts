@@ -84,18 +84,61 @@ export class ChatGateway implements OnGatewayConnection {
     client.disconnect();
   }
 
-  @SubscribeMessage('create channel')
-  async createChannel(
-    @MessageBody() data: { info: ChannelCreateDto, pseudo2: string },
+  @SubscribeMessage('Join Channel')
+  async joinOrCreateChannel(
+    @MessageBody() data: { info: ChannelCreateDto },
     @ConnectedSocket() client: Socket,
   ) {
-    let channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.pseudo2);
-    if (!channel.isPrivate && !channel.isDM)
-      this.server.emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
-    else
-      this.server.to(client.id).emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
-    return;
+    // Vérifiez si le canal existe
+    if (data.info.chanId !== undefined || data.info.chanId !== null)
+      var channel = await this.chatService.getChannelById(data.info.chanId);
+
+    // Creer le canal s'il n'existe pas
+    if (!channel) {
+      channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.info.pseudo2);
+      if (!channel.isPrivate && !channel.isDM)
+        this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
+      else
+        this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
+    }
+
+    // Rejoindre le canal
+    if (this.clients[client.id] === undefined) {
+      this.server.to(client.id).emit("error", "Error refresh the page!!!");
+      return;
+    }
+    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+    const ret = await this.chatService.join_Chan({ chatId: channel.id }, user);
+    if (ret === 0 || ret === 5) {
+      client.join(channel.id.toString());
+      if (ret !== 5)
+        client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+      this.server.to(client.id).emit("Joined", { chatId: channel.id });
+    }
+    else if (ret == 1)
+      this.server.to(client.id).emit("error", "NotInvited");
+    else if (ret == 2)
+      this.server.to(client.id).emit("error", "Banned");
+    else if (ret == 3) {
+      this.server.to(client.id).emit("error", "Wrong password");
+    }
+    else {
+      this.server.to(client.id).emit("error", "This channel does not exist!!!");
+    }
   }
+
+  // @SubscribeMessage('create channel')
+  // async createChannel(
+  //   @MessageBody() data: { info: ChannelCreateDto, pseudo2: string },
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   let channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.pseudo2);
+  //   if (!channel.isPrivate && !channel.isDM)
+  //     this.server.emit("Channel Created", { name: data.info.chatName, id: channel.id, client_id: client.id });
+  //   else
+  //     this.server.to(client.id).emit("Channel Created", { name: data.info.chatName, id: channel.id, client_id: client.id });
+  //   return;
+  // }
 
   @SubscribeMessage('sendMessage')
   async sendMessage(
@@ -117,50 +160,50 @@ export class ChatGateway implements OnGatewayConnection {
     this.server.to(data.channelId.toString()).except(except).emit("Message Created", chat);
   }
 
-  @SubscribeMessage('joinNewChannel')
-  async join_chan(
-    @MessageBody() data: JoinChanDto,
-    @ConnectedSocket() client: Socket,
-  ) {
-    if (this.clients[client.id] === undefined) {
-      this.server.to(client.id).emit("error", "Error refresh the page!!!");
-      return;
-    }
-    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
-    const ret = await this.chatService.join_Chan(data, user);
-    if (ret === 0 || ret === 5) {
-      client.join(data.chatId.toString());
-      if (ret !== 5)
-        client.to(data.chatId.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Joined", { chatId: data.chatId });
-    }
-    else if (ret == 1)
-      this.server.to(client.id).emit("error", "NotInvited");
-    else if (ret == 2)
-      this.server.to(client.id).emit("error", "Banned");
-    else if (ret == 3) {
-      this.server.to(client.id).emit("error", "Wrong password");
-    }
-    else {
-      this.server.to(client.id).emit("error", "This channel does not exist!!!");
-    }
-  }
+  // @SubscribeMessage('joinNewChannel')
+  // async join_chan(
+  //   @MessageBody() data: JoinChanDto,
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   if (this.clients[client.id] === undefined) {
+  //     this.server.to(client.id).emit("error", "Error refresh the page!!!");
+  //     return;
+  //   }
+  //   const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+  //   const ret = await this.chatService.join_Chan(data, user);
+  //   if (ret === 0 || ret === 5) {
+  //     client.join(data.chatId.toString());
+  //     if (ret !== 5)
+  //       client.to(data.chatId.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+  //     this.server.to(client.id).emit("Joined", { chatId: data.chatId });
+  //   }
+  //   else if (ret == 1)
+  //     this.server.to(client.id).emit("error", "NotInvited");
+  //   else if (ret == 2)
+  //     this.server.to(client.id).emit("error", "Banned");
+  //   else if (ret == 3) {
+  //     this.server.to(client.id).emit("error", "Wrong password");
+  //   }
+  //   else {
+  //     this.server.to(client.id).emit("error", "This channel does not exist!!!");
+  //   }
+  // }
 
-  @SubscribeMessage('JoinChannel')
-  async join(
-    @MessageBody() data: number,
-    @ConnectedSocket() client: Socket,
-  ) {
-    if (this.clients[client.id] === undefined)
-      return;
-    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
-    const userIsInChan = await this.chatService.userIsInChan(user.fortytwo_id, data);
-    if (userIsInChan)
-      client.join(data.toString());
-    else {
-      this.server.to(client.id).emit("error", "You are not in this channel");
-    }
-  }
+  // @SubscribeMessage('JoinChannel')
+  // async join(
+  //   @MessageBody() data: number,
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   if (this.clients[client.id] === undefined)
+  //     return;
+  //   const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+  //   const userIsInChan = await this.chatService.userIsInChan(user.fortytwo_id, data);
+  //   if (userIsInChan)
+  //     client.join(data.toString());
+  //   else {
+  //     this.server.to(client.id).emit("error", "You are not in this channel");
+  //   }
+  // }
 
   @SubscribeMessage('quit')
   async quit_chan(
@@ -210,7 +253,7 @@ export class ChatGateway implements OnGatewayConnection {
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_userName === data.username) {
         let channel = await this.chatService.get__chanNamebyId(data.chatId);
-        this.server.to(key).emit("invited", { chatId: data.chatId, channelName: channel.channelName })
+        this.server.to(key).emit("invited", { chatId: data.chatId, name: channel.name })
         return;
       }
     }

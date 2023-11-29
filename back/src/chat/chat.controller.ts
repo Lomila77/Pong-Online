@@ -41,7 +41,7 @@ export class ChatController {
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
-			mydms.push({id:elem.id, channelName:elem.members[0].username})
+			mydms.push({id:elem.id, name:elem.members[0].username})
 		})
 		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}

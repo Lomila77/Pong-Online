@@ -151,7 +151,7 @@ export const ChatProvider = ({ children }) => {
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels }}>
+    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows }}>
       {children}
     </ChatContext.Provider>
   );
