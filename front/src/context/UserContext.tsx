@@ -21,7 +21,7 @@ export const UserProvider = ({ children }) => {
     /***************************** */
   const isJwtToken = () => {
     const jwtToken = Cookies.get("jwtToken")
-    console.log("\n looking for coockies\n", jwtToken)
+    // console.log("\n looking for coockies\n", jwtToken)
     return jwtToken ? true : false;
   }
 
@@ -75,7 +75,7 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     return () => {
-      //todo : gerer le demontage 
+      //todo : gerer le demontage
       console.log("UserProvider component is unmounting");
     };
   }, []); // Le tableau de dépendances vide signifie que cela s'exécutera uniquement lors du démontage

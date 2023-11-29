@@ -22,7 +22,6 @@ model User {
   secretOf2FA       String  @default("0")
   xp                Float   @default(0)
   ratio             Int     @default(0)
-
   createdAt DateTime @default(now())
   updateAt  DateTime @updatedAt
   connected Boolean  @default(false)

@@ -156,11 +156,20 @@ export interface frontReqInterface {
   token?: string;
 }
 
-export interface Channel {
-  MyDms: string[];
-  MyChannels: string[];
-  ChannelsToJoin: string[];
-}
+export interface IChannels{
+	MyDms: {
+	  id: number,
+	  channelName: string,
+	}[];
+	MyChannels: {
+		id: number,
+		channelName: string,
+	}[]
+	ChannelsToJoin : {
+		id: number,
+		channelName: string,
+	}[]
+  }
 
 export interface backResInterface {
   pseudo?: string;
@@ -171,8 +180,9 @@ export interface backResInterface {
   fortytwo_id?: string;
   friends?: string[];
   allUser?: User[]
-  channels?: Channel;
 	isAuthenticated?: boolean;
+  channels?: IChannels;
+  data?: any;
 }
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{

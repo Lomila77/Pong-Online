@@ -43,7 +43,7 @@ export class ChatController {
 		dms.forEach((elem:any) => {
 			mydms.push({id:elem.id, channelName:elem.members[0].username})
 		})
-		return {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join};
+		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
 
 	@Get('/channels/:id/name')
@@ -55,7 +55,7 @@ export class ChatController {
 
 	@Get('/channels/:id/isprotected')
 	async getChannelsProtection(@Req() req:Request, @Param("id") id: string)
-	{	
+	{
 		const pwd = await this.chat_service.getChannelProtection(parseInt(id));
 		const userIsInChan = await this.chat_service.userIsInChan(req.headers["authorization"],parseInt(id));
 		if (userIsInChan)
@@ -137,4 +137,12 @@ export class ChatController {
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		return friends;
 	}
+
+	@Get('/channels/:id/chatWindow')
+	@UseGuards(JwtGuard)
+	async getChannelWindow(@Param("id") id: number, @GetUser() user: User)
+	{
+		return {data : await this.chat_service.getChannelInfo(id, user) };
+	}
 }
+
