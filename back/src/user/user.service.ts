@@ -1,5 +1,5 @@
 import { backResInterface, frontReqInterface } from './../shared/shared.interface';
-import { IsBoolean, validate } from 'class-validator';
+import { validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';

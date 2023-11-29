@@ -44,6 +44,7 @@ function WindowChat({user, me, destroyChat, socket}) {
         setMessage('');
     }
 
+    //TODO no usage ?!
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container' + user);
         if (messageContainer) {
