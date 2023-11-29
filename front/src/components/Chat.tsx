@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useUser } from "../context/UserContext";
-import { useChat } from "../context/ChatContext";
+import { IChatWindow, useChat } from "../context/ChatContext";
 import { Socket } from "socket.io-client";
 import {getUsers, IChannels} from "../api/queries";
 import CreateChannel from "./CreateChannel";
@@ -18,7 +18,8 @@ function Chat() {
         friends: string[];
         connectedFriends: string[];
         disconnectedFriends: string[];
-        channels: IChannels[]; // TODO: channels pas un tableau de string ?
+        channels: IChannels; // TODO: channels pas un tableau de string ?
+        openedWindows: IChatWindow[];
     };
 
     // Recuperation de la session de l'utilisateur
