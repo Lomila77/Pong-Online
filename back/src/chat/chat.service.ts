@@ -48,6 +48,20 @@ export class ChatService {
     return users[0];
   }
 
+  async getChan(chatName: string) {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        chatName: chatName,
+      },
+    });
+
+    if (!channel) {
+      return null;
+    }
+
+    return channel;
+  }
+
   async CreateChan(info: ChannelCreateDto, pseudo1: string, pseudo2: string = null) {
     let hash = null;
     info.isPassword = false;
