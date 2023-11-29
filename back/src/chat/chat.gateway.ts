@@ -90,7 +90,8 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     // Vérifiez si le canal existe
-    let channel = await this.chatService.getChan(data.info.chatName);
+    if (data.info.chanId !== undefined || data.info.chanId !== null)
+      var channel = await this.chatService.getChannelById(data.info.chanId);
 
     // Creer le canal s'il n'existe pas
     if (!channel) {
@@ -125,7 +126,7 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("error", "This channel does not exist!!!");
     }
   }
-  
+
   // @SubscribeMessage('create channel')
   // async createChannel(
   //   @MessageBody() data: { info: ChannelCreateDto, pseudo2: string },

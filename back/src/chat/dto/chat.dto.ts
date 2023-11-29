@@ -3,8 +3,12 @@ import { Tag } from '../chat.type';
 
 export class ChannelCreateDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   chatName: string;
+
+  @IsNumber()
+  @IsOptional()
+  chanId: number;
 
   @IsBoolean()
   @IsOptional()
