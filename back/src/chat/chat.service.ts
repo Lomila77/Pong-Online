@@ -69,7 +69,7 @@ export class ChatService {
     }
     const channel = await this.prisma.channel.create({
       data: {
-        channelName: info.chatName,
+        name: info.chatName,
         password: hash,
         isPrivate: info.isPrivate,
         isPassword: info.isPassword,
@@ -494,7 +494,7 @@ export class ChatService {
         },
         select: {
           id: true,
-          channelName: true,
+          name: true,
         },
       });
       return source;

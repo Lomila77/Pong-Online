@@ -13,7 +13,7 @@ import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
 
 function Chat() {
-    const {socket, friends, connectedFriends, disconnectedFriends, channels } = useChat() as {
+    const {socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows } = useChat() as {
         socket: Socket | null;
         friends: string[];
         connectedFriends: string[];
@@ -110,7 +110,7 @@ function Chat() {
                     {drawerContent.map((target, index) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={"btn btn-ghost font-display " + colorDrawer.text}
-                                    onClick={() => setSelectedUser(target)}>{target}
+                                    onClick={() => setSelectedUser(target.name)}>{target.name}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
@@ -136,12 +136,24 @@ function Chat() {
                     </div>
                 </ul>
                 <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse overflow-hidden">
-                    {drawerOpen && openDm.map((userDm, index) => (
+                    {//drawerOpen && openDm.map((userDm, index) => (
+                    //        <div key={index} className="px-5">
+                    //            <WindowChat user={userDm}
+                    //                        me={user}
+                    //                        destroyChat={() => setDestroyWindowChat(index)}
+                    //                        socket={socket}/>
+                    //        </div>
+                    //    )
+                    //)
+                    }
+                    {drawerOpen && openedWindows.map((channel, index) => (
                             <div key={index} className="px-5">
-                                <WindowChat user={userDm}
+                                <WindowChat user={channel.members} // TODO: members is array, choose wich one is user dest
                                             me={user}
                                             destroyChat={() => setDestroyWindowChat(index)}
-                                            socket={socket}/>
+                                            socket={socket}
+                                            history={channel.history}
+                                />
                             </div>
                         )
                     )}
