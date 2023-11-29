@@ -156,19 +156,15 @@ export interface frontReqInterface {
   token?: string;
 }
 
+export interface IChannel {
+  id: number,
+  channelName: string,
+}
+
 export interface IChannels{
-	MyDms: {
-	  id: number,
-	  channelName: string,
-	}[];
-	MyChannels: {
-		id: number,
-		channelName: string,
-	}[]
-	ChannelsToJoin : {
-		id: number,
-		channelName: string,
-	}[]
+	MyDms: IChannel[];
+	MyChannels: IChannel[];
+	ChannelsToJoin : IChannel[];
   }
 
 export interface backResInterface {
