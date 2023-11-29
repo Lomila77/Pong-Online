@@ -17,10 +17,6 @@ export interface IChatMsg {
   content: string;
 }
 
-export interface IChatMembers {
-
-}
-
 export interface IChatWindow {
   id: number;
   members: string[];
@@ -33,6 +29,7 @@ const ChatContext = createContext<{
   connectedFriends: string[]
   disconnectedFriends: string[]
   channels: IChannels | null
+  openedWindows: IChatWindow[] | null
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -66,6 +63,7 @@ export const ChatProvider = ({ children }) => {
       })
       backRequest('chat/channels', 'GET').then((data) => {
         console.log(data);
+
         data.channels && setChannels(data.channels);
       })
 
@@ -136,7 +134,7 @@ export const ChatProvider = ({ children }) => {
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels }}>
+    <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows }}>
       {children}
     </ChatContext.Provider>
   );
