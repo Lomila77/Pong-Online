@@ -930,7 +930,7 @@ export class ChatService {
     return users;
   }
 
-  
+
   /******************************************* */
   /** fonction ajoute pour remanier le front  */
   /***************************************** */
@@ -957,7 +957,6 @@ export class ChatService {
         }},
       }
     });
-    if (channel.members.find)
     return channel && this.membershipCheck(channel.members, user.pseudo)
                   ? {id : channelId,members:channel.members, history: channel.messages}
                   : {};
