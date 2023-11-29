@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
+import { useUser } from "../context/UserContext";
+import { useChat } from "../context/ChatContext";
+import { Socket } from "socket.io-client";
+import { getUsers } from "../api/queries";
+import CreateChannel from "./CreateChannel";
+import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
 import Messagerie from "../images/chat.svg";
 import Play from "../images/play.svg"
 import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
-import {useUser} from "../context/UserContext";
-import {useChat} from "../context/ChatContext";
-import {io, Socket} from "socket.io-client";
-import {backRequest, getUsers} from "../api/queries";
-import CreateChannel from "./CreateChannel";
-import WindowChannel from "./WindowChannel";
 
 function Chat() {
     const {socket, friends, connectedFriends, disconnectedFriends, channels } = useChat() as {

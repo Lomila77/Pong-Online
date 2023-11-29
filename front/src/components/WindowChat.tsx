@@ -1,11 +1,11 @@
 // @ts-ignore
 import React, { useEffect, useState } from "react";
+import { backRequest } from "../api/queries";
+import ProfileComp from "./ProfileComp";
 import Message from "./Message";
 import Send from "../images/send.svg"
 import Profil from "../images/profil.svg"
 import Cross from "../images/cross.svg"
-import {backRequest, User} from "../api/queries";
-import ProfileComp from "./ProfileComp";
 
 function WindowChat({user, me, destroyChat, socket}) {
     // Liste des messages recu et envoyees

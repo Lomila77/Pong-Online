@@ -40,7 +40,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
     }
 
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container' + user);
+        const messageContainer = document.getElementById('message-container' + me.pseudo); // TODO fix comme chez windowchat
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }

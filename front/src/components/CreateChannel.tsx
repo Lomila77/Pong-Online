@@ -1,6 +1,4 @@
 import {useEffect, useState} from "react";
-import {useChat} from "../context/ChatContext";
-import {Socket} from "socket.io-client";
 
 function NewChannel({me, socket, close}) {
     const [formData, setFormData] = useState({
