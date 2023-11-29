@@ -45,4 +45,5 @@ export interface IChannels{
 	isAuthenticated?: boolean;
 	channels?: IChannels;
 	data?: any;
+	xp?: number;
   }

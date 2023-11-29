@@ -1,6 +1,6 @@
 
-import { frontReqInterface, backResInterface } from './../shared/shared.interface';
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { frontReqInterface } from './../shared/shared.interface';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 import { User } from '@prisma/client';
@@ -23,6 +23,12 @@ export class UserController {
     return this.userService.profil(user);
   }
 
+  @Put('/user')
+  @UseGuards(JwtGuard)
+  getUser(@Body() body: frontReqInterface) {
+    return this.userService.getUser(body.pseudo);
+  }
+
   @Get('/all')
   @UseGuards(JwtGuard)
   async getUsers() {
@@ -42,7 +48,6 @@ export class UserController {
   ) {
       return await this.userService.updateUser(user.fortytwo_id, body)
   }
-
 
   @Get('/del/:id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {

@@ -1,45 +1,50 @@
 // @ts-ignore
 import React, { useEffect, useState } from "react";
-import { getMessage } from "../api/queries";
+import { backRequest } from "../api/queries";
+import ProfileComp from "./ProfileComp";
 import Message from "./Message";
 import Send from "../images/send.svg"
+import Profil from "../images/profil.svg"
+import Cross from "../images/cross.svg"
 
-function WindowChat({user, me, destroyChannel, socket}) {
+function WindowChat({user, me, destroyChat, socket}) {
+    // Liste des messages recu et envoyees
     const [messages, setMessages] = useState([]);
+    // Liste de mes messages
     const [myMessages, setMyMessages] = useState([]);
+    // Message a envoyer
     const [message, setMessage] = useState('');
+
     const [isChecked, setIsChecked] = useState(false);
-    socket.emit('CreateDm', {target: user}); // TODO: Create Channel
+
+    const [displayUserProfil, setDisplayUserProfil] = useState(false);
+    const [userProfil, setUserProfil] = useState(null);
+
+    //socket.emit('create channel', {pseudo2: user}); // TODO: Create Channel
+    useEffect(() => {
+        backRequest('users/user', 'PUT', {pseudo: user}).then(data => {
+            setUserProfil(data);
+        })
+    }, []);
+
+    const toggleDisplayUserProfil = () => {
+        setDisplayUserProfil(displayUserProfil !== true);
+    }
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
-    // TODO: comment le back fait il pour savoir qui parle ? (brnacher sur socket snas cible)
-    useEffect(() => {
-        socket.on('update', (data) => {
-            if (data === 'chan updated') {
-                getMessage().then(data =>
-                    setMessages([...messages, data]))
-            }
-            scrollToBottom();
-        });
-
-        //return () => {
-        //    socket.disconnect();
-        //}
-    }, []);
-
-
     const sendMessage = () => {
         if (!message)
             return;
-        socket.emit('message', message);
+        socket.emit('sendMessage', {message: message});
         setMessages([...messages, message]);
         setMyMessages([...myMessages, message]);
         setMessage('');
     }
 
+    //TODO no usage ?!
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container' + user);
         if (messageContainer) {
@@ -58,20 +63,31 @@ function WindowChat({user, me, destroyChannel, socket}) {
             <div className="collapse-title text-orangeNG font-display">
                 {user}
             </div>
-            <div className="absolute top-0 right-0">
+            <div className="absolute top-0 right-0 flex flex-row-reverse z-10">
                 <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        onClick={destroyChannel}>
-                    x
+                        onClick={destroyChat}>
+                    <img src={Cross} alt={"cross"} className={"p-2"}/>
+                </button>
+                <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1"
+                        onClick={toggleDisplayUserProfil}>
+                    <img src={Profil} alt={"profil"} className={""}/>
                 </button>
             </div>
-            <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                {messages.map((msg, index) => (
-                    <Message srcMsg={msg}
-                             srcPseudo={isMyMessage(msg) ? me.pseudo : user}
-                             myMessage={!!isMyMessage(msg)}
-                             key={index}
-                    />
-                ))}
+            <div className={""}>
+                {displayUserProfil && (
+                    <ProfileComp user={userProfil}/>
+                )}
+                {!displayUserProfil && (
+                    <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
+                        {messages.map((msg, index) => (
+                            <Message srcMsg={msg}
+                                     srcPseudo={isMyMessage(msg) ? me.pseudo : user}
+                                     myMessage={!!isMyMessage(msg)}
+                                     key={index}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
             <div className="flex flex-row justify-between py-4">
                 <input className="input input-bordered input-sm max-w-xs w-60"

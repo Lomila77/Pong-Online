@@ -1,5 +1,5 @@
 import { backResInterface, frontReqInterface } from './../shared/shared.interface';
-import { IsBoolean, validate } from 'class-validator';
+import { validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -108,17 +108,25 @@ export class UserService {
     }
   }
 
+  async getUser(userPseudo: string) {
+    return this.prisma.user.findFirst({
+      where: {
+        pseudo: userPseudo,
+      }
+    })
+  }
+
   async getUsers() {
     return this.prisma.user.findMany();
   }
 
-  async getUser(username: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        fortytwo_userName: username
-      }
-    });
-  }
+  //async getUser(username: string) {
+  //  return this.prisma.user.findUnique({
+  //    where: {
+  //      fortytwo_userName: username
+  //    }
+  //  });
+ // }
 
   // this function is meant to be deleted before correction.
 
