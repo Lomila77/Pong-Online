@@ -512,7 +512,7 @@ export class ChatService {
         },
         select: {
           id: true,
-          channelName: true,
+          name: true,
         },
       });
       return source;
@@ -565,7 +565,7 @@ export class ChatService {
   organize__channelToJoin(source: any) {
     const channels = [];
     // console.log("source : ", source)
-    // console.log("channelName : ", source.channelName)
+    // console.log("name : ", source.name)
     // console.log("source size : ", source.contains)
     // console.log("member : ", source.member)
 
@@ -595,7 +595,7 @@ export class ChatService {
           id: id,
         },
         select: {
-          channelName: true,
+          name: true,
         },
       });
       return source
@@ -709,7 +709,7 @@ export class ChatService {
       //         id: idchat,
       //       },
       //       data: {
-      //         channelName : info.newname,
+      //         name : info.newname,
       //       },
       //     }
       //   )
@@ -871,7 +871,7 @@ export class ChatService {
   async createDmChannel(username1: string, username2: string) {
     const channel = await this.prisma.channel.create({
       data: {
-        channelName: username1 + "," + username2,
+        name: username1 + "," + username2,
         password: '',
         isPrivate: true,
         isDM: true,

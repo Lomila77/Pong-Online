@@ -91,9 +91,9 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     let channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.pseudo2);
     if (!channel.isPrivate && !channel.isDM)
-      this.server.emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
+      this.server.emit("Channel Created", { name: data.info.chatName, id: channel.id, client_id: client.id });
     else
-      this.server.to(client.id).emit("Channel Created", { channelName: data.info.chatName, id: channel.id, client_id: client.id });
+      this.server.to(client.id).emit("Channel Created", { name: data.info.chatName, id: channel.id, client_id: client.id });
     return;
   }
 
@@ -210,7 +210,7 @@ export class ChatGateway implements OnGatewayConnection {
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_userName === data.username) {
         let channel = await this.chatService.get__chanNamebyId(data.chatId);
-        this.server.to(key).emit("invited", { chatId: data.chatId, channelName: channel.channelName })
+        this.server.to(key).emit("invited", { chatId: data.chatId, name: channel.name })
         return;
       }
     }

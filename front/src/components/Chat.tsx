@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useUser } from "../context/UserContext";
 import { useChat } from "../context/ChatContext";
 import { Socket } from "socket.io-client";
-import {getUsers, IChannels} from "../api/queries";
+import {getUsers, IChannel, IChannels} from "../api/queries";
 import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
@@ -49,7 +49,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState< | null>([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState<IChannel[] | any[]>([]); // TODO change by friends after tests
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -58,7 +58,7 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels : users); // TODO change by friends after tests
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels : users); // TODO change by friends after tests
     }, [displayChannelDrawer]);
 
     // DELETE ===========================================================
@@ -109,7 +109,7 @@ function Chat() {
                     {drawerContent.map((target, index) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={"btn btn-ghost font-display " + colorDrawer.text}
-                                    onClick={() => setSelectedUser(target.name || target.channelName)}>{target.name || target.channelName}
+                                    onClick={() => setSelectedUser(target)}>{target}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
