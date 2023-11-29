@@ -4,7 +4,7 @@ import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto } from './dto/msg.dto';
 import { updateChat } from './chat.type';
 import { UserService } from 'src/user/user.service'
-import { Channel, User, Message } from '@prisma/client';
+import { Channel, User, Message, PrismaClient } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
 import { channel } from 'diagnostics_channel';
@@ -59,7 +59,7 @@ export class ChatService {
 
     if (info.isPrivate === undefined)
       info.isPrivate = false;
-    
+
     const user1 = await this.getUserByPseudo(pseudo1);
     let membersToConnect = [{ fortytwo_id: user1.fortytwo_id }];
     let user2 = null;
@@ -702,7 +702,7 @@ export class ChatService {
         }
       )
       // if (info.newname)
-      // {  
+      // {
       //   await this.prisma.channel.update(
       //     {
       //       where: {
@@ -819,7 +819,7 @@ export class ChatService {
     })
     return Promise.all(userToInvite);
   }
-  
+
   async getUserToDm(token: string) {
     const useralreadydm = await this.prisma.channel.findMany({
       where: {
@@ -929,4 +929,44 @@ export class ChatService {
     });
     return users;
   }
+
+  
+  /******************************************* */
+  /** fonction ajoute pour remanier le front  */
+  /***************************************** */
+
+  private pwdCheck(channel: Channel, pwd: string) {
+    channel.password == pwd ? true : false;
+  }
+
+  private membershipCheck(chanMembers: {pseudo: string}[], userName: string){
+      return chanMembers.find(member => member.pseudo === userName) ? true : false;
+  }
+
+  async getChannelInfo(channelId: number, user: User) {
+
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id:channelId
+      },
+      select: {
+        members: {select: {pseudo: true, }},
+        messages: {select:{
+          message: true,
+          owner:{select:{pseudo: true}}
+        }},
+      }
+    });
+    if (channel.members.find)
+    return channel && this.membershipCheck(channel.members, user.pseudo)
+                  ? {id : channelId,members:channel.members, history: channel.messages}
+                  : {};
+    // in case I decide to formate the informations :
+    // const chatHistory = channel?.messages.map(messages => ({
+    //     owner:messages.owner.pseudo,
+    //     messages: messages.message,
+    // })) || []
+    // return {members:channel.members, history: chatHistory }
+  }
 }
+

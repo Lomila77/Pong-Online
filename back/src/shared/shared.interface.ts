@@ -18,7 +18,22 @@ export interface frontReqInterface {
 	fortytwo_id?: string;
 }
 
-export interface backResInterface {
+export interface IChannels{
+	MyDms: {
+	  id: string,
+	  channelName: string,
+	}[];
+	MyChannels: {
+		id: string,
+		channelName: string,
+	}[]
+	ChannelsToJoin : {
+		id: string,
+		channelName: string,
+	}[]
+  }
+
+  export interface backResInterface {
 	pseudo?: string;
 	isOk?: boolean;
 	message?: string;
@@ -26,8 +41,9 @@ export interface backResInterface {
 	isF2Active?: boolean;
 	fortytwo_id?: string;
 	friends?: string[];
-	allUser?: User[];
-	channels?: Channel;
+	allUser?: User[]
 	isAuthenticated?: boolean;
+	channels?: IChannels;
+	data?: any;
 	xp?: number;
   }

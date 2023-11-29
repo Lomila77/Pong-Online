@@ -1,14 +1,30 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { backRequest, backResInterface } from '../api/queries';
+import { IChannels, backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
-
 export interface friends {
   connected: string[]
   disconnected: string[]
+}
+
+export interface IChatMsg {
+  owner: {
+    pseudo: string
+  };
+  content: string;
+}
+
+export interface IChatMembers {
+
+}
+
+export interface IChatWindow {
+  id: number;
+  members: string[];
+  history: IChatMsg[];
 }
 
 const ChatContext = createContext<{
@@ -16,7 +32,7 @@ const ChatContext = createContext<{
   friends: string[]
   connectedFriends: string[]
   disconnectedFriends: string[]
-  channels: string[]
+  channels: IChannels | null
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -25,8 +41,12 @@ export const ChatProvider = ({ children }) => {
   const [friends, setFriends] = useState<string[]>([])
   const [connectedFriends, setConnectedFriends] = useState<string[]>([])
   const [disconnectedFriends, setDisconnectedFriends] = useState<string[]>([])
-  const [channels, setChannels] = useState<string[]>([]);
+  const [channels, setChannels] = useState<IChannels | null>(null);
+  const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>()
 
+  // const [openedWindows, setOpenedWindows] = useState<Map<number, IChatWindow> >()
+
+  /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
 
   const initChatCtx = () => {
@@ -40,12 +60,15 @@ export const ChatProvider = ({ children }) => {
     });
     newSocket.on('connect', () => {
       setSocket(newSocket);
+
       backRequest('chat/friends', 'GET').then((data) => {
         data.friends && setFriends(data.friends);
       })
       backRequest('chat/channels', 'GET').then((data) => {
-        data.channels && setChannels(data.channels.MyChannels);
+        console.log(data);
+        data.channels && setChannels(data.channels);
       })
+
       newSocket?.on('friendConnected', (friend) => {
         setConnectedFriends((prev) => [...prev, friend]);
         setDisconnectedFriends((prev) => prev.filter((f) => f !== friend));
@@ -54,12 +77,15 @@ export const ChatProvider = ({ children }) => {
         setDisconnectedFriends((prev) => [...prev, friend]);
         setConnectedFriends((prev) => prev.filter((f) => f !== friend));
       });
-      newSocket?.on('channelUpdate', (channel) => {
-        setChannels((prev) => [...prev, channel]);
-      });
+
+      newSocket?.on('sendMessage', (message) => {
+        //add message in the right conversation.
+      })
+      // newSocket?.on('channelUpdate', (channel) => {
+      //   setChannels((prev) => [...prev, channel]);
+      // });
       socketRef.current = newSocket;
     })
-
     newSocket.on('disconnect', () => {
       console.log('Socket Disconnected from server');
       // TODO: ajouter logique de gestion déconnexion
@@ -73,7 +99,6 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?.isAuthenticated && !socket?.connected) {
-      console.log("useState Socket : ", socket);
       initChatCtx();
     }
     else if (!user?.isAuthenticated  && socket?.connected) {
@@ -83,6 +108,33 @@ export const ChatProvider = ({ children }) => {
     }
   }, [user])
 
+
+  /*********** chat window states ************/
+
+  const findIdInList = <T extends { id: number }>(list: T[], idToFind: number): T | undefined => {
+    const foundElem = list.find(window => window.id === idToFind);
+    return foundElem;
+  };
+
+  const handleOpenWindow = async (id : number, password?: string) => {
+    if (openedWindows && findIdInList(openedWindows, id))
+      return
+    const newWindow: IChatWindow = (await (backRequest('channels/' + id + '/chatWindow', 'GET'))).data
+    setOpenedWindows(current => {return([...current || [], newWindow])})
+    console.log("newWindow : ", newWindow);
+    socket?.emit('JoinChannel', {chatId: id, Password: password});
+    }
+
+  // const handleCloseWindow = (id : string) => {
+  //   const closingWingow: IChatWindow = {
+  //     id: '',
+  //     members: [],
+  //     history: [],
+  //   }
+  //   setOpenedWindows((prev) => prev ? prev.filter((f) => f !== closingWingow) : []);
+  // }
+
+  /*********** return ctx ************/
   return (
     <ChatContext.Provider value={{ socket, friends, connectedFriends, disconnectedFriends, channels }}>
       {children}
