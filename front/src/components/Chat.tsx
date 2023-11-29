@@ -18,7 +18,7 @@ function Chat() {
         friends: string[];
         connectedFriends: string[];
         disconnectedFriends: string[];
-        channels: string[];
+        channels: string[]; // TODO: channels pas un tableau de string ?
     };
 
     // Recuperation de la session de l'utilisateur

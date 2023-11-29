@@ -98,6 +98,26 @@ export class UserService {
     }
   }
 
+  async addFriends(me: User, friendPseudo: string): Promise<void> {
+    const friend = await this.prisma.user.findFirst({
+      where: {
+        pseudo: friendPseudo,
+      }
+    })
+    //const friendId = friend.then(data => (data.fortytwo_id));
+    console.log("FRIEND ID: " + friend);
+    const mePrisma = await this.prisma.user.update({
+      where: {
+        fortytwo_id: me.fortytwo_id,
+      },
+      data: {
+        friends: {
+          push: friend.fortytwo_id,
+        },
+      }
+    })
+  }
+
   profil(user: User) : backResInterface{
     return {
         pseudo: user.pseudo,

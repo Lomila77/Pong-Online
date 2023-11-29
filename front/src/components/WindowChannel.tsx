@@ -40,7 +40,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
     }
 
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container' + me.pseudo); // TODO fix comme chez windowchat
+        const messageContainer = document.getElementById('message-container' + user); // TODO fix comme chez windowchat
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
@@ -64,7 +64,8 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
                     </button>
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1">
-                            <img src={} alt={"profil"} className={""}/>
+                            <img src={Cross} alt={"profil"} className={""}/> {//TODO change Cross by settings
+                        }
                         </div>
                         <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             <li><a>Item 1</a></li>

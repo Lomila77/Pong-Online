@@ -1,7 +1,11 @@
 import React from 'react';
 import MGameWatch from '../images/MGameWatch.png';
+import {backRequest} from "../api/queries";
 
 const ProfileComp: React.FC = ({user}) => {
+    const toggleAddFriend = () => {
+        backRequest('users/addfriend', 'POST', {pseudo: user.pseudo});
+    }
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
       <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
@@ -55,7 +59,7 @@ const ProfileComp: React.FC = ({user}) => {
         </svg>
         <span className="font-display text-3xl text-orangeNG self-end">{user.xp}</span>
       </div>
-      <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white">Add to friend</button>
+      <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white" onClick={toggleAddFriend}>Add to friend</button>
     </div>
   );
 };

@@ -9,7 +9,8 @@ import { UserService } from './user.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService) {
+  }
 
   @Get('/me')
   @UseGuards(JwtGuard)
@@ -40,13 +41,20 @@ export class UserController {
     return this.userService.checkPseudo(body.pseudo)
   }
 
+  @Post('/addfriend')
+  @UseGuards(JwtGuard)
+  async addFriend(@GetUser() me: User, @Body() body: frontReqInterface) {
+    return await this.userService.addFriends(me, body.pseudo);
+  }
+
+
   @Post('update')
   @UseGuards(JwtGuard)
   async settingslock(
-    @Body() body: frontReqInterface,
-    @GetUser() user: User,
+      @Body() body: frontReqInterface,
+      @GetUser() user: User,
   ) {
-      return await this.userService.updateUser(user.fortytwo_id, body)
+    return await this.userService.updateUser(user.fortytwo_id, body)
   }
 
   @Get('/del/:id')
@@ -58,6 +66,7 @@ export class UserController {
   async clear() {
     return await this.userService.deleteAllUsers();
   }
+
   @Get('/print')
   async print() {
     return await this.userService.print();
