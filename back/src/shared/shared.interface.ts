@@ -29,4 +29,5 @@ export interface backResInterface {
 	allUser?: User[];
 	channels?: Channel;
 	isAuthenticated?: boolean;
+	xp?: number;
   }

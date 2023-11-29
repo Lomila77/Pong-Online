@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMessage } from "../api/queries";
 import Message from "./Message";
 import Send from "../images/send.svg"
+import Cross from "../images/cross.svg"
 
 function WindowChannel({chat, me, destroyChannel, socket}) {
     const [messages, setMessages] = useState([]);
@@ -56,10 +57,21 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
                 {chat.chatName}
             </div>
             <div className="absolute top-0 right-0">
-                <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        onClick={destroyChannel}>
-                    x
-                </button>
+                <div className="absolute top-0 right-0 flex flex-row-reverse z-10">
+                    <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
+                            onClick={destroyChannel}>
+                        <img src={Cross} alt={"cross"} className={"p-2"}/>
+                    </button>
+                    <div className="dropdown dropdown-end">
+                        <div tabIndex={0} role="button" className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1">
+                            <img src={} alt={"profil"} className={""}/>
+                        </div>
+                        <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a>Item 1</a></li>
+                            <li><a>Item 2</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div id={"message-container" + chat.chatName} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => (

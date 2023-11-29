@@ -23,6 +23,12 @@ export class UserController {
     return this.userService.profil(user);
   }
 
+  @Put('/user')
+  @UseGuards(JwtGuard)
+  getUser(@Body() body: frontReqInterface) {
+    return this.userService.getUser(body.pseudo);
+  }
+
   @Get('/all')
   @UseGuards(JwtGuard)
   async getUsers() {
@@ -42,7 +48,6 @@ export class UserController {
   ) {
       return await this.userService.updateUser(user.fortytwo_id, body)
   }
-
 
   @Get('/del/:id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
