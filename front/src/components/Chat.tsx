@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useUser } from "../context/UserContext";
 import { useChat } from "../context/ChatContext";
 import { Socket } from "socket.io-client";
-import { getUsers } from "../api/queries";
+import {getUsers, IChannels} from "../api/queries";
 import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
@@ -18,7 +18,7 @@ function Chat() {
         friends: string[];
         connectedFriends: string[];
         disconnectedFriends: string[];
-        channels: string[]; // TODO: channels pas un tableau de string ?
+        channels: IChannels[]; // TODO: channels pas un tableau de string ?
     };
 
     // Recuperation de la session de l'utilisateur
@@ -109,7 +109,7 @@ function Chat() {
                     {drawerContent.map((target, index) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={"btn btn-ghost font-display " + colorDrawer.text}
-                                    onClick={() => setSelectedUser(target)}>{target}
+                                    onClick={() => setSelectedUser(target.name || target.channelName)}>{target.name || target.channelName}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
