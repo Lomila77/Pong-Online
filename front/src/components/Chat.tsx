@@ -18,7 +18,7 @@ function Chat() {
         friends: string[];
         connectedFriends: string[];
         disconnectedFriends: string[];
-        channels: IChannels[]; // TODO: channels pas un tableau de string ?
+        channels: IChannels; // TODO: channels pas un tableau de string ?
     };
 
     // Recuperation de la session de l'utilisateur
@@ -49,7 +49,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState< | null>([]); // TODO change by friends after tests
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
