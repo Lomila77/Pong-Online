@@ -43,7 +43,8 @@ const newPrivateGame = () => {
         {renderFire}
       </div>
       <div className="flex flex-1 items-center justify-center sm:py-2 sm:px-5">
-        <button className="text-6xl font-display text-orangeNG hover:text-7xl ease-i-out duration-300 NewGame mb-32">
+        <button className="text-6xl font-display text-orangeNG hover:text-7xl ease-i-out duration-300 NewGame mb-32"
+          onClick={newGame}>
           NEW GAME
         </button>
         <button
