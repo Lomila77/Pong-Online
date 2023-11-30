@@ -5,9 +5,9 @@ import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
-export interface friends {
-  connected: string[]
-  disconnected: string[]
+export interface IChatFriend {
+  name: string
+  connected: boolean
 }
 
 export interface IChatHistory {
@@ -27,7 +27,7 @@ export interface IChatWindow {
 
 const ChatContext = createContext<{
   socket: Socket | null
-  friends: string[]
+  friends: IChatFriend[]
   connectedFriends: string[]
   disconnectedFriends: string[]
   channels: IChannels | null
@@ -37,11 +37,11 @@ const ChatContext = createContext<{
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [friends, setFriends] = useState<string[]>([])
+  const [friends, setFriends] = useState<IChatFriend[]>([])
   const [connectedFriends, setConnectedFriends] = useState<string[]>([])
   const [disconnectedFriends, setDisconnectedFriends] = useState<string[]>([])
   const [channels, setChannels ] = useState<IChannels | null>(null);
-  const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>()
+  const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
   // const [openedWindows, setOpenedWindows] = useState<Map<number, IChatWindow> >()
 
