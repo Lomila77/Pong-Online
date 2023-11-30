@@ -1,3 +1,5 @@
+import { IChatFriend } from "../context/ChatContext";
+
 export const createUser = async (params: any) => {
   try {
     const response = await fetch(
@@ -123,7 +125,7 @@ export interface frontReqInterface {
 
 export interface IChannel {
   id: number,
-  channelName: string,
+  name: string,
 }
 
 export interface IChannels{
@@ -139,7 +141,7 @@ export interface backResInterface {
   avatar?: any;
   isF2Active?: boolean;
   fortytwo_id?: string;
-  friends?: string[];
+  friends?: IChatFriend[];
   allUser?: User[]
   isAuthenticated?: boolean;
   channels?: IChannels;
