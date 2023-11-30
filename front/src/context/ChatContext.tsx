@@ -6,6 +6,7 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 export interface IChatFriend {
+  id: number
   name: string
   connected: boolean
 }
@@ -60,6 +61,7 @@ export const ChatProvider = ({ children }) => {
     newSocket.on('connect', () => {
       setSocket(newSocket);
       backRequest('chat/friends', 'GET').then((data) => {
+        console.log("getfriends \n", data);
         data.friends && setFriends(data.friends);
       })
       backRequest('chat/channels', 'GET').then((data) => {
