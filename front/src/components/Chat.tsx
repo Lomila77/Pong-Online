@@ -15,7 +15,7 @@ import NewChannel from "../images/newChan.svg"
 function Chat() {
     const {socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows } = useChat() as {
         socket: Socket | null;
-        friends: string[];
+        friends: IChatFriend[];
         connectedFriends: string[];
         disconnectedFriends: string[];
         channels: IChannels; // TODO: channels pas un tableau de string ?
@@ -59,19 +59,8 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels : users); // TODO change by friends after tests
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends); // TODO change by friends after tests
     }, [displayChannelDrawer]);
-
-    // DELETE ===========================================================
-    const [users, setUsers] = useState([]);
-    useEffect(() => {
-        getUsers().then((data) => {
-            const pseudos = data.map((user) => user.pseudo);
-            setUsers(pseudos);
-            setDrawerContent(pseudos);
-        })
-    }, []);
-    // DELETE =============================================================
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
