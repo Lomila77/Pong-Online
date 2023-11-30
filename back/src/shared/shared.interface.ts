@@ -16,6 +16,7 @@ export interface frontReqInterface {
 export interface IChannel {
 	id: number,
 	name: string,
+	type: string,
   }
 
 export interface IChannels{
