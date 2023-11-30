@@ -3,6 +3,7 @@ import { getMessage } from "../api/queries";
 import Message from "./Message";
 import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
+import Setting from "../images/setting.svg"
 
 function WindowChannel({chat, me, destroyChannel, socket}) {
     const [messages, setMessages] = useState([]);
@@ -40,7 +41,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
     }
 
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container' + user); // TODO fix comme chez windowchat
+        const messageContainer = document.getElementById('message-container'); // TODO fix comme chez windowchat
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
@@ -64,8 +65,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
                     </button>
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1">
-                            <img src={Cross} alt={"profil"} className={""}/> {//TODO change Cross by settings
-                        }
+                            <img src={Setting} alt={"setting"} className={"p-2"}/>
                         </div>
                         <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             <li><a>Item 1</a></li>
@@ -74,10 +74,10 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
                     </div>
                 </div>
             </div>
-            <div id={"message-container" + chat.chatName} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                {messages.map((msg, index) => (
+            <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
+                {messages.map((msg, index) => ( //TODO changer message par la bonne strategie
                     <Message srcMsg={msg}
-                             srcPseudo={isMyMessage(msg) ? me.pseudo : chat.chatName} // TODO changer chat name par personne qui parle: comment faire ?
+                             srcPseudo={isMyMessage(msg) ? me.pseudo : chat.name} // TODO changer chat name par personne qui parle: comment faire ?
                              myMessage={!!isMyMessage(msg)}
                              key={index}
                     />

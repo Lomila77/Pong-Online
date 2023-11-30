@@ -89,7 +89,7 @@ function Chat() {
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" onClick={toggleDrawerOpen}/>
             <div className="drawer-content">
                 <label htmlFor="my-drawer-4"
-                       className="btn drawer-button btn-circle m-5 p-7">
+                       className="btn drawer-button btn-circle m-5 p-2">
                     <img src={Messagerie} alt={"chat"} className={"w-10"}/>
                 </label>
             </div>
