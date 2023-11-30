@@ -59,7 +59,7 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends); // TODO change by friends after tests
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends);
     }, [displayChannelDrawer]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
