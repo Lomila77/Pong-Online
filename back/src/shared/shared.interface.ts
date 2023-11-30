@@ -2,7 +2,8 @@ export interface User {
 	pseudo: string;
 	avatar: any;
 	isF2Active: boolean;
-	friends?: string[];
+	friends?: number[];
+	win?: number;
   }
 
 export interface frontReqInterface {
@@ -30,10 +31,11 @@ export interface IChannels{
 	avatar?: any;
 	isF2Active?: boolean;
 	fortytwo_id?: string;
-	friends?: string[];
-	allUser?: User[]
+	friends?: number[];
+	allUser?: User[];
 	isAuthenticated?: boolean;
 	channels?: IChannels;
 	xp?: number;
+	win?: number;
 	data?: any;
   }

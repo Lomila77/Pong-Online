@@ -3,6 +3,8 @@ import MGameWatch from '../images/MGameWatch.png';
 import {backRequest} from "../api/queries";
 
 const ProfileComp: React.FC = ({user}) => {
+    if (!user)
+        return;
     const toggleAddFriend = () => {
         backRequest('users/addfriend', 'POST', {pseudo: user.pseudo});
     }
