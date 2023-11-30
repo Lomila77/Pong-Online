@@ -97,6 +97,7 @@ export class UserService {
       return {isOk: false, message: error.message};
     }
   }
+
   async isFriend(me: User, friendPseudo: string): Promise<backResInterface> {
     const meFriends = (await this.prisma.user.findUnique({
       where: { fortytwo_id: me.fortytwo_id},
@@ -111,7 +112,7 @@ export class UserService {
     return {isFriend: true};
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
+  async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
     const meFriends = (await this.prisma.user.findUnique({
       where: { fortytwo_id: me.fortytwo_id},
       select: { friends: true}
@@ -120,18 +121,22 @@ export class UserService {
       where: { pseudo: friendPseudo, },
       select: { fortytwo_id: true}
     })).fortytwo_id;
-    if (!meFriends?.find(meFriend => meFriend === friendId) &&
-        me.fortytwo_id != friendId) {
+
+    if (!meFriends?.find(meFriend => meFriend === friendId)
+      && me.fortytwo_id != friendId)
+    {
       const mePrisma = await this.prisma.user.update({
         where: { fortytwo_id: me.fortytwo_id, },
         data: { friends: { push: friendId,},}
       })
       console.log("addfriends result : ", mePrisma.friends);
+      return {isFriend: true};
     }
     else if ( me.fortytwo_id != friendId)
     console.log('you can not friend yourself\n')
     else
       console.log('already friend\n')
+    return {isFriend: false};
   }
 
   profil(user: User) : backResInterface{

@@ -24,6 +24,12 @@ export interface IChannels{
 	ChannelsToJoin : IChannel[];
   }
 
+  export interface IChatFriend {
+	id: number
+	name: string
+	connected: boolean
+  }
+
   export interface backResInterface {
 	pseudo?: string;
 	isOk?: boolean;
@@ -38,5 +44,6 @@ export interface IChannels{
 	channels?: IChannels;
 	xp?: number;
 	win?: number;
+	chatFriends?: IChatFriend[]
 	data?: any;
   }

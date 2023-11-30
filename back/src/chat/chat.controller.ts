@@ -14,6 +14,7 @@ import { PrismaClient, User } from "@prisma/client";
 import { Response } from "express";
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
+import { backResInterface } from "src/shared";
 
 @UseGuards(JwtGuard)
 @Controller("chat")
@@ -133,10 +134,14 @@ export class ChatController {
 
 	@Get('/friends/')
 	@UseGuards(JwtGuard)
-	async getUserFriends(@GetUser() user: User) {
+	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
-		console.log("friends : \n", friends);
-		return friends;
+		const goodFormat = friends.map(friend => ({
+			id: friend.fortytwo_id,
+			name: friend.pseudo,
+			connected: friend.connected,
+		}));
+		return {chatFriends: goodFormat};
 	}
 
 	@Get('/channels/:id/chatWindow')

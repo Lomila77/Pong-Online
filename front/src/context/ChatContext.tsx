@@ -62,7 +62,9 @@ export const ChatProvider = ({ children }) => {
       setSocket(newSocket);
       backRequest('chat/friends', 'GET').then((data) => {
         console.log("getfriends \n", data);
-        data.friends && setFriends(data.friends);
+        data.chatFriends && setFriends(data.chatFriends);
+        console.log("friends \n", friends);
+
       })
       backRequest('chat/channels', 'GET').then((data) => {
         console.log(data);
@@ -117,6 +119,10 @@ export const ChatProvider = ({ children }) => {
        socketRef.current = null;
     });
   }
+  useEffect(() => {
+   console.log("\n\n\n\nuse effect: ", friends);
+  }, [friends])
+
 
   useEffect(() => {
     if (user?.isAuthenticated && !socket?.connected) {

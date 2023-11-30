@@ -60,7 +60,7 @@ function Chat() {
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
         setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends);
-    }, [displayChannelDrawer]);
+    }, [displayChannelDrawer, friends]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {

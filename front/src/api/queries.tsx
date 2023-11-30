@@ -134,21 +134,24 @@ export interface IChannels{
 	ChannelsToJoin : IChannel[];
   }
 
-export interface backResInterface {
-  pseudo?: string;
-  isOk?: boolean;
-  message?: string;
-  avatar?: any;
-  isF2Active?: boolean;
-  fortytwo_id?: string;
-  isFriend?: boolean;
-  friends?: IChatFriend[];
-  allUser?: User[]
-  isAuthenticated?: boolean;
-  channels?: IChannels;
-  data?: any;
-  win?: number;
-}
+  export interface backResInterface {
+    pseudo?: string;
+    isOk?: boolean;
+    message?: string;
+    avatar?: any;
+    isF2Active?: boolean;
+    fortytwo_id?: string;
+    isFriend?: boolean;
+    friends?: number[];
+    allUser?: User[];
+    isAuthenticated?: boolean;
+    channels?: IChannels;
+    xp?: number;
+    win?: number;
+    chatFriends?: IChatFriend[]
+    data?: any;
+    }
+
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
   try {
