@@ -17,7 +17,7 @@ import { GameModule } from './game/game.module';
     }),
     PassportModule.register({ session: true }),
     ChatModule,
-    GameModule
+    GameModule,
   ],
   controllers: [],
   providers: [],

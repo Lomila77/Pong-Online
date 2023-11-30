@@ -10,16 +10,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { backRequest } from '../api/queries';
 import { useUser } from '../context/UserContext';
-import SettingsInput from './SettingsInputComp';
+import Gallery from './Gallery';
+import SettingsInput from './SettingsInputComp'
 
 const MAX_FILE_SIZE: number = 4 * 1024 * 1024; // 4 Mo
 let fileSize: number = 0;
-let fileTest1: any;
 
 const SettingComp: React.FC = () => {
   const hiddenFileInput = useRef(null);
   const navigate = useNavigate();
-  const { user, setUser } = useUser();
+  const { user, updateUser } = useUser();
   const location = useLocation();
   const [settingsLock, setSettingsLock] = useState(false);
 
@@ -32,8 +32,18 @@ const SettingComp: React.FC = () => {
   }, [location.pathname]);
 
   const [file, setFile] = useState(
-    location.pathname === '/settingslock' ? MGameWatch : null
+    location.pathname === '/settingslock'
+      ? MGameWatch
+      : null
   );
+
+  const openGallery = () => {
+    const dropdown = document.querySelector('.Download') as HTMLDetailsElement;
+    if (dropdown) {
+      dropdown.open = false;
+    }
+    document.getElementById('gallery').showModal();
+  }
 
   const uploadFile = (
     e: React.MouseEvent<HTMLButtonElement>
@@ -44,24 +54,27 @@ const SettingComp: React.FC = () => {
   const handleChangeFile = (e: any) => {
     setFile(URL.createObjectURL(e.target.files[0]));
     fileSize = e.target.files[0].size;
-    fileTest1 = e.target.files[0];
+
+    const dropdown = document.querySelector('.Download') as HTMLDetailsElement;
+    if (dropdown) {
+      dropdown.open = false;
+    }
   };
 
   const schema = Yup.object().shape({
-
     isF2Active: Yup.boolean().required(''),
-    pseudo: Yup.string()
-    .when("settingsLock", {
+    pseudo: Yup.string().when('settingsLock', {
       is: false,
-      then: () => Yup.string()
-        .required('Nom d\'utilisateur obligatoire')
-        .min(3, 'Minimum 3 caractères')
-        .max(20, 'Maximum 20 caractères')
-        .matches(
-          /^[0-9a-zA-Z-_]*$/,
-          'Entrez des caractères valides'
-        ),
-      otherwise: () => Yup.string()
+      then: () =>
+        Yup.string()
+          .required("Nom d'utilisateur obligatoire")
+          .min(3, 'Minimum 3 caractères')
+          .max(20, 'Maximum 20 caractères')
+          .matches(
+            /^[0-9a-zA-Z-_]*$/,
+            'Entrez des caractères valides'
+          ),
+      otherwise: () => Yup.string(),
     }),
     avatar: Yup.mixed().test(
       'fileSize',
@@ -80,29 +93,21 @@ const SettingComp: React.FC = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       pseudo: '',
-      isF2Active: false,
-      avatar: {MGameWatch},
+      isF2Active: user?.isF2Active ? true : false,
+      avatar: { MGameWatch },
     },
   });
 
   const onSubmit = async (data: any) => {
     if (!settingsLock && data.pseudo === '')
-      data.pseudo = user?.pseudo
+      data.pseudo = user?.pseudo;
     if (file === null && user?.avatar !== null)
       data.avatar = user?.avatar
     else
       data.avatar = file;
-    const backRes = settingsLock ? await backRequest("auth/settingslock", "POST", {...data})
-                                 : await backRequest("users/update", "POST", {...data})
-    if((backRes?.isOk)){
-      setUser((prevUser) => ({
-        ...prevUser,
-        pseudo: backRes.pseudo,
-        avatar: backRes.avatar,
-        isF2Active: backRes.isF2Active
-      }));
+    updateUser(settingsLock, {...data});
+    if (settingsLock)
       navigate('/');
-    }
   };
 
   return (
@@ -115,24 +120,33 @@ const SettingComp: React.FC = () => {
           <div className="flex flex-col pt-8 gap-y-3">
             <div className="avatar place-self-center ml-12">
               <div className="w-64 rounded-full ring ring-white ring-8 ring-offset-base-100 drop-shadow-md ring-offset-2">
-              <img src={file || user?.avatar} alt="avatar" />
+                <img
+                  src={file || user?.avatar}
+                  alt="avatar"
+                />
               </div>
-              <button
-                className="Download bg-secondary rounded-full justify-center items-center"
-                type="button"
-                onClick={(e: any) => uploadFile(e)}
-              >
+              <details className="Download dropdown dropdown-right" open={false}>
+                <summary className="btn btn-secondary rounded-full IconDownload">
                 <svg
                   className=""
                   xmlns="http://www.w3.org/2000/svg"
-                  height="35"
-                  width="35"
+                  height="50"
+                  width="50"
                   viewBox="0 -960 960 960"
                   fill="white"
                 >
                   <path d="M480-313 287-506l43-43 120 120v-371h60v371l120-120 43 43-193 193ZM220-160q-24 0-42-18t-18-42v-143h60v143h520v-143h60v143q0 24-18 42t-42 18H220Z" />
                 </svg>
-              </button>
+                </summary>
+                <ul className="p-2 shadow menu dropdown-content z-[1] bg-white rounded-box w-38 font-display text-orangeNG text-md">
+                  <li>
+                    <button type="button" onClick={openGallery}>Gallery</button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={(e: any) => uploadFile(e)}>Import</button>
+                  </li>
+                </ul>
+              </details>
               <input
                 className="hidden"
                 type="file"
@@ -174,6 +188,7 @@ const SettingComp: React.FC = () => {
             </div>
           </div>
         </form>
+        <Gallery setFile={setFile}/>
       </div>
     </div>
   );

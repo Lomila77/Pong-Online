@@ -20,10 +20,13 @@ export const createUser = async (params: any) => {
 };
 
 export interface User {
+  fortytwo_userName: string;
   pseudo: string;
   avatar: any;
   isF2Active: boolean;
+  userChannels: {channelId: number }[];
   friends: string[];
+  win?: number
 }
 
 export async function getUser() {
@@ -68,10 +71,11 @@ export async function getUsers() {
   }
 }
 
-export async function getMe() {
+
+export async function getMessage() {
   try {
     const response = await fetch(
-        'http://localhost:3333/users/me', {
+        'http://localhost:3333/channels/:id/msg', {
           credentials: 'include',
           method: 'GET',
         }
@@ -79,30 +83,12 @@ export async function getMe() {
     if (!response.ok) {
       throw new Error('Échec de la requête');
     }
-    const data: User = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     throw new Error(
         "Une erreur s'est produite lors de la récupération des données : " +
         error.message
     );
-  }
-}
-
-export async function backRequestTest(url: string, method: string, params?: any) {
-  try {
-    const reqOptions: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: params ? JSON.stringify(params) : undefined
-    };
-    const response = await fetch('http://localhost:5173/' + url, reqOptions);
-    return response.status === 200 ? await response.json() : {}
-  }
-  catch (error) {
-    console.log(error);
   }
 }
 
@@ -131,7 +117,20 @@ export interface frontReqInterface {
   pseudo?: string;
   avatar?: any;
   isF2Active?: boolean;
+  token?: string;
+  win?: number;
 }
+
+export interface IChannel {
+  id: number,
+  channelName: string,
+}
+
+export interface IChannels{
+	MyDms: IChannel[];
+	MyChannels: IChannel[];
+	ChannelsToJoin : IChannel[];
+  }
 
 export interface backResInterface {
   pseudo?: string;
@@ -139,8 +138,13 @@ export interface backResInterface {
   message?: string;
   avatar?: any;
   isF2Active?: boolean;
+  fortytwo_id?: string;
   friends?: string[];
   allUser?: User[]
+  isAuthenticated?: boolean;
+  channels?: IChannels;
+  data?: any;
+  win?: number;
 }
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
@@ -160,7 +164,6 @@ export async function backRequest(url: string, method: string, params?: frontReq
   catch (error) {
     console.log(error);
     return {isOk: false, message: error}
-    // throw error;
   }
 }
 

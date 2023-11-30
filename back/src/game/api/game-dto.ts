@@ -12,6 +12,12 @@ export class GameDto {
 
   @IsNumber()
   ballRadius: number;
+
+  @IsNumber()
+  paddleHeight: number;
+
+  @IsNumber()
+  paddleWidth: number;
 }
 
 export class GameResponse {

@@ -23,9 +23,9 @@ export class GameService {
             data: {
                 id: uuid,
                 winner_id: userIdWinner,
-                loser_id: userIdLooser,
+                looser_id: userIdLooser,
                 score_winner: scoreWinner,
-                score_loser: scoreLooser,
+                score_looser: scoreLooser,
                 end_timestamp: timestamp.toString()
             },
         });
@@ -60,10 +60,10 @@ export class GameService {
     private async findGamesWonByUser(winnerId: number): Promise<{
         id: string;
         winner_id: number;
-        loser_id: number;
+        looser_id: number;
         end_timestamp: Date;
         score_winner: number;
-        score_loser: number;
+        score_looser: number;
     }[] | null> {
         try {
             const games = await this.prisma.game.findMany({
@@ -82,17 +82,17 @@ export class GameService {
     private async findGamesPlayed(userId: number): Promise<{
         id: string;
         winner_id: number;
-        loser_id: number;
+        looser_id: number;
         end_timestamp: Date;
         score_winner: number;
-        score_loser: number;
+        score_looser: number;
     }[] | null> {
         try {
             const games = await this.prisma.game.findMany({
                 where: {
                     OR: [
                         { winner_id: userId },
-                        { loser_id: userId }
+                        { looser_id: userId }
                     ]
                 }
             });

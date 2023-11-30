@@ -28,18 +28,20 @@ export class EventsGateway {
   @SubscribeMessage('joinRoom')
   handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
     // si la room existe pas encore
-    const mapPlayer = this.roomStoreService.getMapPlayer();
-    if (!mapPlayer.get(data.room)) {
-      mapPlayer.set(data.room, {
+    const mapPong = this.roomStoreService.getMapPong();
+    if (!mapPong.get(data.room)) {
+      mapPong.set(data.room, {
         "map": new Map(), "players": [], "game": {
           xBall: 200,
           yBall: 200,
-          xSpeed: 1.5,
-          ySpeed: 1.5,
+          xSpeed: 3,
+          ySpeed: 3,
           canvasWidth: this.canvasWidth,
           canvasHeight: this.canvasHeight,
-          leftPaddleWidth: 60,
-          rightPaddleWidth: 60,
+          paddleWidth: 3,
+          paddleHeight: 100,
+          leftPaddlePositionY: 100,
+          rightPaddlePositionY: 100,
           victoryPoints: 5,
           ballRadius: 10
         }
@@ -50,42 +52,46 @@ export class EventsGateway {
     // on add le user dans la room
     client.join(data.room);
     // si déjà deux joueurs dans les players
-    if (mapPlayer.get(data.room).players.length === 2) {
-      if (!mapPlayer.get(data.room).map.get(data.name)) {
+    if (mapPong.get(data.room).players.length === 2) {
+      if (!mapPong.get(data.room).map.get(data.name)) {
         // déjà 2 joueurs dans la partie mais pas le joueur qui join
         return
       }
       // le joueur qui join était déjà dans la partie
-      client.emit('yourPosition', { y: mapPlayer.get(data.room).map.get(data.name).y, side: mapPlayer.get(data.room).map.get(data.name).side })
+      const players = this.getPlayerRightAndPlayerLeft(data.room);
+      client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
+      client.emit('yourPosition', { y: mapPong.get(data.room).map.get(data.name).y, side: mapPong.get(data.room).map.get(data.name).side })
       return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
     }
 
 
     // le joueur arrive dans la partie et c'est le premier
-    if (!mapPlayer.get(data.room).map.get(data.name) && mapPlayer.get(data.room).players.length === 0) {
-      mapPlayer.get(data.room).map.set(data.name, { name: data.name, x: this.paddleGapWithWall, y: 100, side: "LEFT", score: 0 });
-      mapPlayer.get(data.room).players.push(data.name)
-      mapPlayer.get(data.room).players = [...new Set(mapPlayer.get(data.room).players)] as string[]
+    if (!mapPong.get(data.room).map.get(data.name) && mapPong.get(data.room).players.length === 0) {
+      mapPong.get(data.room).map.set(data.name, { name: data.name, x: this.paddleGapWithWall, y: 100, side: "LEFT", score: 0 });
+      mapPong.get(data.room).players.push(data.name)
+      mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
       client.emit('startGame', { eventName: "waiting" })
-      client.emit('yourPosition', { y: 100, side: "LEFT" })
+      client.emit('yourPosition', { y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT" })
       return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
     }
 
     // le joueur arrive dans la partie et c'est le deuxième
-    if (!mapPlayer.get(data.room).map[data.name] && mapPlayer.get(data.room).players.length === 1) {
-      mapPlayer.get(data.room).map.set(data.name, { name: data.name, x: this.canvasHeight - this.paddleGapWithWall, y: 100, side: "RIGHT", score: 0 })
-      mapPlayer.get(data.room).players.push(data.name)
-      mapPlayer.get(data.room).players = [...new Set(mapPlayer.get(data.room).players)] as string[]
+    if (!mapPong.get(data.room).map[data.name] && mapPong.get(data.room).players.length === 1) {
+      mapPong.get(data.room).map.set(data.name, { name: data.name, x: this.canvasHeight - this.paddleGapWithWall, y: 100, side: "RIGHT", score: 0 })
+      mapPong.get(data.room).players.push(data.name)
+      mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
       const players = this.getPlayerRightAndPlayerLeft(data.room);
       this.server.to(data.room).emit('startGame',
-        { eventName: "start", playerRight: players.right, playerLeft: players.left }
+        { eventName: "start", playerRight: players.right, playerLeft: players.left, gameData: mapPong.get(data.room).game }
       );
-      client.emit('yourPosition', { y: 100, side: "RIGHT" })
-      this.launchGame(data.room);
+      client.emit('yourPosition', { y: mapPong.get(data.room).game.rightPaddlePositionY, side: "RIGHT" })
+      this.launchGame(data.room, client);
       return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
     }
 
-    //le start de la balle
+    // visiteur
+    //const players = this.getPlayerRightAndPlayerLeft(data.room);
+    //client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
     return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
   }
 
@@ -107,18 +113,18 @@ export class EventsGateway {
     @MessageBody() data: { room: string; direction: 'UP' | 'DOWN' },
     @ConnectedSocket() client: Socket
   ) {
-    const mapPlayer = this.roomStoreService.getMapPlayer();
+    const mapPlayer = this.roomStoreService.getMapPong();
     const sockets = await this.server.in(data.room).allSockets();
     let paddlePositionY = mapPlayer.get(data.room).map.get(client.data.username).y;
     const translation = 15;
     const maxHeight = ((this.canvasHeight - (paddlePositionY + this.paddleHeight)) <= translation);
     const minHeight = (paddlePositionY < translation);
-    console.log("maxHeight: " + maxHeight)
+    /*console.log("maxHeight: " + maxHeight)
     console.log("minHeight: " + minHeight)
     console.log("paddlePositionY: " + paddlePositionY)
     console.log("canvaHeight = " + mapPlayer.get(data.room).game.canvasHeight)
     console.log("top: " + (paddlePositionY + this.paddleHeight))
-    console.log("bottom: " + paddlePositionY)
+    console.log("bottom: " + paddlePositionY)*/
     if (data.direction === "UP" && !minHeight ) {
       paddlePositionY -= translation;
     } else if (data.direction === "DOWN" && !maxHeight) {
@@ -131,20 +137,24 @@ export class EventsGateway {
     return { event: 'messageSent', data: `Message sent to room: ${data.room}` };
   }
 
-  async launchGame(room: string) {
-    const mapPlayer = this.roomStoreService.getMapPlayer();
+  async launchGame(room: string, client: Socket) {
+    const mapPlayer = this.roomStoreService.getMapPong();
     const player1 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
     const player2 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
     const playerRight = player1.side === "RIGHT" ? player1 : player2;
     const playerLeft = player1.side === "LEFT" ? player1 : player2;
-    setInterval(() => {
-      this.handleGame(room, playerRight, playerLeft)
+    const intervalId = setInterval(() => {
+      const stop = this.handleGame(room, playerRight, playerLeft, client)
+      if (stop === 1) {
+        clearInterval(intervalId);
+        return;
+      }
       this.notifyRoomWithBallStat(room);
-    }, 1000 / 30);
+    }, 1000 / 24);
   }
 
   notifyRoomWithBallStat(room: string) {
-    const mapPlayer = this.roomStoreService.getMapPlayer();
+    const mapPlayer = this.roomStoreService.getMapPong();
     let { xBall, yBall } = mapPlayer.get(room).game;
     const ballStat: BallMoveEvent = {
       x: xBall,
@@ -154,29 +164,48 @@ export class EventsGateway {
   }
 
 
-  handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer) {
-    const mapPlayer = this.roomStoreService.getMapPlayer();
-    let { xBall, xSpeed, yBall, ySpeed, canvasHeight, canvasWidth } = mapPlayer.get(room).game;
+  handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+    const mapPong = this.roomStoreService.getMapPong();
+    let { ballRadius, xBall, xSpeed, yBall, ySpeed, canvasHeight, canvasWidth, victoryPoints } = mapPong.get(room).game;
     xBall += xSpeed;
     yBall += ySpeed;
-    const __retBouncing = this.handleBouncingOnWall(yBall, ySpeed, canvasHeight, xBall, xSpeed, canvasWidth);
+    const __retBouncing = this.handleBouncingOnWall(ballRadius, yBall, ySpeed, canvasHeight, xBall, xSpeed, canvasWidth);
     ySpeed = __retBouncing.ySpeed;
     xSpeed = __retBouncing.xSpeed;
 
-    const ballRadius = mapPlayer.get(room).game.ballRadius;
     //Touche Pad du joueur de gauche
     const handledBouncingOnPaddle = this.handleBouncingOnPaddle(xBall, ballRadius, this.paddleWidth, yBall, leftPlayer, this.paddleHeight, xSpeed, ySpeed, canvasWidth, rightPlayer);
     xSpeed = handledBouncingOnPaddle.xSpeed;
     ySpeed = handledBouncingOnPaddle.ySpeed;
 
-    const handledScore = this.handleScore(xBall, ballRadius, canvasWidth, leftPlayer, yBall, room, rightPlayer, this.paddleWidth, xSpeed, ySpeed);
+    const handledScore = this.handleScore(xBall, ballRadius, canvasWidth, leftPlayer, yBall, room, rightPlayer, this.paddleWidth, xSpeed, ySpeed, victoryPoints);
+    
+    //end of the game
+    if (handledScore.end_game) {
+      let winner = rightPlayer;
+      let looser = leftPlayer;
+      if (leftPlayer.score > rightPlayer.score) {
+        winner = leftPlayer;
+        looser = rightPlayer
+      }
+      this.server.to(room).emit('endGame', {
+        leftPlayer: leftPlayer, 
+        rightPlayer: rightPlayer,
+        looser: looser, 
+        winner: winner,
+        left_score: leftPlayer.score, 
+        right_score: rightPlayer.score
+      })
+      return 1;
+    }
+    
     xBall = handledScore.xBall;
     yBall = handledScore.yBall;
     xSpeed = handledScore.xSpeed;
     ySpeed = handledScore.ySpeed;
 
-    mapPlayer.get(room).game = {
-      ...mapPlayer.get(room).game,
+    mapPong.get(room).game = {
+      ...mapPong.get(room).game,
       xBall, xSpeed, yBall, ySpeed
     }
   }
@@ -209,24 +238,25 @@ export class EventsGateway {
     return { xSpeed, ySpeed };
   }
 
-  private handleBouncingOnWall(yBall: number, ySpeed: number, canvaHeight: number, xBall: number, xSpeed: number, canvaWidth: number) {
-    if (yBall + ySpeed > canvaHeight || yBall + ySpeed < 0) {
+  private handleBouncingOnWall(ballRadius: number, yBall: number, ySpeed: number, canvaHeight: number, xBall: number, xSpeed: number, canvaWidth: number) {
+    if (yBall + ySpeed + ballRadius > canvaHeight || yBall - ballRadius + ySpeed < 0) {
       ySpeed = -ySpeed;
     }
 
-    if (xBall + xSpeed > canvaWidth || xBall + xSpeed < 0) {
+
+    /*if (xBall + ballRadius + xSpeed > canvaWidth || xBall + ballRadius + xSpeed < 0) {
       xSpeed = -xSpeed;
-    }
+    }*/
     return { ySpeed, xSpeed };
   }
 
-  private handleScore(xBall: number, ballRadius: number, canvaWidth: number, leftPlayer: GamePlayer, yBall: number, room: string, rightPlayer: GamePlayer, paddleWidth: number, xSpeed: number, ySpeed: number) {
+  private handleScore(xBall: number, ballRadius: number, canvaWidth: number, leftPlayer: GamePlayer, yBall: number, room: string, rightPlayer: GamePlayer, paddleWidth: number, xSpeed: number, ySpeed: number, victoryPoints: number) {
     if (xBall + ballRadius >= canvaWidth) {
       leftPlayer.score += 1;
       xBall = 400;
       yBall = 200;
-      xSpeed = 1.5;
-      ySpeed = 1.5;
+      xSpeed = 3;
+      ySpeed = 3;
       this.server.to(room).emit('scoring', {
         name_left: leftPlayer.name,
         score_left: leftPlayer.score,
@@ -240,8 +270,8 @@ export class EventsGateway {
       rightPlayer.score += 1;
       xBall = 400;
       yBall = 200;
-      xSpeed = -1.5;
-      ySpeed = -1.5;
+      xSpeed = -3;
+      ySpeed = -3;
       this.server.to(room).emit('scoring', {
         name_left: leftPlayer.name,
         score_left: leftPlayer.score,
@@ -252,11 +282,12 @@ export class EventsGateway {
       //console.log(leftPlayer)
       //console.log(rightPlayer)
     }
-    return { xBall, yBall, xSpeed, ySpeed };
+    const end_game = (leftPlayer.score >= victoryPoints || rightPlayer.score >= victoryPoints)
+    return { xBall, yBall, xSpeed, ySpeed, end_game };
   }
 
   getPlayerRightAndPlayerLeft(room: string): { right: string, left: string } {
-    const mapPlayer = this.roomStoreService.getMapPlayer();
+    const mapPlayer = this.roomStoreService.getMapPong();
     const playerOne = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
     const playerTwo = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
 

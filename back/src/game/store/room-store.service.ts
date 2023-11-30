@@ -22,8 +22,10 @@ export interface GamePlayer {
     ballRadius: number;
     canvasWidth: number;
     canvasHeight: number;
-    leftPaddleWidth: number;
-    rightPaddleWidth: number;
+    paddleWidth: number;
+    paddleHeight: number;
+    leftPaddlePositionY: number;
+    rightPaddlePositionY: number;
   }
 
 
@@ -36,7 +38,7 @@ export class RoomStoreService {
       }> = new Map();
     //   mapPlayer["room1"] = {"map": ["Player1"] => {name: "Player1", x: 0, y: 112}, ["Player2"] => {name: "Player2", x: 800, y: 120}, {"players": ["Player1", "Player2"]}}
 
-    getMapPlayer(): Map<string, {
+    getMapPong(): Map<string, {
         "map": Map<string, GamePlayer>, 
         "players": string[], 
         "game": Game

@@ -1,15 +1,21 @@
 import React from 'react';
 import MGameWatch from '../images/MGameWatch.png';
+import {backRequest} from "../api/queries";
 
 const ProfileComp: React.FC = ({user}) => {
+    if (!user)
+        return;
+    const toggleAddFriend = () => {
+        backRequest('users/addfriend', 'POST', {pseudo: user.pseudo});
+    }
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
       <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
-        <img src={MGameWatch} />
+        <img src={MGameWatch} alt={'Hi!'}/>
       </div>
       <div className="text-center">
         <span className="font-display text-2xl text-bleuPseudo pseudoProfil">
-        {user?.name}
+        {user.pseudo}
         </span>
         <br></br>
         <span className="font-display text-sm text-vertOnLine">
@@ -53,9 +59,9 @@ const ProfileComp: React.FC = ({user}) => {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="font-display text-3xl text-orangeNG self-end">{user?.rank}</span>
+        <span className="font-display text-3xl text-orangeNG self-end">{user.xp}</span>
       </div>
-      <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white">Add to friend</button>
+      <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white" onClick={toggleAddFriend}>Add to friend</button>
     </div>
   );
 };

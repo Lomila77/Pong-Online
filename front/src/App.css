@@ -31,16 +31,22 @@
 .Download {
   position: absolute;
   right: 18px;
-  bottom: 10px;
-  height: 3rem;
-  width: 3rem;
+  bottom: -15px;
+  /* height: 3rem;
+  width: 3rem; */
   display: flex;
   transform-origin: center;
   transition: transform 300ms;
+  transform: scale(0.7);
 }
 
 .Download:hover {
-  transform: scale(1.3, 1.3);
+  transform: scale(0.8, 0.8);
+}
+
+.IconDownload {
+  height: 5rem;
+  width: 5rem;
 }
 
 .Pong {
@@ -108,6 +114,15 @@
   background-color: rgb(219, 216, 201);
   margin: 50px 10px 0;
   height: 700px;
+}
+
+.window-chat {
+  transition-property: transform;
+  transition-duration: 0.3s;
+}
+
+.window-chat.checked {
+  transform: translateY(85%);
 }
 
 .slider-thumb-orange::-webkit-slider-thumb {

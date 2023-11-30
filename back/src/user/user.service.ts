@@ -1,5 +1,5 @@
 import { backResInterface, frontReqInterface } from './../shared/shared.interface';
-import { IsBoolean, validate } from 'class-validator';
+import { validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -62,7 +62,8 @@ export class UserService {
           pseudo: user.pseudo,
           avatar: user.avatar,
           isF2Active: user.isF2Active,
-          isOk: true
+          isOk: true,
+          isAuthenticated: user.connected,
       }
     } catch (error){
       console.log("Error user service: ", error);
@@ -97,29 +98,59 @@ export class UserService {
     }
   }
 
-  profil(user: User) {
-    return {
+  async addFriends(me: User, friendPseudo: string): Promise<void> {
+    const friend = await this.prisma.user.findFirst({
+      where: {
+        pseudo: friendPseudo,
+      }
+    })
+    //const friendId = friend.then(data => (data.fortytwo_id));
+    console.log("FRIEND ID: " + friend);
+    const mePrisma = await this.prisma.user.update({
+      where: {
+        fortytwo_id: me.fortytwo_id,
+      },
       data: {
+        friends: {
+          push: friend.fortytwo_id,
+        },
+      }
+    })
+  }
+
+  profil(user: User) : backResInterface{
+    return {
         pseudo: user.pseudo,
         avatar: user.avatar,
         isF2Active: user.isF2Active,
-      },
-    };
+        isOk: true,
+        isAuthenticated: user.connected,
+    }
   }
 
-  async getUsers() {
-    return this.prisma.user.findMany();
-  }
-
-  async getUser(username: string) {
-    return this.prisma.user.findUnique({
+  async getUser(userPseudo: string) {
+    return this.prisma.user.findFirst({
       where: {
-        fortytwo_userName: username
+        pseudo: userPseudo,
       }
-    });
+    })
   }
+
+  async getUsers(): Promise<backResInterface> {
+    return {allUser: await this.prisma.user.findMany()};
+  }
+
+  //async getUser(username: string) {
+  //  return this.prisma.user.findUnique({
+  //    where: {
+  //      fortytwo_userName: username
+  //    }
+  //  });
+ // }
 
   // this function is meant to be deleted before correction.
+
+
   async delId(userId: number) {
     try {
       await this.prisma.user.delete({

@@ -3,18 +3,18 @@ import { Player } from './Game';
 
 interface GameFinishedComponentProperties {
     winner: Player;
-    loser: Player;
+    looser: Player;
     winnerScore: number;
-    loserScore: number;
+    looserScore: number;
 }
 
 type WinnerNameColor = 'text-green-300' | 'text-green-500';
 
 function GameFinishedComponent({
     winner,
-    loser,
+    looser,
     winnerScore,
-    loserScore,
+    looserScore,
 }: GameFinishedComponentProperties) {
 
     const [winnerNameColor, setWinnerNameColor] = useState<WinnerNameColor>('text-green-300');
@@ -43,7 +43,7 @@ function GameFinishedComponent({
                         {winner.firstName} WON with {winnerScore} pts
                     </h1>
                     <p className='text-5xl font-display text-red-400 NewGame mb-32'>
-                        {loser.firstName} lost with {loserScore} pts
+                        {looser.firstName} lost with {looserScore} pts
                     </p>
                 </div>
             </div>

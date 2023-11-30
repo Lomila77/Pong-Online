@@ -9,7 +9,7 @@ import Cookies from 'js-cookie';
 
 function NavBar() {
   const navigate = useNavigate();
-  const { user, setUser } = useUser();
+  const { user, setUser, disconnectUser } = useUser();
 
   const goToPage = async (path: string) => {
     const elem = document.activeElement as HTMLElement;
@@ -24,18 +24,15 @@ function NavBar() {
     const ret = await backRequest('auth/logout', 'POST');
 
     if (ret.isOk) {
-      Cookies.remove("jwtToken");
-      setUser(null);
+      disconnectUser()
+      // Cookies.remove("jwtToken");
+      // setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
+      // console.log("\n\n\nhandout logout user : ", user);
+      navigate('/login');
     } else {
       console.log('error in navBar: ', ret.message);
     }
   }
-  useEffect(() => {
-      if (!user) {
-      // console.log("\n\n\n\n user null found: ", user)
-        navigate('login');
-      }
-  }, [user])
 
   return (
     <div className="navbar h-70 bg-gradient-to-b from-navbar to-white">

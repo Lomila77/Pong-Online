@@ -12,10 +12,10 @@ export class CreatePublicGame {
     async handle(): Promise<Room> {
         // on regarde si i a déjà une partie ouvert
 
-        const roomNames = Array.from(this.roomStoreService.getMapPlayer().keys())
+        const roomNames = Array.from(this.roomStoreService.getMapPong().keys())
         let roomAvailable: string | null = null;
         roomNames.forEach((roomName) => {
-            const hasOnePlayer = this.roomStoreService.getMapPlayer().get(roomName).players.length != 2;
+            const hasOnePlayer = this.roomStoreService.getMapPong().get(roomName).players.length != 2;
             if (hasOnePlayer) {
                 roomAvailable = roomName;
                 return;
@@ -27,16 +27,18 @@ export class CreatePublicGame {
         }
 
         const uuid = this.generateUuid();
-        this.roomStoreService.getMapPlayer().set(uuid, {
+        this.roomStoreService.getMapPong().set(uuid, {
             "map": new Map(), "players": [], "game": {
                 xBall: 200,
                 yBall: 200,
-                xSpeed: 1.5,
-                ySpeed: 1.5,
+                xSpeed: 3,
+                ySpeed: 3,
                 canvasWidth: 800,
                 canvasHeight: 400,
-                leftPaddleWidth: 60,
-                rightPaddleWidth: 60,
+                paddleWidth: 3,
+                paddleHeight: 100,
+                leftPaddlePositionY: 100,
+                rightPaddlePositionY: 100,
                 victoryPoints: 5,
                 ballRadius: 10
             }

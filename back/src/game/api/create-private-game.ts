@@ -15,25 +15,29 @@ export class CreatePrivateGame {
     async handle(dto: GameDto): Promise<Room> {
         const ballXSpeed = [1.5, 3, 4.5]
         const ballYSpeed = [1.5, 3, 4.5]
+        
+        const paddleWidth = [3, 6, 9]
+        const paddleHeight = [50, 100, 150]
 
-        const ballRadius = [10, 20, 30]
+        const ballRadius = [10, 15, 20]
 
         const uuid = this.generateUuid();
-        this.roomStoreService.getMapPlayer().set(uuid, {
+        this.roomStoreService.getMapPong().set(uuid, {
             "map": new Map(), "players": [], "game": {
                 xBall: 200,
                 yBall: 200,
-                xSpeed: ballXSpeed[dto.xSpeed],
-                ySpeed: ballYSpeed[dto.ySpeed],
+                xSpeed: ballXSpeed[dto.xSpeed - 1],
+                ySpeed: ballYSpeed[dto.ySpeed - 1],
                 victoryPoints: dto.victoryPoint,
-                ballRadius: ballRadius[dto.ballRadius],
+                ballRadius: ballRadius[dto.ballRadius - 1],
                 canvasWidth: 800,
                 canvasHeight: 400,
-                leftPaddleWidth: 60,
-                rightPaddleWidth: 60
+                paddleHeight: paddleHeight[dto.paddleHeight - 1],
+                paddleWidth: paddleWidth[dto.paddleWidth - 1],
+                leftPaddlePositionY: 100,
+                rightPaddlePositionY: 100,
             }
         })
-
         return { name: uuid };
     }
 

@@ -1,33 +1,21 @@
-import { ChatGateway } from "src/chat/chat.gateway";
 import { UserService } from "src/user/user.service";
 import {
-	BadRequestException,
-	Body,
-	ConflictException,
 	Controller,
-	Delete,
-	ForbiddenException,
-	InternalServerErrorException,
 	Logger,
 	Param,
-	Patch,
 	Get,
-	Post,
 	Req,
 	UseGuards,
-	UsePipes,
-	ValidationPipe,
 	Res,
 } from "@nestjs/common";
 //import { ChatMessage, DirectMessage } from "@prisma/client";
 import { ChatService } from "src/chat/chat.service";
-import { ChannelCreateDto , sendMsgDto } from './dto/chat.dto';
-import { ChannelMessageSendDto } from './dto/msg.dto';
 import { PrismaClient, User } from "@prisma/client";
-import { channel } from "diagnostics_channel";
-import { QuitChanDto } from "./dto/edit-chat.dto"
 import { Response } from "express";
+import { JwtGuard } from '../auth/guard';
+import { GetUser } from '../auth/decorator';
 
+@UseGuards(JwtGuard)
 @Controller("chat")
 export class ChatController {
 	private readonly _logger: Logger;
@@ -53,9 +41,9 @@ export class ChatController {
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
-			mydms.push({id:elem.id, channelName:elem.members[0].username})
+			mydms.push({id:elem.id, name:elem.members[0].username})
 		})
-		return {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join};
+		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
 
 	@Get('/channels/:id/name')
@@ -67,7 +55,7 @@ export class ChatController {
 
 	@Get('/channels/:id/isprotected')
 	async getChannelsProtection(@Req() req:Request, @Param("id") id: string)
-	{	
+	{
 		const pwd = await this.chat_service.getChannelProtection(parseInt(id));
 		const userIsInChan = await this.chat_service.userIsInChan(req.headers["authorization"],parseInt(id));
 		if (userIsInChan)
@@ -130,12 +118,10 @@ export class ChatController {
 		return peopleToInvite.filter((value:any) => value !== undefined);
 	}
 
-	// Not use
 	@Get('/channels/users/ban/:id')
 	async getChannelUsersBan(@Param("id") id : string)
 	{
-		const idChan : number = parseInt(id); 
-		const users = await this.chat_service.get__UserBanIn(idChan);
+		const users = await this.chat_service.getUserBanIn(parseInt(id));
 		return users[0].banned;
 	}
 
@@ -145,4 +131,18 @@ export class ChatController {
 		return (listUsers);
 	}
 
+	@Get('/friends/')
+	@UseGuards(JwtGuard)
+	async getUserFriends(@GetUser() user: User) {
+		const friends = await this.chat_service.getUserFriends(user.pseudo);
+		return friends;
+	}
+
+	@Get('/channels/:id/chatWindow')
+	@UseGuards(JwtGuard)
+	async getChannelWindow(@Param("id") id: number, @GetUser() user: User)
+	{
+		return {data : await this.chat_service.getChannelInfo(id, user) };
+	}
 }
+

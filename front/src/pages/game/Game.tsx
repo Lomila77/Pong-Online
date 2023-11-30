@@ -25,9 +25,24 @@ interface JoinRoomMessage {
 export interface FinishedGameState {
     gameStatus: GameStatus;
     winner: Player | null;
-    loser: Player | null;
+    looser: Player | null;
     scoreLeft: number;
     scoreRight: number;
+}
+
+export interface GameParameters {
+    xBall: number,
+    yBall: number,
+    xSpeed: number,
+    ySpeed: number,
+    canvasWidth: number,
+    canvasHeight: number,
+    paddleWidth: number,
+    paddleHeight: number,
+    leftPaddlePositionY: number,
+    rightPaddlePositionY: number,
+    victoryPoints: number,
+    ballRadius: number,
 }
 
 function Game() {
@@ -56,7 +71,7 @@ function Game() {
     const [finishedGameState, setFinishedGameState] = useState<FinishedGameState | null>({
         gameStatus: gameStatus,
         winner: null,
-        loser: null,
+        looser: null,
         scoreLeft: 100,
         scoreRight: 0,
     });
@@ -67,7 +82,7 @@ function Game() {
     const [ballRadius, setBallRadius] = useState<number>(6);
     const [ballPositionX, setBallPositionX] = useState<number>(120);
     const [ballPositionY, setBallPositionY] = useState<number>(150);
-    const [ballSpeedX, setBallSpeedX] = useState<number>(1.5);
+    const [ballSpeedX, setBallSpeedX] = useState<number>(2);
     const [ballSpeedY, setBallSpeedY] = useState<number>(2);
     const [scoreLeft, setScoreLeft] = useState<number>(0);
     const [scoreRight, setScoreRight] = useState<number>(0);
@@ -75,6 +90,20 @@ function Game() {
     const [scorePositionOffsetX, setScorePositionOffsetX] = useState<number>(40);
     const [boardWidth, setBoardWidth] = useState<number>(800);
     const [boardHeight, setBoardHeight] = useState<number>(400);
+
+    const setGameParameters = (gameData: GameParameters) => {
+        setBallRadius(gameData.ballRadius);
+        setBallPositionX(gameData.xBall);
+        setBallPositionY(gameData.yBall);
+        setBallSpeedX(gameData.xSpeed);
+        setBallSpeedY(gameData.ySpeed);
+        setBoardWidth(gameData.canvasWidth);
+        setBoardHeight(gameData.canvasHeight);
+        setLeftPaddlePositionY(gameData.leftPaddlePositionY);
+        setRightPaddlePositionY(gameData.rightPaddlePositionY);
+        setPaddleHeight(gameData.paddleHeight);
+        setPaddleWidth(gameData.paddleWidth);
+    }
 
     const { gameId } = useParams<{ gameId: string }>();
     const socketRef = useRef<Socket | null>(null);
@@ -183,7 +212,7 @@ function Game() {
     useEffect(() => {
         if (!user) return;
 
-        socketRef.current?.on('movePaddleOpponent', function(data) {
+        socketRef.current?.on('movePaddleOpponent', function (data) {
             console.log('movePaddleOpponent - playingSide', playingSide, 'data', data);
             if (playingSide === 'LEFT') {
                 setRightPaddlePositionY(data.y);
@@ -192,7 +221,7 @@ function Game() {
             }
         });
 
-        socketRef.current?.on('moveMyPaddle', function(data) {
+        socketRef.current?.on('moveMyPaddle', function (data) {
             console.log('moveMyPaddle - playingSide', playingSide, 'data', data);
             if (playingSide === 'LEFT') {
                 setLeftPaddlePositionY(data.y);
@@ -201,13 +230,13 @@ function Game() {
             }
         });
 
-        socketRef.current?.on('scoring', function(data) {
+        socketRef.current?.on('scoring', function (data) {
             console.log('scoring', data);
             setScoreLeft(data.score_left);
             setScoreRight(data.score_right);
         });
 
-        socketRef.current?.on('yourPosition', function(data) {
+        socketRef.current?.on('yourPosition', function (data) {
             if (data.side === 'RIGHT') {
                 playingSide = 'RIGHT';
                 setRightPlayer({
@@ -254,7 +283,17 @@ function Game() {
             });
         });
 
-        socketRef.current?.on('startGame', function(data) {
+        socketRef.current?.on('gameData', function (data) {
+                setLeftPlayer({
+                    firstName: data.playerLeft,
+                });
+                setRightPlayer({
+                    firstName: data.playerRight,
+                });
+                setGameParameters(data.gameData);
+        });
+
+        socketRef.current?.on('startGame', function (data) {
             if (data.eventName === 'start') {
                 // todo change to get the whole user ?
                 setLeftPlayer({
@@ -263,13 +302,25 @@ function Game() {
                 setRightPlayer({
                     firstName: data.playerRight,
                 });
+                setGameParameters(data.gameData);
                 setGameStatus(GameStatus.IN_PROGRESS);
             } else if (data.eventName === 'waiting') {
                 setGameStatus(GameStatus.WAITING_FOR_PLAYERS);
             }
         });
 
-        socketRef.current?.on('ballPositionEvent', function(data) {
+        socketRef.current?.on('endGame', function (data) {
+            // winner
+            setFinishedGameState({
+                gameStatus: GameStatus.FINISHED,
+                winner: data.winner,
+                looser: data.looser,
+                scoreLeft: data.left_score,
+                scoreRight: data.right_score,
+            })
+            setGameStatus(GameStatus.FINISHED);
+        });
+        socketRef.current?.on('ballPositionEvent', function (data) {
             console.log('received ballPositionEvent');
             updateGameStatus(GameStatus.IN_PROGRESS);
             setBallPositionX(data.x);
@@ -282,7 +333,7 @@ function Game() {
             <div className='flex items-stretch Parent relative flex-col-reverse md:flex-row '>
                 <div className='flex flex-1 flex-col items-center justify-center sm:py-2 sm:px-5'>
                     <GameStatusesComponent gameStatus={gameStatus} leftPlayer={leftPlayer} rightPlayer={rightPlayer}
-                                           finishedGameState={finishedGameState} />
+                        finishedGameState={finishedGameState} />
                     {
                         socketRef.current && (
                             <PongCanvas

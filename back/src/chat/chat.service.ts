@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChannelCreateDto } from './dto/chat.dto';
-import { ChannelMessageSendDto, DmMsgSend } from './dto/msg.dto';
+import { ChannelMessageSendDto } from './dto/msg.dto';
 import { updateChat } from './chat.type';
 import { UserService } from 'src/user/user.service'
-import { Channel, User, Message } from '@prisma/client';
+import { Channel, User, Message, PrismaClient } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
 import { channel } from 'diagnostics_channel';
@@ -21,42 +21,84 @@ export class ChatService {
     private readonly auth: AuthService,
   ) { }
 
-  async newChannel(info: ChannelCreateDto, username: string) {
+  async getUserFriends(pseudo: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { pseudo: pseudo },
+      select: { friends: true }
+    });
 
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const friends = await this.prisma.user.findMany({
+      where: { pseudo: { in: user.friends.map(String) } },
+      select: { pseudo: true }
+    });
+
+    return friends.map(friend => friend.pseudo);
+  }
+
+  async getUserByPseudo(pseudo: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        pseudo: pseudo,
+      }
+    });
+    return users[0];
+  }
+
+  async CreateChan(info: ChannelCreateDto, pseudo1: string, pseudo2: string = null) {
     let hash = null;
     info.isPassword = false;
     if (info.Password != null && info.Password != undefined && info.Password != "") {
       const salt = crypto.randomBytes(16).toString('hex');
-      const hash = await bcrypt.hash(info.Password, 10);
-      // console.log("hash:" + hash);
+      hash = await bcrypt.hash(info.Password, 10);
       info.isPassword = true;
     }
 
     if (info.isPrivate === undefined)
       info.isPrivate = false;
-    const user = await this.userService.getUser(username);
+
+    const user1 = await this.getUserByPseudo(pseudo1);
+    let membersToConnect = [{ fortytwo_id: user1.fortytwo_id }];
+    let user2 = null;
+    if (pseudo2) {
+      user2 = await this.getUserByPseudo(pseudo2);
+      membersToConnect.push({ fortytwo_id: user2.fortytwo_id });
+    }
     const channel = await this.prisma.channel.create({
       data: {
-        channelName: info.chatName,
+        name: info.name,
         password: hash,
         isPrivate: info.isPrivate,
         isPassword: info.isPassword,
+        isDM: pseudo2 ? true : false,
         owner: {
           connect: {
-            fortytwo_id: user.fortytwo_id,
+            fortytwo_id: user1.fortytwo_id,
           }
         },
         admins: {
           connect: {
-            fortytwo_id: user.fortytwo_id,
+            fortytwo_id: user1.fortytwo_id,
           }
         },
         members: {
-          connect: {
-            fortytwo_id: user.fortytwo_id,
-          }
-        }
-      }
+          connect: membersToConnect
+        },
+        muted: {
+        },
+        banned: {
+        },
+      },
+      include: {
+        admins: true,
+        members: true,
+        owner: true,
+        muted: true,
+        banned: true,
+      },
     });
     return channel;
   }
@@ -305,7 +347,7 @@ export class ChatService {
   }
 
   async join_Chan(data: JoinChanDto, user: User) {
-    const isInChan = await this.userIsInChan(user.fortytwo_id.toString(), data.chatId);
+    const isInChan = await this.userIsInChan(user.fortytwo_id, data.chatId);
     if (isInChan)
       return (5);
     const chan = await this.prisma.channel.findUnique({
@@ -407,15 +449,14 @@ export class ChatService {
       return (false)
   }
 
-  async newMsg(info: ChannelMessageSendDto, id: number) {
-    const channelid = info.chatId;
-    const user = await this.prisma.user.findUnique({
-      where: {
-        fortytwo_id: id,
-      },
-    });
-    const isInChan = await this.userIsInChan(user.refresh_token, channelid);
-    const isMuted = await this.userIsChanMuted(user.refresh_token, channelid);
+  async newMsg(info: ChannelMessageSendDto, pseudo: string) {
+    const channelid = info.channelId;
+    const user = await this.getUserByPseudo(pseudo);
+    if (!user) {
+      throw new Error(`User with pseudo ${pseudo} not found`);
+    }
+    const isInChan = await this.userIsInChan(user.fortytwo_id, channelid);
+    const isMuted = await this.userIsChanMuted(user.fortytwo_id, channelid);
     if (!isInChan || isMuted) {
       return (null);
     }
@@ -428,59 +469,20 @@ export class ChatService {
         },
         channel: {
           connect: {
-            id: info.chatId,
+            id: info.channelId,
           }
         },
-        message: info.msg,
+        message: info.message,
       },
       select: {
         id: true,
         owner: {
           select: {
             avatar: true,
-            fortytwo_userName: true,
+            pseudo: true,
           }
         },
       }
-    });
-
-    return (message);
-  }
-
-  async newDM(info: DmMsgSend, id: number) {
-    const channelid = parseInt(info.target);
-    const user = await this.prisma.user.findUnique({
-      where: {
-        fortytwo_id: id,
-      },
-    });
-    const userid = user.fortytwo_id;
-    const channel = this.prisma.channel.findUnique({
-      where: {
-        id: channelid,
-      },
-    });
-    const message: Message = await this.prisma.message.create({
-      data: {
-        owner: {
-          connect: {
-            fortytwo_id: userid,
-          }
-        },
-        channel: {
-          connect: {
-            id: channelid,
-          }
-        },
-        message: info.msg,
-      },
-      select: {
-        id: true,
-        createdAt: true,
-        message: true,
-        userId: true,
-        channelId: true,
-      },
     });
 
     return (message);
@@ -503,7 +505,7 @@ export class ChatService {
         },
         select: {
           id: true,
-          channelName: true,
+          name: true,
         },
       });
       return source;
@@ -521,7 +523,7 @@ export class ChatService {
         },
         select: {
           id: true,
-          channelName: true,
+          name: true,
         },
       });
       return source;
@@ -574,7 +576,7 @@ export class ChatService {
   organize__channelToJoin(source: any) {
     const channels = [];
     // console.log("source : ", source)
-    // console.log("channelName : ", source.channelName)
+    // console.log("name : ", source.name)
     // console.log("source size : ", source.contains)
     // console.log("member : ", source.member)
 
@@ -604,7 +606,7 @@ export class ChatService {
           id: id,
         },
         select: {
-          channelName: true,
+          name: true,
         },
       });
       return source
@@ -657,7 +659,7 @@ export class ChatService {
     return messages;
   }
 
-  async get__UserBanIn(id: number) {
+  async getUserBanIn(id: number) {
     try {
       const source = await this.prisma.channel.findMany({
         where: {
@@ -711,14 +713,14 @@ export class ChatService {
         }
       )
       // if (info.newname)
-      // {  
+      // {
       //   await this.prisma.channel.update(
       //     {
       //       where: {
       //         id: idchat,
       //       },
       //       data: {
-      //         channelName : info.newname,
+      //         name : info.newname,
       //       },
       //     }
       //   )
@@ -729,26 +731,31 @@ export class ChatService {
       return (2);
   }
 
-  async userIsInChan(token: string, id_channel: number): Promise<boolean> {
-    const channels = await this.prisma.user.findUnique({
+  async userIsInChan(fortytwo_id: number, id_channel: number): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_id: Number(token)
+        fortytwo_id: fortytwo_id
       },
       select: {
         members: true
       }
-    })
-    for (let i = 0; i < channels.members.length; i++) {
-      if (channels.members[i].id === id_channel)
+    });
+
+    if (!user) {
+      throw new Error(`User with fortytwo_id ${fortytwo_id} not found`);
+    }
+
+    for (let i = 0; i < user.members.length; i++) {
+      if (user.members[i].id === id_channel)
         return true;
     }
     return false;
   }
 
-  async userIsChanMuted(token: string, id_channel: number): Promise<boolean> {
+  async userIsChanMuted(fortytwo_id: number, id_channel: number): Promise<boolean> {
     const channels = await this.prisma.user.findUnique({
       where: {
-        fortytwo_id: Number(token)
+        fortytwo_id: fortytwo_id
       },
       select: {
         muted: true
@@ -823,7 +830,7 @@ export class ChatService {
     })
     return Promise.all(userToInvite);
   }
-  
+
   async getUserToDm(token: string) {
     const useralreadydm = await this.prisma.channel.findMany({
       where: {
@@ -875,7 +882,7 @@ export class ChatService {
   async createDmChannel(username1: string, username2: string) {
     const channel = await this.prisma.channel.create({
       data: {
-        channelName: username1 + "," + username2,
+        name: username1 + "," + username2,
         password: '',
         isPrivate: true,
         isDM: true,
@@ -933,4 +940,43 @@ export class ChatService {
     });
     return users;
   }
+
+
+  /******************************************* */
+  /** fonction ajoute pour remanier le front  */
+  /***************************************** */
+
+  private pwdCheck(channel: Channel, pwd: string) {
+    channel.password == pwd ? true : false;
+  }
+
+  private membershipCheck(chanMembers: {pseudo: string}[], userName: string){
+      return chanMembers.find(member => member.pseudo === userName) ? true : false;
+  }
+
+  async getChannelInfo(channelId: number, user: User) {
+
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id:channelId
+      },
+      select: {
+        members: {select: {pseudo: true, }},
+        messages: {select:{
+          message: true,
+          owner:{select:{pseudo: true}}
+        }},
+      }
+    });
+    return channel && this.membershipCheck(channel.members, user.pseudo)
+                  ? {id : channelId,members:channel.members, history: channel.messages}
+                  : {};
+    // in case I decide to formate the informations :
+    // const chatHistory = channel?.messages.map(messages => ({
+    //     owner:messages.owner.pseudo,
+    //     messages: messages.message,
+    // })) || []
+    // return {members:channel.members, history: chatHistory }
+  }
 }
+

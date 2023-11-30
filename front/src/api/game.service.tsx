@@ -18,13 +18,21 @@ export class GameService {
         }
     }
 
-    static async createPrivateGame( ySpeed: number, xSpeed: number, ballRadius: number, victoryPoint : number): Promise<Game> {
+    static async createPrivateGame( 
+        ySpeed: number, 
+        xSpeed: number, 
+        ballRadius: number, 
+        victoryPoint : number, 
+        paddleHeight: number, 
+        paddleWidth: number): Promise<Game> {
         try {
             const res =  await axios.post('http://localhost:3333/game/private', {
                 ySpeed: ySpeed,
                 xSpeed: xSpeed,
                 ballRadius: ballRadius,
                 victoryPoint: victoryPoint,
+                paddleHeight: paddleHeight,
+                paddleWidth: paddleWidth,
             });
             return { id: res.data.roomName };
         }

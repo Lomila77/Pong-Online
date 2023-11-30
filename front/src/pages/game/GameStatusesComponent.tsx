@@ -31,14 +31,14 @@ function GameStatusesComponent({
             }
             {
                 gameStatus === GameStatus.IN_PROGRESS ? (
-                    <div className='flex flex-row items-center justify-center'>
-                        <p className='text-4xl font-display text-green-300 ease-i-out duration-300 NewGame mb-32'>
+                    <div className='flex flex-row items-center justify-center mb-8'>
+                        <p className='text-4xl font-display text-green-300 ease-i-out duration-300 NewGame'>
                             {leftPlayer?.firstName}
                         </p>
-                        <p className='text-3xl font-display text-orangeNG ease-i-out duration-300 NewGame mb-32 ml-16 mr-16'>
+                        <p className='text-3xl font-display text-orangeNG ease-i-out duration-300 NewGame ml-16 mr-16'>
                             VS
                         </p>
-                        <p className='text-4xl font-display text-green-300 ease-i-out duration-300 NewGame mb-32'>
+                        <p className='text-4xl font-display text-green-300 ease-i-out duration-300 NewGame'>
                             {rightPlayer?.firstName}
                         </p>
                     </div>
@@ -48,9 +48,9 @@ function GameStatusesComponent({
                 gameStatus === GameStatus.FINISHED ? (
                     <GameFinishedComponent
                         winner={finishedGameState!.winner!}
-                        loser={finishedGameState!.loser!}
+                        looser={finishedGameState!.looser!}
                         winnerScore={finishedGameState!.scoreLeft}
-                        loserScore={finishedGameState!.scoreRight}
+                        looserScore={finishedGameState!.scoreRight}
                     />
                 ) : null
             }
