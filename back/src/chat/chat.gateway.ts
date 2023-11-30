@@ -94,12 +94,12 @@ export class ChatGateway implements OnGatewayConnection {
       var channel = await this.chatService.getChannelById(data.info.chanId);
 
     // Creer le canal s'il n'existe pas
-    if (!channel) {
-      channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.info.pseudo2);
-      if (!channel.isPrivate && !channel.isDM)
-        this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
-      else
-        this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
+    let type = channel.isDM ? "dm" : channel.isPrivate ? "privé" : "public";
+
+    if (!channel.isPrivate && !channel.isDM) {
+      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
+    } else {
+      this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
     }
 
     // Rejoindre le canal
