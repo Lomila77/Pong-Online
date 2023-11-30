@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { IChannels, backRequest, backResInterface } from '../api/queries';
+import { IChannel, IChannels, backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
@@ -10,7 +10,7 @@ export interface friends {
   disconnected: string[]
 }
 
-export interface IChatMsg {
+export interface IChatHistory {
   owner: {
     pseudo: string
   };
@@ -19,9 +19,10 @@ export interface IChatMsg {
 
 export interface IChatWindow {
   id: number;
+  type: string;
   name: string;
   members: string[];
-  history: IChatMsg[];
+  history: IChatHistory[];
 }
 
 const ChatContext = createContext<{
@@ -58,16 +59,13 @@ export const ChatProvider = ({ children }) => {
     });
     newSocket.on('connect', () => {
       setSocket(newSocket);
-
       backRequest('chat/friends', 'GET').then((data) => {
         data.friends && setFriends(data.friends);
       })
       backRequest('chat/channels', 'GET').then((data) => {
         console.log(data);
-
         data.channels && setChannels(data.channels);
       })
-
       newSocket?.on('friendConnected', (friend) => {
         setConnectedFriends((prev) => [...prev, friend]);
         setDisconnectedFriends((prev) => prev.filter((f) => f !== friend));
@@ -76,25 +74,35 @@ export const ChatProvider = ({ children }) => {
         setDisconnectedFriends((prev) => [...prev, friend]);
         setConnectedFriends((prev) => prev.filter((f) => f !== friend));
       });
-
       newSocket?.on('sendMessage', (message) => {
         //add message in the right conversation.
       })
-
-      newSocket?.on('Channel Created', (id:number, name: string, members: string[], type: string) => {
-        switch (type){
+      newSocket?.on('Channel Created', (newChat : IChatWindow) => {
+        const newChannel : IChannel = {id: newChat.id, name: newChat.name}
+        /* update channels state  */
+        switch (newChat.type){
           case 'dm' :
-            
+            setChannels((prev) => ({
+              ...prev!,
+              MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
+            }));
+            break;
           case 'private' :
+            setChannels((prev) => ({
+              ...prev!,
+              MyDms: prev ? [...prev.MyChannels, newChannel] : [newChannel],
+            }));
+            break;
           case 'public' :
+            setChannels((prev) => ({
+              ...prev!,
+              MyDms: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
+            }));
+            break;
         }
-        // set channel liste
-        // set opnedWindows
-        //setChannels((prev) => [...prev, channel]);
+        /* update openedWindows state */
+        setOpenedWindows((prev) => [...(prev ?? []), newChat]);
       });
-      // newSocket?.on('channelUpdate', (channel) => {
-      //   setChannels((prev) => [...prev, channel]);
-      // });
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -122,23 +130,26 @@ export const ChatProvider = ({ children }) => {
 
   /*********** chat window states ************/
 
-  const findIdInList = <T extends { id: number }>(list: T[], idToFind: number): T | undefined => {
-    const foundElem = list.find(window => window.id === idToFind);
+  const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
+    const foundElem = list?.find(window => window.id === idToFind);
     return foundElem;
   };
 
-
-    const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
-    if (openedWindows && chatId && findIdInList(openedWindows, chatId))
-      return
-    if (chatId) { //case it has an history
+  /* in handleOpenWindow we handle 2 cases :
+   * case open an already existing conversation
+      we need to get the history of the conversation
+      send the event to the back with a full id
+   * case open a new conversation :
+      send the event to the back with a empty id
+   */
+  const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
+    if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation
       const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
       setOpenedWindows(current => {return([...current || [], newWindow])})
       console.log("newWindow : ", newWindow);
     }
-    // TODO: in case there is no history, I will have to listen to socket to check newly created chan.
     socket?.emit('JoinChannel', {pseudo: pseudo, chatId: chatId, Password: password});
-    }
+  }
 
   // const handleCloseWindow = (id : string) => {
   //   const closingWingow: IChatWindow = {

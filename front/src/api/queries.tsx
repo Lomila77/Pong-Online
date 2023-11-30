@@ -158,7 +158,7 @@ export interface frontReqInterface {
 
 export interface IChannel {
   id: number,
-  channelName: string,
+  name: string,
 }
 
 export interface IChannels{

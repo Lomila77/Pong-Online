@@ -5,12 +5,6 @@ export interface User {
 	friends?: string[];
   }
 
-export interface Channel {
-	MyDms: string[];
-	MyChannels: string[];
-	ChannelsToJoin: string[];
-}
-
 export interface frontReqInterface {
 	pseudo?: string;
 	avatar?: any;
@@ -18,19 +12,15 @@ export interface frontReqInterface {
 	fortytwo_id?: string;
 }
 
+export interface IChannel {
+	id: number,
+	name: string,
+  }
+
 export interface IChannels{
-	MyDms: {
-	  id: string,
-	  channelName: string,
-	}[];
-	MyChannels: {
-		id: string,
-		channelName: string,
-	}[]
-	ChannelsToJoin : {
-		id: string,
-		channelName: string,
-	}[]
+	MyDms: IChannel[];
+	MyChannels: IChannel[];
+	ChannelsToJoin : IChannel[];
   }
 
   export interface backResInterface {
@@ -44,6 +34,6 @@ export interface IChannels{
 	allUser?: User[]
 	isAuthenticated?: boolean;
 	channels?: IChannels;
-	data?: any;
 	xp?: number;
+	data?: any;
   }
