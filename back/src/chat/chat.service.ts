@@ -30,13 +30,14 @@ export class ChatService {
     if (!user) {
       throw new Error('User not found');
     }
-
+    console.log("service getUserFriends: printing user.friends \n", user.friends);
     const friends = await this.prisma.user.findMany({
-      where: { pseudo: { in: user.friends.map(String) } },
-      select: { pseudo: true }
+      where: { fortytwo_id: { in: user.friends.map(Number) } },
+      select: { pseudo: true, connected: true, fortytwo_id: true }
     });
-
-    return friends.map(friend => friend.pseudo);
+    console.log("service getUserFriends: printing friends \n", friends);
+    return friends
+    // return friends.map(friend => friend.pseudo);
   }
 
   async getUserByPseudo(pseudo: string) {

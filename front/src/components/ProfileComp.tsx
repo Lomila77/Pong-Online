@@ -1,21 +1,26 @@
 import React, {useEffect, useState} from 'react';
 import MGameWatch from '../images/MGameWatch.png';
 import {backRequest} from "../api/queries";
+import {useUser} from "../context/UserContext";
 
 const ProfileComp: React.FC = ({user}) => {
     if (!user)
         return;
     const [friendAdded, setFriendAdded] = useState<boolean>(false);
     useEffect(() => {
-        backRequest('users/isFriend', 'GET', {pseudo: user.pseudo}).then(data => {(
+        backRequest('users/isFriend/' + user.pseudo, 'GET').then(data => {
             setFriendAdded(data.isFriend);
-        )})
+            console.log("ISFRIEND?: " + friendAdded);
+        })
     }, []);
+
     const toggleAddFriend = () => {
+        if (friendAdded)
+            return;
         backRequest('users/addFriend', 'POST', {pseudo: user.pseudo});
-        console.log("Friend Added");
         setFriendAdded(true);
     }
+
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
       <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
@@ -69,7 +74,7 @@ const ProfileComp: React.FC = ({user}) => {
         </svg>
         <span className="font-display text-3xl text-orangeNG self-end">{user.xp}</span>
       </div>
-      <button className={"btn btn-active btn-sm font-display btn-secondary text-xs text-white " + (friendAdded ? "disabled" : "")} onClick={toggleAddFriend}>{friendAdded ? "Success" : "Add to friend"}</button>
+      <button className={"btn btn-active btn-sm font-display btn-secondary text-xs text-white " + (friendAdded ? "btn-disabled" : "")} onClick={toggleAddFriend}>{friendAdded ? "Friend" : "Add to friend"}</button>
     </div>
   );
 };

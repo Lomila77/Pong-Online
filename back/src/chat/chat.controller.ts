@@ -135,6 +135,7 @@ export class ChatController {
 	@UseGuards(JwtGuard)
 	async getUserFriends(@GetUser() user: User) {
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
+		console.log("friends : \n", friends);
 		return friends;
 	}
 
