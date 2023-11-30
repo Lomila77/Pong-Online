@@ -41,7 +41,13 @@ export class UserController {
     return this.userService.checkPseudo(body.pseudo)
   }
 
-  @Post('/addfriend')
+  @Get('/isFriend')
+  @UseGuards(JwtGuard)
+  async isFriend(@GetUser() me: User, @Body() body: frontReqInterface) {
+    return await this.userService.isFriend(me, body.pseudo);
+  }
+
+  @Post('/addFriend')
   @UseGuards(JwtGuard)
   async addFriend(@GetUser() me: User, @Body() body: frontReqInterface) {
     return await this.userService.addFriends(me, body.pseudo);

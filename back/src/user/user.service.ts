@@ -98,15 +98,21 @@ export class UserService {
     }
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
+  async isFriend(me: User, friendPseudo: string): Promise<backResInterface> {
     const friend = await this.prisma.user.findFirst({
       where: {
         pseudo: friendPseudo,
-      }
+      },
     })
-    //const friendId = friend.then(data => (data.fortytwo_id));
-    console.log("FRIEND ID: " + friend);
-    const mePrisma = await this.prisma.user.update({
+    if ()
+  }
+  async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
+    const friend = await this.prisma.user.findFirst({
+      where: {
+        pseudo: friendPseudo,
+      },
+    });
+    await this.prisma.user.update({
       where: {
         fortytwo_id: me.fortytwo_id,
       },
@@ -116,6 +122,20 @@ export class UserService {
         },
       }
     })
+    const userMe = await this.prisma.user.findUnique({
+      where: {
+        fortytwo_id: me.fortytwo_id,
+      },
+      select: {
+        friends: true,
+      }
+    })
+    const friends = await this.prisma.user.findMany({
+      where: { pseudo: { in: userMe.friends.map(String) } },
+      select: { pseudo: true, connected: true }
+    });
+    console.log("FRIENDS: " + friends[0])
+    return {isOk: true};
   }
 
   profil(user: User) : backResInterface{

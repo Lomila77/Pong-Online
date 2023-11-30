@@ -141,6 +141,7 @@ export interface backResInterface {
   avatar?: any;
   isF2Active?: boolean;
   fortytwo_id?: string;
+  isFriend?: boolean;
   friends?: IChatFriend[];
   allUser?: User[]
   isAuthenticated?: boolean;

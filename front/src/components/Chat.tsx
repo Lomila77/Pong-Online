@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useUser } from "../context/UserContext";
-import { IChatWindow, useChat } from "../context/ChatContext";
+import {IChatFriend, IChatWindow, useChat} from "../context/ChatContext";
 import { Socket } from "socket.io-client";
 import {getUsers, IChannel, IChannels} from "../api/queries";
 import CreateChannel from "./CreateChannel";

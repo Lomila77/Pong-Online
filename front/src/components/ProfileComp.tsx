@@ -1,12 +1,20 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import MGameWatch from '../images/MGameWatch.png';
 import {backRequest} from "../api/queries";
 
 const ProfileComp: React.FC = ({user}) => {
     if (!user)
         return;
+    const [friendAdded, setFriendAdded] = useState<boolean>(false);
+    useEffect(() => {
+        backRequest('users/isFriend', 'GET', {pseudo: user.pseudo}).then(data => {(
+            setFriendAdded(data.isFriend);
+        )})
+    }, []);
     const toggleAddFriend = () => {
-        backRequest('users/addfriend', 'POST', {pseudo: user.pseudo});
+        backRequest('users/addFriend', 'POST', {pseudo: user.pseudo});
+        console.log("Friend Added");
+        setFriendAdded(true);
     }
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
@@ -61,7 +69,7 @@ const ProfileComp: React.FC = ({user}) => {
         </svg>
         <span className="font-display text-3xl text-orangeNG self-end">{user.xp}</span>
       </div>
-      <button className="btn btn-active btn-sm font-display btn-secondary text-xs text-white" onClick={toggleAddFriend}>Add to friend</button>
+      <button className={"btn btn-active btn-sm font-display btn-secondary text-xs text-white " + (friendAdded ? "disabled" : "")} onClick={toggleAddFriend}>{friendAdded ? "Success" : "Add to friend"}</button>
     </div>
   );
 };
