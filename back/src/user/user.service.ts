@@ -136,8 +136,8 @@ export class UserService {
     })
   }
 
-  async getUsers() {
-    return this.prisma.user.findMany();
+  async getUsers(): Promise<backResInterface> {
+    return {allUser: await this.prisma.user.findMany()};
   }
 
   //async getUser(username: string) {

@@ -1,5 +1,5 @@
 
-import { frontReqInterface } from './../shared/shared.interface';
+import {backResInterface, frontReqInterface} from './../shared/shared.interface';
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
@@ -32,8 +32,8 @@ export class UserController {
 
   @Get('/all')
   @UseGuards(JwtGuard)
-  async getUsers() {
-    return this.userService.getUsers();
+  async getUsers(): Promise<backResInterface> {
+    return await this.userService.getUsers();
   }
 
   @Put('/checkpseudo')

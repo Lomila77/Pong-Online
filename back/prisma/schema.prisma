@@ -25,6 +25,7 @@ model User {
   createdAt         DateTime @default(now())
   updateAt          DateTime @updatedAt
   connected         Boolean  @default(false)
+  win               Int      @default(0)
 
   messages      Message[]
   ownerId       Int?
