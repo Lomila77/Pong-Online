@@ -50,7 +50,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChannel[] | IChatFriend[]>([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState<IChatFriend[] | IChannel[]>([]); // TODO change by friends after tests
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -73,7 +73,7 @@ function Chat() {
     }, [selectedTarget]);
 
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
-    // TODO call luc pour effacer un channel ouvert
+    // TODO call luc pour effacer un channel
     useEffect(() => {
         console.log("destroyWindowChat modified");
         if (destroyWindowChat != -1) {
@@ -100,9 +100,9 @@ function Chat() {
             <div className="drawer-side mt-16">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
-                    {drawerContent.map((target: IChannel | IChatFriend, index: number) => (
+                    {drawerContent.map((target: IChatFriend | IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
-                            <button className={"btn btn-ghost font-display " + colorDrawer.text + " " + {target.isConnected ? "online" : ""}}
+                            <button className={`btn btn-ghost font-display ${target.connected ? "disabled" : ""} ` + colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.name}
                             </button>
                             {!displayChannelDrawer && (
