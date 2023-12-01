@@ -13,6 +13,7 @@ export interface IChannel {
   id: number,
   name: string,
   type: string,
+  members: number[],
 }
 
 export interface IChannels{
@@ -27,6 +28,7 @@ export interface IChatFriend {
   id: number
   name: string
   type: string
+  members: number[],
   connected: boolean
 }
 
@@ -36,7 +38,6 @@ export interface IChatHistory {
   };
   content: string;
 }
-
 
 //for windows that are openned
 export interface IChatMember {
@@ -50,6 +51,14 @@ export interface IChatWindow {
 
   members: IChatMember[];
   history: IChatHistory[];
+}
+
+export interface IFormData {
+  name: string,
+  isPrivate: boolean,
+  isPassword: boolean,
+  password: string,
+  members: number[],
 }
 
 const ChatContext = createContext<{
@@ -146,10 +155,6 @@ export const ChatProvider = ({ children }) => {
        socketRef.current = null;
     });
   }
-  useEffect(() => {
-   console.log("\n\n\n\nuse effect: ", friends);
-  }, [friends])
-
 
   useEffect(() => {
     if (user?.isAuthenticated && !socket?.connected) {
@@ -177,24 +182,32 @@ export const ChatProvider = ({ children }) => {
    * case open a new conversation :
       send the event to the back with a empty id
    */
-// todo : il faut gerer different cas :
-  const handleOpenWindo = async ({name, id, type} : {name?: string, id: number, type: string}, password?: string) => {
-    
-    if (type == "dm" )
-      socket?.emit('Join Channel', {name: name});
-    else
-      socket?.emit('Join Channel', {chatId: id, Password: password});
+  const handleOpenWindow = async (chat : IChannel | IChatFriend, form?: IFormData) => {
+
+    // const data = {
+    //   id: number,
+    //   name: form?.name? ,
+    //   type: string,
+    //   members:number[],
+    //   name: string,
+    //   isPrivate: boolean,
+    //   isPassword: boolean,
+    //   password: string,
+    //   members: number[],
+    // }
+    socket?.emit('JoinChannel', chat )
+    // todo if name is not in mydm, set chat.name a friend 's name
 
   }
 
-  const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
-    if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation
-      const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
-      setOpenedWindows(current => {return([...current || [], newWindow])})
-      console.log("newWindow : ", newWindow);
-    }
-    socket?.emit('Join Channel', {pseudo: pseudo, chatId: chatId, Password: password});
-  }
+  // const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
+  //   if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation
+  //     const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
+  //     setOpenedWindows(current => {return([...current || [], newWindow])})
+  //     console.log("newWindow : ", newWindow);
+  //   }
+  //   socket?.emit('Join Channel', {pseudo: pseudo, chatId: chatId, Password: password});
+  // }
 
   // const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
   //   if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation

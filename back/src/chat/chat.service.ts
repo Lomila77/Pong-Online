@@ -507,10 +507,12 @@ export class ChatService {
         select: {
           id: true,
           name: true,
+          members: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
+        members: source.members.map(member => member.fortytwo_id),
         type: 'ChannelsToJoin',
       }));
 
@@ -531,13 +533,15 @@ export class ChatService {
         select: {
           id: true,
           name: true,
+          members: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
+        members: source.members.map(member => member.fortytwo_id),
         type: 'MyChannels',
       }));
-      return sources;
+      return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
     }
@@ -545,7 +549,7 @@ export class ChatService {
 
   async get__DmUser(token: string) {
     try {
-      const source = await this.prisma.channel.findMany({
+      const sources = await this.prisma.channel.findMany({
         where: {
           members: { some: { refresh_token: token } },
           isDM: true,
@@ -557,12 +561,18 @@ export class ChatService {
               NOT: { refresh_token: token },
             },
             select: {
-              fortytwo_userName: true,
+              fortytwo_id: true,
+              // fortytwo_userName: true,
             }
           }
         },
       });
-      return source;
+      const modifiedSources = sources.map((source) => ({
+        ...source,
+        members: source.members.map(member => member.fortytwo_id),
+        type: 'MyDms',
+      }));
+      return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
     }
