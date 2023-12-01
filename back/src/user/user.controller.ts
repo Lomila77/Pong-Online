@@ -47,13 +47,6 @@ export class UserController {
     return await this.userService.isFriend(me, pseudo);
   }
 
-  @Post('/addFriend')
-  @UseGuards(JwtGuard)
-  async addFriend(@GetUser() me: User, @Body() body: frontReqInterface) {
-    return await this.userService.addFriends(me, body.pseudo);
-  }
-
-
   @Post('update')
   @UseGuards(JwtGuard)
   async settingslock(
