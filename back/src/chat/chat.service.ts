@@ -2,16 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto } from './dto/msg.dto';
-import { updateChat } from './chat.type';
 import { UserService } from 'src/user/user.service'
-import { Channel, User, Message, PrismaClient } from '@prisma/client';
+import { Channel, User } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
-import { channel } from 'diagnostics_channel';
-import { use } from 'passport';
-import { Server, Socket } from 'socket.io';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { backResInterface } from './../shared/shared.interface';
 
 @Injectable()
 export class ChatService {
@@ -944,11 +941,6 @@ export class ChatService {
     return users;
   }
 
-
-  /******************************************* */
-  /** fonction ajoute pour remanier le front  */
-  /***************************************** */
-
   private pwdCheck(channel: Channel, pwd: string) {
     channel.password == pwd ? true : false;
   }
@@ -980,6 +972,33 @@ export class ChatService {
     //     messages: messages.message,
     // })) || []
     // return {members:channel.members, history: chatHistory }
+  }
+
+  async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
+    const meFriends = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.fortytwo_id},
+      select: { friends: true}
+    })).friends;
+    const friendId = (await this.prisma.user.findFirst({
+      where: { pseudo: friendPseudo, },
+      select: { fortytwo_id: true}
+    })).fortytwo_id;
+
+    if (!meFriends?.find(meFriend => meFriend === friendId)
+      && me.fortytwo_id != friendId)
+    {
+      const mePrisma = await this.prisma.user.update({
+        where: { fortytwo_id: me.fortytwo_id, },
+        data: { friends: { push: friendId,},}
+      })
+      console.log("addfriends result : ", mePrisma.friends);
+      return {isFriend: true};
+    }
+    else if ( me.fortytwo_id != friendId)
+    console.log('you can not friend yourself\n')
+    else
+      console.log('already friend\n')
+    return {isFriend: false};
   }
 }
 

@@ -408,6 +408,24 @@ export class ChatGateway implements OnGatewayConnection {
       client.broadcast.emit('chan updated', data);
   }
 
+  @SubscribeMessage('Add Friends')
+  async addFriends(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { userId: string, friendId: string }
+  ) {
+    try {
+      const me = await this.userService.getUser(data.userId);
+      const result = await this.chatService.addFriends(me, data.friendId);
+      if (result.isFriend) {
+        client.emit('Friends Added', { userId: data.userId, friendId: data.friendId });
+      } else {
+        client.emit('Failed to Add Friends', { userId: data.userId, friendId: data.friendId });
+      }
+    } catch (error) {
+      console.error(error);
+      client.emit('Error', 'An error occurred while adding friends');
+    }
+  }
   // @SubscribeMessage('play')
   // async playMatchWithFriends(@ConnectedSocket() client: Socket, @MessageBody() data: PlayChanDto) {
   //   const room = await this.chatService.playMatchWithFriends(client, this.clients[client.id].fortytwo_userName, data.chatId, this.server);
