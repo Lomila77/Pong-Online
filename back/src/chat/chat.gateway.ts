@@ -96,12 +96,11 @@ export class ChatGateway implements OnGatewayConnection {
     } else {
       channel = await this.chatService.CreateChan(data.info);
     }
-    let type = channel.isDM ? "dm" : "channel";
 
     if (!channel.isPrivate && !channel.isDM) {
-      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
+      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
     } else {
-      this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
+      this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
     }
 
     // Rejoindre le canal
@@ -109,13 +108,23 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("error", "Error refresh the page!!!");
       return;
     }
-    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+    const user = await this.userService.getUser(this.clients[client.id].pseudo);
     const ret = await this.chatService.join_Chan({ chatId: channel.id }, user);
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5)
         client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: type});
+      this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+
+      if (channel.isDM)
+      {
+        const otherUser = await this.userService.getUserbyId(data.info.members[1]);
+        const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
+        if (retOtherUser === 0 || retOtherUser === 5) {
+          client.to(channel.id.toString()).emit("NewUserJoin", { username: otherUser.fortytwo_userName, id: otherUser.fortytwo_id, avatarUrl: otherUser.avatar });
+          this.server.to(otherUser.socketId).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+        }
+      }
     }
     else if (ret == 1)
       this.server.to(client.id).emit("error", "NotInvited");
@@ -399,6 +408,24 @@ export class ChatGateway implements OnGatewayConnection {
       client.broadcast.emit('chan updated', data);
   }
 
+  @SubscribeMessage('Add Friends')
+  async addFriends(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { userId: string, friendId: string }
+  ) {
+    try {
+      const me = await this.userService.getUser(data.userId);
+      const result = await this.chatService.addFriends(me, data.friendId);
+      if (result.isFriend) {
+        client.emit('Friends Added', { userId: data.userId, friendId: data.friendId });
+      } else {
+        client.emit('Failed to Add Friends', { userId: data.userId, friendId: data.friendId });
+      }
+    } catch (error) {
+      console.error(error);
+      client.emit('Error', 'An error occurred while adding friends');
+    }
+  }
   // @SubscribeMessage('play')
   // async playMatchWithFriends(@ConnectedSocket() client: Socket, @MessageBody() data: PlayChanDto) {
   //   const room = await this.chatService.playMatchWithFriends(client, this.clients[client.id].fortytwo_userName, data.chatId, this.server);
