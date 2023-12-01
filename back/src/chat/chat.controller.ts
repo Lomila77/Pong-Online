@@ -42,7 +42,7 @@ export class ChatController {
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
-			mydms.push({id:elem.id, name:elem.members[0].username, type: "dm"})
+			mydms.push({id:elem.id, name:"", members: elem.members, type: elem.type})
 		})
 		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
@@ -140,6 +140,8 @@ export class ChatController {
 			id: friend.fortytwo_id,
 			name: friend.pseudo,
 			connected: friend.connected,
+			type: "MyDms",
+			members: [user.fortytwo_id, friend.fortytwo_id]
 		}));
 		return {chatFriends: goodFormat};
 	}
@@ -150,5 +152,6 @@ export class ChatController {
 	{
 		return {data : await this.chat_service.getChannelInfo(id, user) };
 	}
+
 }
 

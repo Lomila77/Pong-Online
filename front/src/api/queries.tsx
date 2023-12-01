@@ -127,6 +127,7 @@ export interface IChannel {
   id: number,
   name: string,
   type: string,
+  members:number[],
 }
 
 export interface IChannels{
