@@ -59,11 +59,13 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends);
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends); //TODO manque channnel to join
     }, [displayChannelDrawer, friends]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
+        if (!selectedTarget)
+            return;
         if ((selectedTarget.name && !openedWindows.find(content => content.name === selectedTarget.name)) ||
             (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)))
             handleOpenWindow(selectedTarget);

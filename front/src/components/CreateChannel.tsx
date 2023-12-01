@@ -2,11 +2,12 @@ import {useEffect, useState} from "react";
 
 function NewChannel({me, socket, close}) {
     const [formData, setFormData] = useState({
-        chatName: '',
+        name: '',
         isPrivate: false,
         isPassword: false,
-        Password: '',
+        password: '',
         members: [],
+        type: 'MyChannels'
     })
 
     useEffect(() =>
@@ -16,7 +17,7 @@ function NewChannel({me, socket, close}) {
         )), []);
 
     const toggleCreateChannel = () => {
-        socket.emit('create channel', formData);
+        socket.emit('JoinChannel', formData); // TODO: Appeler fonction luc
         close();
     }
 
@@ -30,11 +31,11 @@ function NewChannel({me, socket, close}) {
                             <input className="input input-bordered input-sm max-w-xs w-60 text-black"
                                    type={"text"}
                                    placeholder={"Title"}
-                                   value={formData.chatName}
+                                   value={formData.name}
                                    onChange={(e) =>
                                        setFormData(prevFormData => ({
                                            ...prevFormData,
-                                           chatName: e.target.value,
+                                           name: e.target.value,
                                            }))}
                                    required={true}
                                    minLength={1}
@@ -47,7 +48,7 @@ function NewChannel({me, socket, close}) {
                                    type={"checkbox"}
                                    checked={formData.isPrivate}
                                    onChange={(e) =>
-                                       setFormData(prevFormData => ({
+                                    setFormData(prevFormData => ({
                                            ...prevFormData,
                                            isPrivate: (e.target.checked),
                                        }))}
@@ -75,25 +76,11 @@ function NewChannel({me, socket, close}) {
                                    onChange={(e) =>
                                        setFormData(prevFormData => ({
                                            ...prevFormData,
-                                           Password: e.target.value,
+                                           password: e.target.value,
                                        }))}
                                    minLength={1}
                                    disabled={!formData.isPassword}
                             />
-                        </div>
-                        <br/>
-                        <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
-                            <label>Friends:</label>
-                            <input className="input input-bordered input-sm max-w-xs w-60 text-black"
-                               placeholder="Friend1, Friend2, ..."
-                               type="text"
-                               value={formData.members}
-                               onChange={(e) =>
-                                   setFormData(prevFormData => ({
-                                       ...prevFormData,
-                                       members: e.target.value.split(' '),
-                               }))}
-                               />
                         </div>
                         <button className="btn text-orangeNG" type={"submit"}>Create</button>
                     </form>
