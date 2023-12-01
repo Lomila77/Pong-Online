@@ -17,7 +17,7 @@ const ProfileComp: React.FC = ({user}) => {
     const toggleAddFriend = () => {
         if (friendAdded)
             return;
-        backRequest('users/addFriend', 'POST', {pseudo: user.pseudo});
+        backRequest('chat/addFriend', 'POST', {pseudo: user.pseudo});
         setFriendAdded(true);
     }
 

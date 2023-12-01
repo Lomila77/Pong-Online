@@ -50,7 +50,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChannel[] | any[]>([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState<IChannel[] | IChatFriend[]>([]); // TODO change by friends after tests
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -73,16 +73,17 @@ function Chat() {
     }, [selectedTarget]);
 
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
+    // TODO call luc pour effacer un channel ouvert
     useEffect(() => {
         console.log("destroyWindowChat modified");
         if (destroyWindowChat != -1) {
-            setOpenDm((prevDm) =>
-                prevDm.filter((dm, index) => index !== destroyWindowChat));
+            //setOpenDm((prevDm) =>
+            //    prevDm.filter((dm, index) => index !== destroyWindowChat));
             setDestroyWindowChat(-1);
         }
         if (destroyWindowChannel != -1) {
-            setOpenChannel((prevChannel) =>
-                prevChannel.filter((channel, index) => index !== destroyWindowChannel));
+            //setOpenChannel((prevChannel) =>
+            //    prevChannel.filter((channel, index) => index !== destroyWindowChannel));
             setDestroyWindowChannel(-1);
         }
         }, [destroyWindowChat, destroyWindowChannel]);
@@ -99,9 +100,9 @@ function Chat() {
             <div className="drawer-side mt-16">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
-                    {drawerContent.map((target, index) => (
+                    {drawerContent.map((target: IChannel | IChatFriend, index: number) => (
                         <li key={index} className="flex flex-row justify-between">
-                            <button className={"btn btn-ghost font-display " + colorDrawer.text}
+                            <button className={"btn btn-ghost font-display " + colorDrawer.text + " " + {target.isConnected ? "online" : ""}}
                                     onClick={() => setSelectedTarget(target)}>{target.name}
                             </button>
                             {!displayChannelDrawer && (
