@@ -25,10 +25,10 @@ function Chat() {
     // Recuperation de la session de l'utilisateur
     const {user, setUser} = useUser();
     // Permet de selectionner le user pour afficher le dm avec celui-ci
-    const [selectedUser, setSelectedUser] = useState('');
+    const [selectedTarget, setSelectedTarget] = useState<IChatWindow>(null);
 
     // Liste des dms ouvert (en bas de page)
-    const [openDm, setOpenDm] = useState([]);
+    //const [openDm, setOpenDm] = useState([]);
     // Liste des channels ouvert (en bas de page)
     const [openChannel, setOpenChannel] = useState([]);
 
@@ -64,10 +64,11 @@ function Chat() {
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
-        if (selectedUser && !openDm.find(pseudo => pseudo === selectedUser))
-            setOpenDm([...openDm, selectedUser]);
-        setSelectedUser(null);
-    }, [selectedUser]);
+        if ((selectedTarget.name && !openedWindows.find(content => content.name === selectedTarget.name)) ||
+            (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)))
+            handleOpenWindow(selectedTarget);
+        setSelectedTarget(null);
+    }, [selectedTarget]);
 
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
     useEffect(() => {
@@ -99,7 +100,7 @@ function Chat() {
                     {drawerContent.map((target, index) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={"btn btn-ghost font-display " + colorDrawer.text}
-                                    onClick={() => setSelectedUser(target.name)}>{target.name}
+                                    onClick={() => setSelectedTarget(target)}>{target.name}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
