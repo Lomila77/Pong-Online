@@ -17,6 +17,7 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
+import { backResInterface } from './../shared/shared.interface';
 
 export interface User {
   id: number;
@@ -122,7 +123,7 @@ export class ChatGateway implements OnGatewayConnection {
         const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
         if (retOtherUser === 0 || retOtherUser === 5) {
           client.to(channel.id.toString()).emit("NewUserJoin", { username: otherUser.fortytwo_userName, id: otherUser.fortytwo_id, avatarUrl: otherUser.avatar });
-          this.server.to(otherUser.socketId).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+          this.server.to(channel.id.toString()).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
         }
       }
     }
@@ -408,24 +409,6 @@ export class ChatGateway implements OnGatewayConnection {
       client.broadcast.emit('chan updated', data);
   }
 
-  @SubscribeMessage('Add Friends')
-  async addFriends(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { userId: string, friendId: string }
-  ) {
-    try {
-      const me = await this.userService.getUser(data.userId);
-      const result = await this.chatService.addFriends(me, data.friendId);
-      if (result.isFriend) {
-        client.emit('Friends Added', { userId: data.userId, friendId: data.friendId });
-      } else {
-        client.emit('Failed to Add Friends', { userId: data.userId, friendId: data.friendId });
-      }
-    } catch (error) {
-      console.error(error);
-      client.emit('Error', 'An error occurred while adding friends');
-    }
-  }
   // @SubscribeMessage('play')
   // async playMatchWithFriends(@ConnectedSocket() client: Socket, @MessageBody() data: PlayChanDto) {
   //   const room = await this.chatService.playMatchWithFriends(client, this.clients[client.id].fortytwo_userName, data.chatId, this.server);
@@ -435,4 +418,33 @@ export class ChatGateway implements OnGatewayConnection {
   //     this.server.to(data.chatId.toString()).emit("NewMessage", msg);
   //   }, 2000);
   // }
+
+  async addFriends(me: User, friendPseudo: string,  @ConnectedSocket() client: Socket): Promise<backResInterface> {
+    const meFriends = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.id },
+      select: { friends: true }
+    })).friends;
+    const friendId = (await this.prisma.user.findFirst({
+      where: { pseudo: friendPseudo },
+      select: { fortytwo_id: true }
+    })).fortytwo_id;
+
+    if (!meFriends?.find(meFriend => meFriend === friendId) && me.id != friendId) {
+      const mePrisma = await this.prisma.user.update({
+        where: { fortytwo_id: me.id },
+        data: { friends: { push: friendId } }
+      });
+      console.log("addfriends result : ", mePrisma.friends);
+
+      const friend = await this.userService.getUserbyId(friendId);
+      this.server.to(client.id).emit("New Friends", { friend });
+
+      return { isFriend: true };
+    } else if (me.id != friendId) {
+      console.log('you can not friend yourself\n');
+    } else {
+      console.log('already friend\n');
+    }
+    return { isFriend: false };
+  }
 }
