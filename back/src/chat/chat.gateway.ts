@@ -89,12 +89,13 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: { info: ChannelCreateDto },
     @ConnectedSocket() client: Socket,
   ) {
-    // Vérifiez si le canal existe
-    if (data.info.chanId !== undefined || data.info.chanId !== null)
-      var channel = await this.chatService.getChannelById(data.info.chanId);
+    let channel;
 
-    // Creer le canal s'il n'existe pas
-    // let type = channel.isDM ? "dm" : channel.isPrivate ? "privé" : "public";
+    if (data.info.chanId) {
+      channel = await this.chatService.getChannelById(data.info.chanId);
+    } else {
+      channel = await this.chatService.CreateChan(data.info);
+    }
     let type = channel.isDM ? "dm" : "channel";
 
     if (!channel.isPrivate && !channel.isDM) {
@@ -114,7 +115,7 @@ export class ChatGateway implements OnGatewayConnection {
       client.join(channel.id.toString());
       if (ret !== 5)
         client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Joined", { chatId: channel.id });
+      this.server.to(client.id).emit("Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: type});
     }
     else if (ret == 1)
       this.server.to(client.id).emit("error", "NotInvited");
