@@ -20,15 +20,16 @@ export class ChannelCreateDto {
 
   @IsString()
   @IsOptional()
-  Password: string;
+  password: string;
 
   @IsArray()
+  @IsNumber({}, { each: true })
   @IsOptional()
-  members: Array<Tag>
+  members: number[];
 
   @IsString()
   @IsOptional()
-  pseudo2: string;
+  type: string;
 }
 
 export class sendMsgDto {

@@ -9,19 +9,19 @@ import { io, Socket } from 'socket.io-client';
 
 
 /** duplicated code from queries */
-export interface IChannel {
-  id: number,
-  name: string,
-  type: string,
-  members: number[],
-}
+// export interface IChannel {
+//   id: number,
+//   name: string,
+//   type: string,
+//   members: number[],
+// }
 
-export interface IChannels{
-	MyDms: IChannel[];
-	MyChannels: IChannel[];
-	ChannelsToJoin : IChannel[];
-  }
-/** duplicated code  */
+// export interface IChannels{
+// 	MyDms: IChannel[];
+// 	MyChannels: IChannel[];
+// 	ChannelsToJoin : IChannel[];
+//   }
+// /** duplicated code  */
 
 
 export interface IChatFriend {
@@ -59,6 +59,7 @@ export interface IFormData {
   isPassword: boolean,
   password: string,
   members: number[],
+  type: string,
 }
 
 const ChatContext = createContext<{
@@ -114,35 +115,95 @@ export const ChatProvider = ({ children }) => {
         //add message in the right conversation.
       })
       // Channel Created event : a new channel is created => concequence need to update our list of existing channels
-      newSocket?.on('Channel Created', (newChat : IChatWindow) => {
-        const newChannel : IChannel = {name: newChat.name, id: newChat.id, type: newChat.type}
-        switch (newChat.type){
-          case 'dm' :
-            setChannels((prev) => ({
-              ...prev!,
-              MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
-            }));
-            setOpenedWindows((prev) => [...(prev ?? []), newChat]);
-            break;
-          case 'channel' : // 2 cases: Im a member of channel / Im not a member
-            if (newChat.members.some(member=> member.name === user?.pseudo)) {
-              newChannel.type = "MyChannels"
+      // newSocket?.on('Channel Created', (newChat : IChannel) => {
+      //   const newChannel : IChannel = {name: newChat.name, id: newChat.id, type: newChat.type, members newChat.members}
+      //   switch (newChat.type){
+      //     case 'dm' :
+      //       setChannels((prev) => ({
+      //         ...prev!,
+      //         MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
+      //       }));
+      //       setOpenedWindows((prev) => [...(prev ?? []), newChat]);
+      //       break;
+      //     case 'channel' : // 2 cases: Im a member of channel / Im not a member
+      //       if (newChat.members.some(member=> member.name === user?.pseudo)) {
+      //         newChannel.type = "MyChannels"
+      //         setChannels((prev) => ({
+      //           ...prev!,
+      //           MyChannels: prev ? [...prev.MyChannels, newChannel] : [newChannel],
+      //         }));
+      //         setOpenedWindows((prev) => [...(prev ?? []), newChat]);
+      //       }
+      //       else {
+      //         newChannel.type = "ChannelsToJoin"
+      //         setChannels((prev) => ({
+      //           ...prev!,
+      //           ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
+      //         }));
+      //       }
+      //       break;
+      //   }
+      // });
+
+      newSocket?.on('Channel Created', (newChat : IChannel) => {
+
+        //todo: update Ichannels ->
+          // todo : case type Mydms : put chat in Mydms if not inside already
+          // todo : case Mychannels : if Im a member, put in MyChannels
+        switch (newChat.type) {
+          case "MyDms" :
+            if(!findIdInList(channels?.MyDms, newChat.id)) {
               setChannels((prev) => ({
                 ...prev!,
-                MyChannels: prev ? [...prev.MyChannels, newChannel] : [newChannel],
+                MyDms: prev ? [...prev.MyDms, newChat] : [newChat],
               }));
-              setOpenedWindows((prev) => [...(prev ?? []), newChat]);
             }
             else {
-              newChannel.type = "ChannelsToJoin"
               setChannels((prev) => ({
-                ...prev!,
-                ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
+              ...prev!,
+              MyDms: prev?.MyDms?.map((channel) => (channel.id === newChat.id ? newChat : channel)) || [],
               }));
+              // todo replace element with sameid with newChat
             }
             break;
+          case "MyChannels" :
+            break;
         }
+
+        // const newChannel : IChannel = {name: newChat.name, id: newChat.id, type: newChat.type, members newChat.members}
+        // switch (newChat.type){
+        //   case 'dm' :
+        //     setChannels((prev) => ({
+        //       ...prev!,
+        //       MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
+        //     }));
+        //     setOpenedWindows((prev) => [...(prev ?? []), newChat]);
+        //     break;
+        //   case 'channel' : // 2 cases: Im a member of channel / Im not a member
+        //     if (newChat.members.some(member=> member === user?.fortytwo_id)) {
+        //       newChannel.type = "MyChannels"
+        //       setChannels((prev) => ({
+        //         ...prev!,
+        //         MyChannels: prev ? [...prev.MyChannels, newChannel] : [newChannel],
+        //       }));
+        //       setOpenedWindows((prev) => [...(prev ?? []), newChat]);
+        //     }
+        //     else {
+        //       newChannel.type = "ChannelsToJoin"
+        //       setChannels((prev) => ({
+        //         ...prev!,
+        //         ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
+        //       }));
+        //     }
+        //     break;
+        // }
       });
+      newSocket?.on('Channel Joined', (newChat: IChannel) => {
+        //todo : openned window;
+          //todo : back request to get history;
+          //todo setOpenedWindo;
+      });
+
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -171,7 +232,7 @@ export const ChatProvider = ({ children }) => {
   /*********** chat window states ************/
 
   const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
-    const foundElem = list?.find(window => window.id === idToFind);
+    const foundElem = list?.find(elem => elem.id === idToFind);
     return foundElem;
   };
 
@@ -182,22 +243,21 @@ export const ChatProvider = ({ children }) => {
    * case open a new conversation :
       send the event to the back with a empty id
    */
-  const handleOpenWindow = async (chat : IChannel | IChatFriend, form?: IFormData) => {
+  const handleOpenWindow = async (chatData : IChannel | IChatFriend, form?: IFormData) => {
 
-    // const data = {
-    //   id: number,
-    //   name: form?.name? ,
-    //   type: string,
-    //   members:number[],
-    //   name: string,
-    //   isPrivate: boolean,
-    //   isPassword: boolean,
-    //   password: string,
-    //   members: number[],
-    // }
-    socket?.emit('JoinChannel', chat )
-    // todo if name is not in mydm, set chat.name a friend 's name
+    const data = {
+      id: chatData.id,
+      name: form?.name? form.name : chatData.name,
+      type: form?.type? form.type : chatData.type,
+      members: form?.members? form.members : chatData.members,
+      isPrivate: form?.isPrivate? form.isPrivate : false,
+      isPassword: form?.isPassword? form.isPassword : false,,
+      password: form?.password? form.password : "",
+    }
+    socket?.emit('JoinChannel', data)
 
+    //todo 'channel created' => update Ichannels
+    //todo 'channel joined' => setopenned window with history.
   }
 
   // const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {

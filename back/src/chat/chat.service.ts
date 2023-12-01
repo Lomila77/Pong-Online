@@ -49,58 +49,50 @@ export class ChatService {
     return users[0];
   }
 
-  async CreateChan(info: ChannelCreateDto, pseudo1: string, pseudo2: string = null) {
+  async CreateChan(info: ChannelCreateDto) {
+    var members = info.members;
     let hash = null;
     info.isPassword = false;
-    if (info.Password != null && info.Password != undefined && info.Password != "") {
+    if (info.password != null && info.password != undefined && info.password != "") {
       const salt = crypto.randomBytes(16).toString('hex');
-      hash = await bcrypt.hash(info.Password, 10);
+      hash = await bcrypt.hash(info.password, 10);
       info.isPassword = true;
     }
 
     if (info.isPrivate === undefined)
       info.isPrivate = false;
 
-    const user1 = await this.getUserByPseudo(pseudo1);
-    let membersToConnect = [{ fortytwo_id: user1.fortytwo_id }];
-    let user2 = null;
-    if (pseudo2) {
-      user2 = await this.getUserByPseudo(pseudo2);
-      membersToConnect.push({ fortytwo_id: user2.fortytwo_id });
-    }
-    const channel = await this.prisma.channel.create({
-      data: {
-        name: info.name,
-        password: hash,
-        isPrivate: info.isPrivate,
-        isPassword: info.isPassword,
-        isDM: pseudo2 ? true : false,
-        owner: {
-          connect: {
-            fortytwo_id: user1.fortytwo_id,
-          }
+      const channel = await this.prisma.channel.create({
+        data: {
+          name: info.name,
+          password: hash,
+          isPrivate: info.isPrivate,
+          isPassword: info.isPassword,
+          isDM: members.length == 2 ? true : false,
+          owner: {
+            connect: { fortytwo_id: members[0] }
+          },
+          admins: {
+            connect: members.map(member => ({
+              fortytwo_id: member,
+            }))
+          },
+          members: {
+            connect: members.map(member => ({
+              fortytwo_id: member,
+            }))
+          },
+          muted: {},
+          banned: {},
         },
-        admins: {
-          connect: {
-            fortytwo_id: user1.fortytwo_id,
-          }
+        include: {
+          admins: true,
+          members: true,
+          owner: true,
+          muted: true,
+          banned: true,
         },
-        members: {
-          connect: membersToConnect
-        },
-        muted: {
-        },
-        banned: {
-        },
-      },
-      include: {
-        admins: true,
-        members: true,
-        owner: true,
-        muted: true,
-        banned: true,
-      },
-    });
+      });
     return channel;
   }
 
