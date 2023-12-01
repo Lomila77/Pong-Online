@@ -491,7 +491,7 @@ export class ChatService {
 
   async get__channelsUserCanJoin(token: string) {
     try {
-      const source = await this.prisma.channel.findMany({
+      const sources = await this.prisma.channel.findMany({
         where: {
           OR: [
             {
@@ -509,7 +509,13 @@ export class ChatService {
           name: true,
         },
       });
-      return source;
+      const modifiedSources = sources.map((source) => ({
+        ...source,
+        type: 'ChannelsToJoin',
+      }));
+
+      return modifiedSources;
+      // return source;
     } catch (error) {
       console.log('get__channels error:', error);
     }
@@ -517,7 +523,7 @@ export class ChatService {
 
   async get__channelsUserIn(token: string) {
     try {
-      const source = await this.prisma.channel.findMany({
+      const sources = await this.prisma.channel.findMany({
         where: {
           members: { some: { refresh_token: token } },
           isDM: false,
@@ -527,7 +533,11 @@ export class ChatService {
           name: true,
         },
       });
-      return source;
+      const modifiedSources = sources.map((source) => ({
+        ...source,
+        type: 'MyChannels',
+      }));
+      return sources;
     } catch (error) {
       console.log('get__channels error:', error);
     }
