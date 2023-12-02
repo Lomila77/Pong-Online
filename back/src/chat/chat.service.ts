@@ -2,14 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto } from './dto/msg.dto';
-import { updateChat } from './chat.type';
 import { UserService } from 'src/user/user.service'
-import { Channel, User, Message, PrismaClient } from '@prisma/client';
+import { Channel, User } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
-import { channel } from 'diagnostics_channel';
-import { use } from 'passport';
-import { Server, Socket } from 'socket.io';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 
@@ -49,58 +45,50 @@ export class ChatService {
     return users[0];
   }
 
-  async CreateChan(info: ChannelCreateDto, pseudo1: string, pseudo2: string = null) {
+  async CreateChan(info: ChannelCreateDto) {
+    var members = info.members;
     let hash = null;
     info.isPassword = false;
-    if (info.Password != null && info.Password != undefined && info.Password != "") {
+    if (info.password != null && info.password != undefined && info.password != "") {
       const salt = crypto.randomBytes(16).toString('hex');
-      hash = await bcrypt.hash(info.Password, 10);
+      hash = await bcrypt.hash(info.password, 10);
       info.isPassword = true;
     }
 
     if (info.isPrivate === undefined)
       info.isPrivate = false;
 
-    const user1 = await this.getUserByPseudo(pseudo1);
-    let membersToConnect = [{ fortytwo_id: user1.fortytwo_id }];
-    let user2 = null;
-    if (pseudo2) {
-      user2 = await this.getUserByPseudo(pseudo2);
-      membersToConnect.push({ fortytwo_id: user2.fortytwo_id });
-    }
-    const channel = await this.prisma.channel.create({
-      data: {
-        name: info.name,
-        password: hash,
-        isPrivate: info.isPrivate,
-        isPassword: info.isPassword,
-        isDM: pseudo2 ? true : false,
-        owner: {
-          connect: {
-            fortytwo_id: user1.fortytwo_id,
-          }
+      const channel = await this.prisma.channel.create({
+        data: {
+          name: info.name,
+          password: hash,
+          isPrivate: info.isPrivate,
+          isPassword: info.isPassword,
+          isDM: members.length == 2 ? true : false,
+          owner: {
+            connect: { fortytwo_id: members[0] }
+          },
+          admins: {
+            connect: members.map(member => ({
+              fortytwo_id: member,
+            }))
+          },
+          members: {
+            connect: members.map(member => ({
+              fortytwo_id: member,
+            }))
+          },
+          muted: {},
+          banned: {},
         },
-        admins: {
-          connect: {
-            fortytwo_id: user1.fortytwo_id,
-          }
+        include: {
+          admins: true,
+          members: true,
+          owner: true,
+          muted: true,
+          banned: true,
         },
-        members: {
-          connect: membersToConnect
-        },
-        muted: {
-        },
-        banned: {
-        },
-      },
-      include: {
-        admins: true,
-        members: true,
-        owner: true,
-        muted: true,
-        banned: true,
-      },
-    });
+      });
     return channel;
   }
 
@@ -507,10 +495,12 @@ export class ChatService {
         select: {
           id: true,
           name: true,
+          members: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
+        members: source.members.map(member => member.fortytwo_id),
         type: 'ChannelsToJoin',
       }));
 
@@ -531,13 +521,15 @@ export class ChatService {
         select: {
           id: true,
           name: true,
+          members: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
+        members: source.members.map(member => member.fortytwo_id),
         type: 'MyChannels',
       }));
-      return sources;
+      return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
     }
@@ -545,7 +537,7 @@ export class ChatService {
 
   async get__DmUser(token: string) {
     try {
-      const source = await this.prisma.channel.findMany({
+      const sources = await this.prisma.channel.findMany({
         where: {
           members: { some: { refresh_token: token } },
           isDM: true,
@@ -557,12 +549,18 @@ export class ChatService {
               NOT: { refresh_token: token },
             },
             select: {
-              fortytwo_userName: true,
+              fortytwo_id: true,
+              // fortytwo_userName: true,
             }
           }
         },
       });
-      return source;
+      const modifiedSources = sources.map((source) => ({
+        ...source,
+        members: source.members.map(member => member.fortytwo_id),
+        type: 'MyDms',
+      }));
+      return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
     }
@@ -951,11 +949,6 @@ export class ChatService {
     });
     return users;
   }
-
-
-  /******************************************* */
-  /** fonction ajoute pour remanier le front  */
-  /***************************************** */
 
   private pwdCheck(channel: Channel, pwd: string) {
     channel.password == pwd ? true : false;

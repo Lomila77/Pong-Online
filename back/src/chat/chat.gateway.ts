@@ -17,6 +17,7 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
+import { backResInterface } from './../shared/shared.interface';
 
 export interface User {
   id: number;
@@ -89,18 +90,18 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: { info: ChannelCreateDto },
     @ConnectedSocket() client: Socket,
   ) {
-    // Vérifiez si le canal existe
-    if (data.info.chanId !== undefined || data.info.chanId !== null)
-      var channel = await this.chatService.getChannelById(data.info.chanId);
+    let channel;
 
-    // Creer le canal s'il n'existe pas
-    // let type = channel.isDM ? "dm" : channel.isPrivate ? "privé" : "public";
-    let type = channel.isDM ? "dm" : "channel";
+    if (data.info.chanId) {
+      channel = await this.chatService.getChannelById(data.info.chanId);
+    } else {
+      channel = await this.chatService.CreateChan(data.info);
+    }
 
     if (!channel.isPrivate && !channel.isDM) {
-      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
+      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
     } else {
-      this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: type });
+      this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
     }
 
     // Rejoindre le canal
@@ -108,13 +109,23 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("error", "Error refresh the page!!!");
       return;
     }
-    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+    const user = await this.userService.getUser(this.clients[client.id].pseudo);
     const ret = await this.chatService.join_Chan({ chatId: channel.id }, user);
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5)
         client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Joined", { chatId: channel.id });
+      this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+
+      if (channel.isDM)
+      {
+        const otherUser = await this.userService.getUserbyId(data.info.members[1]);
+        const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
+        if (retOtherUser === 0 || retOtherUser === 5) {
+          client.to(channel.id.toString()).emit("NewUserJoin", { username: otherUser.fortytwo_userName, id: otherUser.fortytwo_id, avatarUrl: otherUser.avatar });
+          this.server.to(channel.id.toString()).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+        }
+      }
     }
     else if (ret == 1)
       this.server.to(client.id).emit("error", "NotInvited");
@@ -407,4 +418,33 @@ export class ChatGateway implements OnGatewayConnection {
   //     this.server.to(data.chatId.toString()).emit("NewMessage", msg);
   //   }, 2000);
   // }
+
+  async addFriends(me: User, friendPseudo: string,  @ConnectedSocket() client: Socket): Promise<backResInterface> {
+    const meFriends = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.id },
+      select: { friends: true }
+    })).friends;
+    const friendId = (await this.prisma.user.findFirst({
+      where: { pseudo: friendPseudo },
+      select: { fortytwo_id: true }
+    })).fortytwo_id;
+
+    if (!meFriends?.find(meFriend => meFriend === friendId) && me.id != friendId) {
+      const mePrisma = await this.prisma.user.update({
+        where: { fortytwo_id: me.id },
+        data: { friends: { push: friendId } }
+      });
+      console.log("addfriends result : ", mePrisma.friends);
+
+      const friend = await this.userService.getUserbyId(friendId);
+      this.server.to(client.id).emit("New Friends", { friend });
+
+      return { isFriend: true };
+    } else if (me.id != friendId) {
+      console.log('you can not friend yourself\n');
+    } else {
+      console.log('already friend\n');
+    }
+    return { isFriend: false };
+  }
 }

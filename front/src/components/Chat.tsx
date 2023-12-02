@@ -25,10 +25,10 @@ function Chat() {
     // Recuperation de la session de l'utilisateur
     const {user, setUser} = useUser();
     // Permet de selectionner le user pour afficher le dm avec celui-ci
-    const [selectedUser, setSelectedUser] = useState('');
+    const [selectedTarget, setSelectedTarget] = useState<IChatWindow>(null);
 
     // Liste des dms ouvert (en bas de page)
-    const [openDm, setOpenDm] = useState([]);
+    //const [openDm, setOpenDm] = useState([]);
     // Liste des channels ouvert (en bas de page)
     const [openChannel, setOpenChannel] = useState([]);
 
@@ -50,7 +50,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChannel[] | any[]>([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState<IChatFriend[] | IChannel[]>([]); // TODO change by friends after tests
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -59,27 +59,31 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends);
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends); //TODO manque channnel to join
     }, [displayChannelDrawer, friends]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
-        if (selectedUser && !openDm.find(pseudo => pseudo === selectedUser))
-            setOpenDm([...openDm, selectedUser]);
-        setSelectedUser(null);
-    }, [selectedUser]);
+        if (!selectedTarget)
+            return;
+        if ((selectedTarget.name && !openedWindows.find(content => content.name === selectedTarget.name)) ||
+            (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)))
+            handleOpenWindow(selectedTarget);
+        setSelectedTarget(null);
+    }, [selectedTarget]);
 
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
+    // TODO call luc pour effacer un channel
     useEffect(() => {
         console.log("destroyWindowChat modified");
         if (destroyWindowChat != -1) {
-            setOpenDm((prevDm) =>
-                prevDm.filter((dm, index) => index !== destroyWindowChat));
+            //setOpenDm((prevDm) =>
+            //    prevDm.filter((dm, index) => index !== destroyWindowChat));
             setDestroyWindowChat(-1);
         }
         if (destroyWindowChannel != -1) {
-            setOpenChannel((prevChannel) =>
-                prevChannel.filter((channel, index) => index !== destroyWindowChannel));
+            //setOpenChannel((prevChannel) =>
+            //    prevChannel.filter((channel, index) => index !== destroyWindowChannel));
             setDestroyWindowChannel(-1);
         }
         }, [destroyWindowChat, destroyWindowChannel]);
@@ -89,17 +93,17 @@ function Chat() {
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" onClick={toggleDrawerOpen}/>
             <div className="drawer-content">
                 <label htmlFor="my-drawer-4"
-                       className="btn drawer-button btn-circle m-5 p-7">
+                       className="btn drawer-button btn-circle m-5 p-2">
                     <img src={Messagerie} alt={"chat"} className={"w-10"}/>
                 </label>
             </div>
             <div className="drawer-side mt-16">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
-                    {drawerContent.map((target, index) => (
+                    {drawerContent.map((target: IChatFriend | IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
-                            <button className={"btn btn-ghost font-display " + colorDrawer.text}
-                                    onClick={() => setSelectedUser(target.name)}>{target.name}
+                            <button className={`btn btn-ghost font-display ${target.connected ? "disabled" : ""} ` + colorDrawer.text}
+                                    onClick={() => setSelectedTarget(target)}>{target.name}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">
