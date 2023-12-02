@@ -4,3 +4,8 @@
 #NODE_MODULES
 node_modules
 
+#MIGRATION
+/back/prisma/migrations/
+
+#gitignore
+gitignore
