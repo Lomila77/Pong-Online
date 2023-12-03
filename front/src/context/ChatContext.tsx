@@ -1,36 +1,48 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { IChannel, IChannels, backRequest, backResInterface } from '../api/queries';
+import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
-// Todo: friends has no socket event and therefore do not selfactualise
 
+// Todo : change back, so it retuns Id and pseudo in members --> put it in data
+// Todo : handle channel Created event;
+// Todo: friends has no socket event and therefore do not selfactualise
+// Todo : update channels (change password, name new admin ....)
+
+// *npx prisma generate
+
+// some code that can still be usefull
+//case channel id already exist in list: need to update info
+// else {
+//   setChannels((prev) => ({
+//   ...prev!,
+//   MyDms: prev?.MyDms?.map((channel) => (channel.id === newChat.id ? newChat : channel)) || [],
+//   }));
+// }
+// break;
 
 /** duplicated code from queries */
-// export interface IChannel {
-//   id: number,
-//   name: string,
-//   type: string,
-//   members: number[],
-// }
-
-// export interface IChannels{
-// 	MyDms: IChannel[];
-// 	MyChannels: IChannel[];
-// 	ChannelsToJoin : IChannel[];
-//   }
-// /** duplicated code  */
-
-
-export interface IChatFriend {
-  id: number
-  name: string
-  type: string
-  members: number[],
-  connected: boolean
+export interface IChannel {
+  id: number,
+  name: string,
+  type: string,
+  members: IChatMember[],
+  connected?: boolean
 }
+
+export interface IChannels{
+	MyDms: IChannel[];
+	MyChannels: IChannel[];
+	ChannelsToJoin : IChannel[];
+  }
+
+  export interface IChatMember {
+    id: number;
+    name: string;
+  }
+// /** duplicated code  */
 
 export interface IChatHistory {
   owner: {
@@ -38,18 +50,9 @@ export interface IChatHistory {
   };
   content: string;
 }
-
 //for windows that are openned
-export interface IChatMember {
-  id: number;
-  name: string;
-}
-export interface IChatWindow {
-  id: number;
-  name: string;
-  type: string;
 
-  members: IChatMember[];
+export interface IChatWindow extends IChannel{
   history: IChatHistory[];
 }
 
@@ -64,19 +67,16 @@ export interface IFormData {
 
 const ChatContext = createContext<{
   socket: Socket | null
-  friends: IChatFriend[]
-  // connectedFriends: string[]
-  // disconnectedFriends: string[]
+  friends: IChannel[]
   channels: IChannels | null
   openedWindows: IChatWindow[] | null
+  handleOpenWindow: (chatData? : IChannel | IChannel, form?: IFormData) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [friends, setFriends] = useState<IChatFriend[]>([])
-  // const [connectedFriends, setConnectedFriends] = useState<string[]>([])
-  // const [disconnectedFriends, setDisconnectedFriends] = useState<string[]>([])
+  const [friends, setFriends] = useState<IChannel[]>([])
   const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
@@ -94,8 +94,7 @@ export const ChatProvider = ({ children }) => {
         token: token
       }
     });
-    newSocket.on('connect', () => {
-      setSocket(newSocket);
+    newSocket.on('connect', () => {handleOpenWindow
       backRequest('chat/friends', 'GET').then((data) => {
         data.chatFriends && setFriends(data.chatFriends);
       })
@@ -114,42 +113,9 @@ export const ChatProvider = ({ children }) => {
       newSocket?.on('sendMessage', (message) => {
         //add message in the right conversation.
       })
-      // Channel Created event : a new channel is created => concequence need to update our list of existing channels
-      // newSocket?.on('Channel Created', (newChat : IChannel) => {
-      //   const newChannel : IChannel = {name: newChat.name, id: newChat.id, type: newChat.type, members newChat.members}
-      //   switch (newChat.type){
-      //     case 'dm' :
-      //       setChannels((prev) => ({
-      //         ...prev!,
-      //         MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
-      //       }));
-      //       setOpenedWindows((prev) => [...(prev ?? []), newChat]);
-      //       break;
-      //     case 'channel' : // 2 cases: Im a member of channel / Im not a member
-      //       if (newChat.members.some(member=> member.name === user?.pseudo)) {
-      //         newChannel.type = "MyChannels"
-      //         setChannels((prev) => ({
-      //           ...prev!,
-      //           MyChannels: prev ? [...prev.MyChannels, newChannel] : [newChannel],
-      //         }));
-      //         setOpenedWindows((prev) => [...(prev ?? []), newChat]);
-      //       }
-      //       else {
-      //         newChannel.type = "ChannelsToJoin"
-      //         setChannels((prev) => ({
-      //           ...prev!,
-      //           ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
-      //         }));
-      //       }
-      //       break;
-      //   }
-      // });
 
       newSocket?.on('Channel Created', (newChat : IChannel) => {
-
-        //todo: update Ichannels ->
-          // todo : case type Mydms : put chat in Mydms if not inside already
-          // todo : case Mychannels : if Im a member, put in MyChannels
+        // todo : need a less repetitive way to do this
         switch (newChat.type) {
           case "MyDms" :
             if(!findIdInList(channels?.MyDms, newChat.id)) {
@@ -158,50 +124,26 @@ export const ChatProvider = ({ children }) => {
                 MyDms: prev ? [...prev.MyDms, newChat] : [newChat],
               }));
             }
-            else {
+          default :
+            if (newChat.members.find(member => member.name === user?.pseudo)) {
+              newChat.type = "MyChannels"
               setChannels((prev) => ({
-              ...prev!,
-              MyDms: prev?.MyDms?.map((channel) => (channel.id === newChat.id ? newChat : channel)) || [],
+                ...prev!,
+                MyChannels: prev ? [...prev.MyChannels, newChat] : [newChat],
               }));
-              // todo replace element with sameid with newChat
             }
-            break;
-          case "MyChannels" :
+            else
+              newChat.type = "ChannelsToJoin"
+              setChannels((prev) => ({
+                ...prev!,
+                ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChat] : [newChat],
+              }));
             break;
         }
-
-        // const newChannel : IChannel = {name: newChat.name, id: newChat.id, type: newChat.type, members newChat.members}
-        // switch (newChat.type){
-        //   case 'dm' :
-        //     setChannels((prev) => ({
-        //       ...prev!,
-        //       MyDms: prev ? [...prev.MyDms, newChannel] : [newChannel],
-        //     }));
-        //     setOpenedWindows((prev) => [...(prev ?? []), newChat]);
-        //     break;
-        //   case 'channel' : // 2 cases: Im a member of channel / Im not a member
-        //     if (newChat.members.some(member=> member === user?.fortytwo_id)) {
-        //       newChannel.type = "MyChannels"
-        //       setChannels((prev) => ({
-        //         ...prev!,
-        //         MyChannels: prev ? [...prev.MyChannels, newChannel] : [newChannel],
-        //       }));
-        //       setOpenedWindows((prev) => [...(prev ?? []), newChat]);
-        //     }
-        //     else {
-        //       newChannel.type = "ChannelsToJoin"
-        //       setChannels((prev) => ({
-        //         ...prev!,
-        //         ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChannel] : [newChannel],
-        //       }));
-        //     }
-        //     break;
-        // }
       });
+
       newSocket?.on('Channel Joined', (newChat: IChannel) => {
-        //todo : openned window;
-          //todo : back request to get history;
-          //todo setOpenedWindo;
+        handleOpenWindow(newChat);
       });
 
       socketRef.current = newSocket;
@@ -231,53 +173,37 @@ export const ChatProvider = ({ children }) => {
 
   /*********** chat window states ************/
 
+  const updateChannels = (newChat : IChannel) => {
+    if (isChannelKnown(newChat.id, newChat.type))
+    {
+
+    }
+  }
+
   const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
     const foundElem = list?.find(elem => elem.id === idToFind);
     return foundElem;
   };
 
-  /* in handleOpenWindow we handle 2 cases :
-   * case open an already existing conversation
-      we need to get the history of the conversation
-      send the event to the back with a full id
-   * case open a new conversation :
-      send the event to the back with a empty id
-   */
-  const handleOpenWindow = async (chatData : IChannel | IChatFriend, form?: IFormData) => {
+  const isChannelKnown = (idToFind: number, type: string) => {
+    return channels?.[type]?.find((channel: IChannel) => channel.id === idToFind);
+  };
 
-    const data = {
-      id: chatData.id,
-      name: form?.name? form.name : chatData.name,
-      type: form?.type? form.type : chatData.type,
-      members: form?.members? form.members : chatData.members,
-      isPrivate: form?.isPrivate? form.isPrivate : false,
-      isPassword: form?.isPassword? form.isPassword : false,,
-      password: form?.password? form.password : "",
-    }
-    socket?.emit('JoinChannel', data)
-
-    //todo 'channel created' => update Ichannels
-    //todo 'channel joined' => setopenned window with history.
+  const ischatOpenned = (idTofind: number) => {
+    return openedWindows?.find((openedWindow: IChatWindow) => openedWindow.id === idTofind)
   }
 
-  // const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
-  //   if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation
-  //     const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
-  //     setOpenedWindows(current => {return([...current || [], newWindow])})
+  const handleOpenWindow = async (chatData : IChannel) =>{
+    if (ischatOpenned(chatData.id)){
+      const newWindow: IChatWindow = (await (backRequest('channels/' + chatData.id + '/chatWindow', 'GET'))).data
+      newWindow.id = chatData.id;
+      newWindow.name = chatData.name;
+      newWindow.type = chatData.type;
+      newWindow.members = chatData.members;
+      setOpenedWindows(current => {return([...current || [], newWindow])})
+    }
   //     console.log("newWindow : ", newWindow);
-  //   }
-  //   socket?.emit('Join Channel', {pseudo: pseudo, chatId: chatId, Password: password});
-  // }
-
-  // const handleOpenWindow = async (pseudo?: string, chatId?: number, password?: string) => {
-  //   if (chatId && !findIdInList(openedWindows, chatId)) { //case already existing conversation
-  //     const newWindow: IChatWindow = (await (backRequest('channels/' + chatId + '/chatWindow', 'GET'))).data
-  //     setOpenedWindows(current => {return([...current || [], newWindow])})
-  //     console.log("newWindow : ", newWindow);
-  //   }
-  //   socket?.emit('Join Channel', {pseudo: pseudo, chatId: chatId, Password: password});
-  // }
-
+  }
   // const handleCloseWindow = (id : string) => {
   //   const closingWingow: IChatWindow = {
   //     id: '',
@@ -287,9 +213,28 @@ export const ChatProvider = ({ children }) => {
   //   setOpenedWindows((prev) => prev ? prev.filter((f) => f !== closingWingow) : []);
   // }
 
+  const openWindow = async (chatData? : IChannel, form?: IFormData, password?: string) => {
+    const data = {
+      id:          chatData?.id?      chatData.id      :  -1,
+      name:        form?.name?        form.name        :  chatData?.name,
+      type:        form?.type?        form.type        :  chatData?.type,
+      members:     form?.members?     form.members     :  chatData?.members,
+      isPrivate:   form?.isPrivate?   form.isPrivate   :  false,
+      isPassword:  form?.isPassword?  form.isPassword  :  false,
+      password:    form?.password?    form.password    :  "",
+    }
+    // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
+    if (data.type && !isChannelKnown(data.id, data.type))
+      socket?.emit('JoinChannel', data)
+    // if channel is known, open window directly
+    else if (chatData)
+      handleOpenWindow(chatData);
+  }
+
+
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, friends, /*connectedFriends, disconnectedFriends,*/ channels, openedWindows }}>
+    <ChatContext.Provider value={{ socket, friends, /*connectedFriends, disconnectedFriends,*/ channels, openedWindows, handleOpenWindow }}>
       {children}
     </ChatContext.Provider>
   );

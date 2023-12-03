@@ -141,7 +141,10 @@ export class ChatController {
 			name: friend.pseudo,
 			connected: friend.connected,
 			type: "MyDms",
-			members: [user.fortytwo_id, friend.fortytwo_id]
+			members:[
+				{id : user.fortytwo_id, name: user.pseudo},
+				{id : friend.fortytwo_id, name: friend.pseudo}
+			]
 		}));
 		return {chatFriends: goodFormat};
 	}
