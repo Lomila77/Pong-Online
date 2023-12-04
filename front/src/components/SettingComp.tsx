@@ -106,7 +106,9 @@ const SettingComp: React.FC = () => {
     else
       data.avatar = file;
     updateUser(settingsLock, {...data});
-    if (settingsLock)
+    if (settingsLock && data.isF2Active)
+      navigate('/twoFA');
+    else if (settingsLock)
       navigate('/');
   };
 

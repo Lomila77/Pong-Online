@@ -29,7 +29,7 @@ export class AuthService {
       await this.handleCookies(incommingUser.id, res);
       firstConnection = false;
     }
-    return firstConnection;
+    return {firstConnection: firstConnection, isF2Active: prismaRet? prismaRet.isF2Active : false};
   }
 
   async signup(incommingUser: Fortytwo_dto) {
@@ -116,23 +116,30 @@ export class AuthService {
     }
   }
 
-  twoFA(user: User) {
+  async twoFA(user: User): Promise<backResInterface> {
     const secret = speakeasy.generateSecret({
       name: user.pseudo,
     });
-    user.secretOf2FA = secret.base32;
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: user.fortytwo_id,
+      },
+      data: {
+        secretOf2FA: secret.base32,
+      }
+    })
     qrcode.toDataURL(secret.otpauth_url, function (err) {
       if (err) throw err;
     });
-    return secret.otpauth_url;
+    return {qrCodeUrl: secret.otpauth_url};
   }
 
-  verify(user: User, code: string) {
-    return speakeasy.totp.verify({
+  verify(user: User, code: string): backResInterface {
+    return {verifyQrCode: speakeasy.totp.verify({
       secret: user.secretOf2FA,
-      encoding: 'base32',
+      encoding: "base32",
       token: code,
-    });
+    })};
   }
 }
 

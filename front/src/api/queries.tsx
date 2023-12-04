@@ -121,6 +121,7 @@ export interface frontReqInterface {
   isF2Active?: boolean;
   token?: string;
   win?: number;
+  codeQRAuth?: string;
 }
 
 export interface IChannel {
@@ -152,6 +153,8 @@ export interface IChannels{
     win?: number;
     chatFriends?: IChatFriend[]
     data?: any;
+    qrCodeUrl?: string;
+    verifyQrCode?: boolean;
     }
 
 

@@ -251,7 +251,7 @@ export const ChatProvider = ({ children }) => {
       type: form?.type? form.type : chatData.type,
       members: form?.members? form.members : chatData.members,
       isPrivate: form?.isPrivate? form.isPrivate : false,
-      isPassword: form?.isPassword? form.isPassword : false,,
+      isPassword: form?.isPassword? form.isPassword : false,
       password: form?.password? form.password : "",
     }
     socket?.emit('JoinChannel', data)
