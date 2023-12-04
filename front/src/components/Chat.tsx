@@ -104,7 +104,7 @@ function Chat() {
             <div className="drawer-side mt-16">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
-                    {drawerContent.map((target: IChatFriend | IChannel , index: number) => (
+                    {drawerContent && drawerContent.map((target: IChatFriend | IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={`btn btn-ghost font-display ${target.connected ? "disabled" : ""} ` + colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.name}

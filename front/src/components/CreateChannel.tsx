@@ -31,7 +31,7 @@ function NewChannel({me, close}) {
         )), []);
 
     const toggleCreateChannel = () => {
-        openWindow(undefined, formData); // TODO tests
+        openWindow(undefined, formData, undefined); // TODO tests
         close();
     }
 
