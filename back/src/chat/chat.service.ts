@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChannelCreateDto } from './dto/chat.dto';
 import { ChannelMessageSendDto } from './dto/msg.dto';
@@ -8,6 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { ChatGateway } from './chat.gateway';
 
 @Injectable()
 export class ChatService {
@@ -15,6 +16,8 @@ export class ChatService {
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
     private readonly auth: AuthService,
+    @Inject(forwardRef(() => ChatGateway))
+    private chatGateway: ChatGateway
   ) { }
 
   async getUserFriends(pseudo: string) {
@@ -975,6 +978,64 @@ export class ChatService {
   //   })
   // }
 
+  // recursively find if a prop name (ex: fortytwo_id) is in obj
+  private isPropInObj(obj: any, prop: string): boolean {
+    if (obj.hasOwnProperty(prop))
+      return true;
+    for (const key in obj) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        if (this.isPropInObj(obj[key], prop)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // find prop in source and replace it by newprop
+  private replacePropName <T extends object >(source: T, prop: string, newprop: string): T {
+    if (typeof source !== 'object' || source ===null) {
+      return source;
+    }
+    const newSource: any = {}
+    for (const key in source) {
+      if (source.hasOwnProperty(key)) {
+        if (key === prop) {
+          newSource[newprop] = source[key];
+        } else if (typeof source[key] === 'object' && source[key] !== null) {
+          newSource[key] = this.replacePropName(source[key] as object, prop, newprop);
+        } else {
+          newSource[key] = source[key];
+        }
+      }
+    }
+    return newSource;
+  }
+
+  // find props in source and replace it by newprops (MULTI)
+  private replacePropNames<T extends object>(source: T, props: string[], newprops: string[]): T {
+  if (typeof source !== 'object' || source === null) {
+    return source;
+  }
+
+  const newSource: any = {};
+
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      const propIndex = props.indexOf(key);
+
+      if (propIndex !== -1) {
+        newSource[newprops[propIndex]] = source[key];
+      } else if (typeof source[key] === 'object' && source[key] !== null) {
+        newSource[key] = this.replacePropNames(source[key] as object, props, newprops);
+      } else {
+        newSource[key] = source[key];
+      }
+    }
+  }
+  return newSource;
+}
+
   async getChannelInfo(channelId: number, user: User) {
 
     const channel = await this.prisma.channel.findUnique({
@@ -982,6 +1043,7 @@ export class ChatService {
         id:channelId
       },
       select: {
+        id: true,
         members: {select: {pseudo: true, fortytwo_id: true}},
         messages: {select:{
           message: true,
@@ -989,19 +1051,66 @@ export class ChatService {
         }},
       }
     });
-    // if (channel) {
-    //   const modifiedMembers = this.modifySource(channel.members);
-    //   const modifiedOwners = this.modifySource(channel.messages.map(msg => msg.owner));
-    //   channel.messages = channel.messages.map((msg, index) => ({
-    //     ...msg,
-    //     owner: modifiedOwners[index],
-    //   }));
-    //   channel.members = modifiedMembers;
-    // }
-    // return {id : channelId,members:channel.members, history: channel.messages}
-    return channel && this.membershipCheck(channel.members, user.pseudo)
-                  ? {id : channelId,members:channel.members, history: channel.messages}
-                  : {};
+    return (channel && this.membershipCheck(channel.members, user.pseudo))
+            ? this.replacePropNames(channel, ['fortytwo_id', 'pseudo'], ['id', 'name'])
+            : {}
   }
+
+  async addFriends(me: User, friendPseudo: string): Promise<void> {
+    const meFriends = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.fortytwo_id},
+      select: { friends: true}
+    })).friends;
+    const friendId = (await this.prisma.user.findFirst({
+      where: { pseudo: friendPseudo, },
+      select: { fortytwo_id: true}
+    })).fortytwo_id;
+
+    if (!meFriends?.find(meFriend => meFriend === friendId && me.fortytwo_id != friendId)
+    && me.fortytwo_id != friendId) {
+      const mePrisma = await this.prisma.user.update({
+        where: { fortytwo_id: me.fortytwo_id, },
+        data: { friends: { push: friendId,},}
+      })
+      this.notifyNewFriendAdded(me, friendId);
+      console.log("addfriends result : ", mePrisma.friends);
+    }
+    else if ( me.fortytwo_id != friendId)
+    console.log('you can not friend yourself\n')
+    else
+      console.log('already friend\n')
+  }
+
+  async notifyNewFriendAdded(me: User, friendId: number): Promise<void>  {
+    const friendProfile = await this.userService.getUserbyId(friendId);
+
+		const goodFormatFriend = {
+			id: friendProfile.fortytwo_id,
+			name: friendProfile.pseudo,
+			connected: friendProfile.connected,
+			type: "MyDms",
+			members:[
+				{id : me.fortytwo_id, name: me.pseudo},
+				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo}
+			]
+		};
+    const goodFormatMe = {
+			id: me.fortytwo_id,
+			name: me.pseudo,
+			connected: me.connected,
+			type: "MyDms",
+			members:[
+				{id : me.fortytwo_id, name: me.pseudo},
+				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo}
+			]
+		};
+    this.emitSignal(me.fortytwo_id, goodFormatFriend, "New Friends")
+    this.emitSignal(friendId, goodFormatMe, "New Friends")
+  }
+
+  async emitSignal(userId: number, obj: any, signal: string) {
+    this.chatGateway.emitSignal(userId, obj, signal)
+  }
+
 }
 

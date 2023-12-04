@@ -7,6 +7,8 @@ import {
 	Req,
 	UseGuards,
 	Res,
+	Body,
+	Post,
 } from "@nestjs/common";
 //import { ChatMessage, DirectMessage } from "@prisma/client";
 import { ChatService } from "src/chat/chat.service";
@@ -14,7 +16,7 @@ import { PrismaClient, User } from "@prisma/client";
 import { Response } from "express";
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
-import { backResInterface } from "src/shared";
+import { backResInterface, frontReqInterface } from "src/shared";
 
 @UseGuards(JwtGuard)
 @Controller("chat")
@@ -44,7 +46,7 @@ export class ChatController {
 		dms.forEach((elem:any) => {
 			mydms.push({id:elem.id, name:"", members: elem.members, type: elem.type})
 		})
-		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
+		return {data: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
 
 	@Get('/channels/:id/name')
@@ -133,7 +135,6 @@ export class ChatController {
 	}
 
 	@Get('/friends/')
-	@UseGuards(JwtGuard)
 	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		const goodFormat = friends.map(friend => ({
@@ -146,7 +147,13 @@ export class ChatController {
 				{id : friend.fortytwo_id, name: friend.pseudo}
 			]
 		}));
-		return {chatFriends: goodFormat};
+		return {data: goodFormat};
+	}
+
+	@Post('addFriend')
+	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface) {
+		this.chat_service.addFriends(user, body.pseudo)
+		return {isOk: true}
 	}
 
 	@Get('/channels/:id/chatWindow')
@@ -155,6 +162,5 @@ export class ChatController {
 	{
 		return {data : await this.chat_service.getChannelInfo(id, user) };
 	}
-
 }
 

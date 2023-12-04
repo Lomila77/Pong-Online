@@ -5,12 +5,6 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CheckPseudoDto } from './dto/user.dto';
 
-// interface userUpdate {
-//   pseudo: string;
-//   avatar: string;
-//   isF2Active: boolean;
-// }
-
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}

@@ -85,6 +85,7 @@ export class ChatGateway implements OnGatewayConnection {
     client.disconnect();
   }
 
+
   @SubscribeMessage('Join Channel')
   async joinOrCreateChannel(
     @MessageBody() data: { info: ChannelCreateDto },
@@ -419,32 +420,44 @@ export class ChatGateway implements OnGatewayConnection {
   //   }, 2000);
   // }
 
-  async addFriends(me: User, friendPseudo: string,  @ConnectedSocket() client: Socket): Promise<backResInterface> {
-    const meFriends = (await this.prisma.user.findUnique({
-      where: { fortytwo_id: me.id },
-      select: { friends: true }
-    })).friends;
-    const friendId = (await this.prisma.user.findFirst({
-      where: { pseudo: friendPseudo },
-      select: { fortytwo_id: true }
-    })).fortytwo_id;
-
-    if (!meFriends?.find(meFriend => meFriend === friendId) && me.id != friendId) {
-      const mePrisma = await this.prisma.user.update({
-        where: { fortytwo_id: me.id },
-        data: { friends: { push: friendId } }
-      });
-      console.log("addfriends result : ", mePrisma.friends);
-
-      const friend = await this.userService.getUserbyId(friendId);
-      this.server.to(client.id).emit("New Friends", { friend });
-
-      return { isFriend: true };
-    } else if (me.id != friendId) {
-      console.log('you can not friend yourself\n');
-    } else {
-      console.log('already friend\n');
-    }
-    return { isFriend: false };
+  private findSocketIdByUserId(userId: number): string | undefined {
+    return Object.keys(this.clients).find((id) => this.clients[id]?.fortytwo_id === userId);
   }
+
+  async emitSignal(userId: number, obj: any, signal: string) {
+    const userSocketId = this.findSocketIdByUserId(userId)
+
+    if (userSocketId) {
+      this.server.to(userSocketId).emit(signal,  obj);
+    }
+  }
+
+  // async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
+  //   const meFriends = (await this.prisma.user.findUnique({
+  //     where: { fortytwo_id: me.id },
+  //     select: { friends: true }
+  //   })).friends;
+  //   const friendId = (await this.prisma.user.findFirst({
+  //     where: { pseudo: friendPseudo },
+  //     select: { fortytwo_id: true }
+  //   })).fortytwo_id;
+
+  //   if (!meFriends?.find(meFriend => meFriend === friendId) && me.id != friendId) {
+  //     const mePrisma = await this.prisma.user.update({
+  //       where: { fortytwo_id: me.id },
+  //       data: { friends: { push: friendId } }
+  //     });
+  //     console.log("addfriends result : ", mePrisma.friends);
+
+  //     const friend = await this.userService.getUserbyId(friendId);
+  //     this.server.to(this.clients[me.id]).emit("New Friends", { friend });
+
+  //     return { isFriend: true };
+  //   } else if (me.id != friendId) {
+  //     console.log('you can not friend yourself\n');
+  //   } else {
+  //     console.log('already friend\n');
+  //   }
+  //   return { isFriend: false };
+  // }
 }
