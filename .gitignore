@@ -4,5 +4,10 @@
 #NODE_MODULES
 node_modules
 
+#MIGRATION
+/back/prisma/migrations/
+
+#gitignore
+gitignore
 back/prisma/migrations/migration_lock.toml
 back/prisma/migrations/20231201114112_to_deploy/migration.sql

@@ -1,4 +1,4 @@
-import { IChatFriend } from "../context/ChatContext";
+import { IChannel, IChannels } from "../context/ChatContext";
 
 export const createUser = async (params: any) => {
   try {
@@ -124,18 +124,24 @@ export interface frontReqInterface {
   codeQRAuth?: string;
 }
 
-export interface IChannel {
-  id: number,
-  name: string,
-  type: string,
-  members:number[],
-}
+// export interface IChannel {
+// 	id: number,
+// 	name: string,
+// 	type: string,
+// 	members: IChatMember[],
+// 	connected?: boolean
+//   }
+//   export interface IChatMember {
+//     id: number;
+//     name: string;
+//   }
 
-export interface IChannels{
-	MyDms: IChannel[];
-	MyChannels: IChannel[];
-	ChannelsToJoin : IChannel[];
-  }
+
+// export interface IChannels{
+// 	MyDms: IChannel[];
+// 	MyChannels: IChannel[];
+// 	ChannelsToJoin : IChannel[];
+//   }
 
   export interface backResInterface {
     pseudo?: string;
@@ -151,7 +157,7 @@ export interface IChannels{
     channels?: IChannels;
     xp?: number;
     win?: number;
-    chatFriends?: IChatFriend[]
+    chatFriends?: IChannel[]
     data?: any;
     qrCodeUrl?: string;
     verifyQrCode?: boolean;

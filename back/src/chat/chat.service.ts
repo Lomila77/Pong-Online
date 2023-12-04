@@ -495,12 +495,15 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true}},
+          members: {select: {fortytwo_id: true, pseudo: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
-        members: source.members.map(member => member.fortytwo_id),
+        members: source.members.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+        })),
         type: 'ChannelsToJoin',
       }));
 
@@ -521,7 +524,7 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true}},
+          members: {select: {fortytwo_id: true, pseudo: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -550,7 +553,7 @@ export class ChatService {
             },
             select: {
               fortytwo_id: true,
-              // fortytwo_userName: true,
+              fortytwo_userName: true,
             }
           }
         },
@@ -958,6 +961,20 @@ export class ChatService {
       return chanMembers.find(member => member.pseudo === userName) ? true : false;
   }
 
+  // private modifySource<T extends object>(sources: T[]): T[] {
+  //   return sources.map(source => {
+  //     if ('fortytwo_id' in source) {
+  //       const {fortytwo_id, ... rest} = source;
+  //       return {id: fortytwo_id, ... rest} as T;
+  //     }
+  //     if ('pseudo' in source) {
+  //       const {pseudo, ... rest} = source;
+  //       return {name: pseudo, ... rest} as T;
+  //     }
+  //     return source
+  //   })
+  // }
+
   async getChannelInfo(channelId: number, user: User) {
 
     const channel = await this.prisma.channel.findUnique({
@@ -965,22 +982,26 @@ export class ChatService {
         id:channelId
       },
       select: {
-        members: {select: {pseudo: true, }},
+        members: {select: {pseudo: true, fortytwo_id: true}},
         messages: {select:{
           message: true,
-          owner:{select:{pseudo: true}}
+          owner:{select:{pseudo: true, fortytwo_id: true}}
         }},
       }
     });
+    // if (channel) {
+    //   const modifiedMembers = this.modifySource(channel.members);
+    //   const modifiedOwners = this.modifySource(channel.messages.map(msg => msg.owner));
+    //   channel.messages = channel.messages.map((msg, index) => ({
+    //     ...msg,
+    //     owner: modifiedOwners[index],
+    //   }));
+    //   channel.members = modifiedMembers;
+    // }
+    // return {id : channelId,members:channel.members, history: channel.messages}
     return channel && this.membershipCheck(channel.members, user.pseudo)
                   ? {id : channelId,members:channel.members, history: channel.messages}
                   : {};
-    // in case I decide to formate the informations :
-    // const chatHistory = channel?.messages.map(messages => ({
-    //     owner:messages.owner.pseudo,
-    //     messages: messages.message,
-    // })) || []
-    // return {members:channel.members, history: chatHistory }
   }
 }
 
