@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useUser } from "../context/UserContext";
-import {IChatFriend, IChatWindow, useChat} from "../context/ChatContext";
+import {IChatWindow, IChannel, IChannels, IFormData, useChat} from "../context/ChatContext";
 import { Socket } from "socket.io-client";
-import {getUsers, IChannel, IChannels} from "../api/queries";
 import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
@@ -13,13 +12,12 @@ import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
 
 function Chat() {
-    const {socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows } = useChat() as {
+    const {socket, friends, channels, openedWindows, openWindow } = useChat() as {
         socket: Socket | null;
-        friends: IChatFriend[];
-        connectedFriends: string[];
-        disconnectedFriends: string[];
+        friends: IChannel[];
         channels: IChannels;
         openedWindows: IChatWindow[];
+        openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
     };
 
     // Recuperation de la session de l'utilisateur
@@ -50,7 +48,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChatFriend[] | IChannel[]>(friends);
+    const [drawerContent, setDrawerContent] = useState<IChannel[]>(friends);
     //useEffect(() => { TODO delete coms after test
     //    setDrawerContent(friends);
     //}, []);
@@ -72,7 +70,8 @@ function Chat() {
             return;
         if ((selectedTarget.name && !openedWindows.find(content => content.name === selectedTarget.name)) ||
             (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)))
-            handleOpenWindow(selectedTarget);
+            openWindow(selectedTarget);
+            // handleOpenWindow(selectedTarget);
         setSelectedTarget(null);
     }, [selectedTarget]);
 
@@ -104,7 +103,7 @@ function Chat() {
             <div className="drawer-side mt-16">
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
-                    {drawerContent && drawerContent.map((target: IChatFriend | IChannel , index: number) => (
+                    {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={`btn btn-ghost font-display ${target.connected ? "disabled" : ""} ` + colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.name}

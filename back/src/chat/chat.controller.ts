@@ -9,6 +9,7 @@ import {
 	Res,
 	Body,
 	Post,
+	ParseIntPipe,
 } from "@nestjs/common";
 //import { ChatMessage, DirectMessage } from "@prisma/client";
 import { ChatService } from "src/chat/chat.service";
@@ -156,11 +157,25 @@ export class ChatController {
 		return {isOk: true}
 	}
 
-	@Get('/channels/:id/chatWindow')
+
+	// @Get('/del/:id')
+	// async deleteUser(@Param('id', ParseIntPipe) id: number) {
+	//   return this.userService.delId(id)
+	// }
+
+
+	@Get('/chatWindow/:id')
 	@UseGuards(JwtGuard)
-	async getChannelWindow(@Param("id") id: number, @GetUser() user: User)
+	async getChannelWindow(@Param("id", ParseIntPipe) id: number, @GetUser() user: User)
 	{
 		return {data : await this.chat_service.getChannelInfo(id, user) };
+	}
+
+	//debug to delete before correction
+	@Get('print')
+	async printAllChannels(){
+		const channels = await this.chat_service.printAllChannels();
+		return channels.length!==0 ? channels : "no channels yet\n"
 	}
 }
 

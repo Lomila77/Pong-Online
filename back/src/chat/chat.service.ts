@@ -49,6 +49,7 @@ export class ChatService {
   }
 
   async CreateChan(info: ChannelCreateDto) {
+    console.log("creatchannel function is called\n")
     var members = info.members;
     let hash = null;
     info.isPassword = false;
@@ -69,16 +70,16 @@ export class ChatService {
           isPassword: info.isPassword,
           isDM: members.length == 2 ? true : false,
           owner: {
-            connect: { fortytwo_id: members[0] }
+            connect: { fortytwo_id: members[0].id }
           },
           admins: {
             connect: members.map(member => ({
-              fortytwo_id: member,
+              fortytwo_id: member.id,
             }))
           },
           members: {
             connect: members.map(member => ({
-              fortytwo_id: member,
+              fortytwo_id: member.id,
             }))
           },
           muted: {},
@@ -1056,6 +1057,8 @@ export class ChatService {
             : {}
   }
 
+
+
   async addFriends(me: User, friendPseudo: string): Promise<void> {
     const meFriends = (await this.prisma.user.findUnique({
       where: { fortytwo_id: me.fortytwo_id},
@@ -1066,11 +1069,15 @@ export class ChatService {
       select: { fortytwo_id: true}
     })).fortytwo_id;
 
-    if (!meFriends?.find(meFriend => meFriend === friendId && me.fortytwo_id != friendId)
+    if (!meFriends?.find(meFriend => meFriend === friendId)
     && me.fortytwo_id != friendId) {
       const mePrisma = await this.prisma.user.update({
         where: { fortytwo_id: me.fortytwo_id, },
         data: { friends: { push: friendId,},}
+      })
+      await this.prisma.user.update({
+        where: { fortytwo_id: friendId, },
+        data: { friends: { push: me.fortytwo_id,},}
       })
       this.notifyNewFriendAdded(me, friendId);
       console.log("addfriends result : ", mePrisma.friends);
@@ -1112,5 +1119,16 @@ export class ChatService {
     this.chatGateway.emitSignal(userId, obj, signal)
   }
 
+
+  // to delete before correction
+  async printAllChannels() {
+    try {
+		  const channels = await this.prisma.channel.findMany()
+		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
+		  return channels;
+		} catch (error) {
+		  console.error(error);
+		}
+  }
 }
 

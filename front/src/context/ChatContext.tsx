@@ -82,7 +82,6 @@ export const ChatProvider = ({ children }) => {
 
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
-
   const initChatCtx = () => {
     const token = Cookies.get('jwtToken');
     if (!token)
@@ -92,7 +91,8 @@ export const ChatProvider = ({ children }) => {
         token: token
       }
     });
-    newSocket.on('connect', () => {handleOpenWindow
+    newSocket.on('connect', () => {
+      setSocket(newSocket);
       backRequest('chat/friends', 'GET').then((data) => {
         console.log("friends route is giving : ", data, "\n");
         data.data && setFriends(data.data as IChannel[]);
@@ -118,6 +118,8 @@ export const ChatProvider = ({ children }) => {
 
       newSocket?.on('Channel Created', (newChat : IChannel) => {
         // todo : need a less repetitive way to do this
+        console.log("Channel Created signal received newChat =", newChat, "\n");
+
         switch (newChat.type) {
           case "MyDms" :
             if(!findIdInList(channels?.MyDms, newChat.id)) {
@@ -145,6 +147,7 @@ export const ChatProvider = ({ children }) => {
       });
 
       newSocket?.on('Channel Joined', (newChat: IChannel) => {
+        console.log("channel Joined signal received\n");
         handleOpenWindow(newChat);
       });
 
@@ -175,19 +178,21 @@ export const ChatProvider = ({ children }) => {
 
   /*********** chat window states ************/
 
-  const updateChannels = (newChat : IChannel) => {
-    if (isChannelKnown(newChat.id, newChat.type))
-    {
+  // const updateChannels = (newChat : IChannel) => {
+  //   if (isChannelKnown(newChat.id, newChat.type))
+  //   {
 
-    }
-  }
+  //   }
+  // }
 
   const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
     const foundElem = list?.find(elem => elem.id === idToFind);
     return foundElem;
   };
 
-  const isChannelKnown = (idToFind: number, type: string) => {
+  const isChannelKnown = (type: string, idToFind?: number) => {
+    if (!idToFind)
+      return false;
     return channels?.[type]?.find((channel: IChannel) => channel.id === idToFind);
   };
 
@@ -196,16 +201,17 @@ export const ChatProvider = ({ children }) => {
   }
 
   const handleOpenWindow = async (chatData : IChannel) =>{
-    if (ischatOpenned(chatData.id)){
-      const newWindow: IChatWindow = (await (backRequest('channels/' + chatData.id + '/chatWindow', 'GET'))).data
+    if (!ischatOpenned(chatData.id)){
+      const newWindow: IChatWindow = (await (backRequest('chat/chatWindow/' + chatData.id, 'GET'))).data
       newWindow.id = chatData.id;
       newWindow.name = chatData.name;
       newWindow.type = chatData.type;
       newWindow.members = chatData.members;
       setOpenedWindows(current => {return([...current || [], newWindow])})
     }
-  //     console.log("newWindow : ", newWindow);
   }
+  useEffect (() => {console.log("new openned window set : ", openedWindows)}, [openedWindows])
+
   // const handleCloseWindow = (id : string) => {
   //   const closingWingow: IChatWindow = {
   //     id: '',
@@ -217,7 +223,7 @@ export const ChatProvider = ({ children }) => {
 
   const openWindow = async (chatData? : IChannel, form?: IFormData, password?: string) => {
     const data = {
-      id:          chatData?.id?      chatData.id      :  -1,
+      id:          chatData?.id?      chatData.id      :  undefined,
       name:        form?.name?        form.name        :  chatData?.name,
       type:        form?.type?        form.type        :  chatData?.type,
       members:     form?.members?     form.members     :  chatData?.members,
@@ -226,8 +232,11 @@ export const ChatProvider = ({ children }) => {
       password:    form?.password?    form.password    :  "",
     }
     // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if (data.type && !isChannelKnown(data.id, data.type))
-      socket?.emit('JoinChannel', data)
+    if (data.type && !isChannelKnown(data.type, data.id)) {
+      console.log("openWindoc called : data = ", data);
+      console.log("socket = ", socket);
+      socket?.emit('Join Channel', data)
+    }
     // if channel is known, open window directly
     else if (chatData)
       handleOpenWindow(chatData);

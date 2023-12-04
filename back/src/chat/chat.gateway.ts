@@ -79,30 +79,30 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+
   handleDisconnect(client: Socket) {
     console.log("Disconnect")
     delete this.clients[client.id];
     client.disconnect();
   }
 
-
   @SubscribeMessage('Join Channel')
   async joinOrCreateChannel(
-    @MessageBody() data: { info: ChannelCreateDto },
+    @MessageBody() data: ChannelCreateDto, /*: { info: ChannelCreateDto },*/
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("Join Channel received data = ", data, "socketId = ", client.id, "/n")
     let channel;
 
-    if (data.info.chanId) {
-      channel = await this.chatService.getChannelById(data.info.chanId);
+    if (data.id && data.type) {
+      channel = await this.chatService.getChannelById(data.id);
     } else {
-      channel = await this.chatService.CreateChan(data.info);
+      channel = await this.chatService.CreateChan(data);
     }
-
     if (!channel.isPrivate && !channel.isDM) {
-      this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
+      this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
     } else {
-      this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type });
+      this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
     }
 
     // Rejoindre le canal
@@ -116,15 +116,15 @@ export class ChatGateway implements OnGatewayConnection {
       client.join(channel.id.toString());
       if (ret !== 5)
         client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+      this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
 
       if (channel.isDM)
       {
-        const otherUser = await this.userService.getUserbyId(data.info.members[1]);
+        const otherUser = await this.userService.getUserbyId(data.members[1].id);
         const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
         if (retOtherUser === 0 || retOtherUser === 5) {
           client.to(channel.id.toString()).emit("NewUserJoin", { username: otherUser.fortytwo_userName, id: otherUser.fortytwo_id, avatarUrl: otherUser.avatar });
-          this.server.to(channel.id.toString()).emit("Channel Joined", { id: channel.id, name: data.info.name, members: data.info.members, type: data.info.type});
+          this.server.to(channel.id.toString()).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
         }
       }
     }

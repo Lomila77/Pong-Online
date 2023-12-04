@@ -8,7 +8,7 @@ export class ChannelCreateDto {
 
   @IsNumber()
   @IsOptional()
-  chanId: number;
+  id: number;
 
   @IsBoolean()
   @IsOptional()
@@ -23,9 +23,9 @@ export class ChannelCreateDto {
   password: string;
 
   @IsArray()
-  @IsNumber({}, { each: true })
+  // @IsNumber({}, { each: true })
   @IsOptional()
-  members: number[];
+  members: {name: string, id: number}[];
 
   @IsString()
   @IsOptional()
