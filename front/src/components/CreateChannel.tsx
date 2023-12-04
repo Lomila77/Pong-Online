@@ -1,6 +1,17 @@
 import {useEffect, useState} from "react";
+import {IChatFriend, IChatWindow, useChat} from "../context/ChatContext";
+import {Socket} from "socket.io-client";
+import {IChannels} from "../api/queries";
 
-function NewChannel({me, socket, close}) {
+function NewChannel({me, close}) {
+    const {socket, friends, connectedFriends, disconnectedFriends, channels, openedWindows } = useChat() as {
+        socket: Socket | null;
+        friends: IChatFriend[];
+        connectedFriends: string[];
+        disconnectedFriends: string[];
+        channels: IChannels;
+        openedWindows: IChatWindow[];
+    };
     const [formData, setFormData] = useState({
         name: '',
         isPrivate: false,
@@ -17,7 +28,7 @@ function NewChannel({me, socket, close}) {
         )), []);
 
     const toggleCreateChannel = () => {
-        socket.emit('JoinChannel', formData); // TODO: Appeler fonction luc
+        handleOpenWindow(formData); // TODO tests
         close();
     }
 

@@ -9,12 +9,14 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import TwoFA from "./components/TwoFA";
 
 const App = () => {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/twoFA" element={<TwoFA/>} />
         <Route
           path="/"
           element={

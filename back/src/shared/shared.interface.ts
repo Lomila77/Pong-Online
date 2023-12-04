@@ -11,6 +11,7 @@ export interface frontReqInterface {
 	avatar?: any;
 	isF2Active?: boolean;
 	fortytwo_id?: string;
+	codeQRAuth?: string;
 }
 
 export interface IChannel {
@@ -47,4 +48,6 @@ export interface IChannels{
 	win?: number;
 	chatFriends?: IChatFriend[]
 	data?: any;
+	qrCodeUrl?: string;
+	verifyQrCode?: boolean;
   }

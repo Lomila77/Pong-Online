@@ -18,7 +18,7 @@ function Chat() {
         friends: IChatFriend[];
         connectedFriends: string[];
         disconnectedFriends: string[];
-        channels: IChannels; // TODO: channels pas un tableau de string ?
+        channels: IChannels;
         openedWindows: IChatWindow[];
     };
 
@@ -50,7 +50,11 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChatFriend[] | IChannel[]>([]); // TODO change by friends after tests
+    const [drawerContent, setDrawerContent] = useState<IChatFriend[] | IChannel[]>(friends);
+    //useEffect(() => { TODO delete coms after test
+    //    setDrawerContent(friends);
+    //}, []);
+
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -59,7 +63,7 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels : friends); //TODO manque channnel to join
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels + channels.ChannelsToJoin : friends); //TODO trouver un moyen de separer MyChannels et ChannelsToJoin
     }, [displayChannelDrawer, friends]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
@@ -129,19 +133,10 @@ function Chat() {
                     </div>
                 </ul>
                 <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse overflow-hidden">
-                    {//drawerOpen && openDm.map((userDm, index) => (
-                    //        <div key={index} className="px-5">
-                    //            <WindowChat user={userDm}
-                    //                        me={user}
-                    //                        destroyChat={() => setDestroyWindowChat(index)}
-                    //                        socket={socket}/>
-                    //        </div>
-                    //    )
-                    //)
-                    }
-                    {drawerOpen && openedWindows.map((channel, index) => (
+                    {drawerOpen && openedWindows.map((channel, index) =>
+                        channel.type == 'MyDms' && (
                             <div key={index} className="px-5">
-                                <WindowChat user={channel.members} // TODO: members is array, choose wich one is user dest
+                                <WindowChat user={channel.name} // TODO: fix name par le dest
                                             me={user}
                                             destroyChat={() => setDestroyWindowChat(index)}
                                             socket={socket}
@@ -150,9 +145,10 @@ function Chat() {
                             </div>
                         )
                     )}
-                    {openChannel.map((channel, index) => (
+                    {drawerOpen && openedWindows.map((channel, index) =>
+                        channel.type == 'MyChannels' && (
                         <div key={index} className="px-5">
-                            <WindowChannel chat={channel}
+                            <WindowChannel chatName={channel.name}
                                         me={user}
                                         destroyChannel={() => setDestroyWindowChannel(index)}
                                         socket={socket}/>
