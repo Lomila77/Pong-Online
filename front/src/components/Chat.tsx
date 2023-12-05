@@ -43,7 +43,10 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChannel[]>(channels.MyDms);
+    const [drawerContent, setDrawerContent] = useState<IChannel[]>([]);
+    useEffect(() => {
+        setDrawerContent(channels.MyDms);
+    }, []);
 
     // Gere le basculement DM/Channel
     const toggleDisplayChannel = () => {
