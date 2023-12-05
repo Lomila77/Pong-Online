@@ -21,26 +21,22 @@ function Chat() {
         openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
     };
 
-
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
+    const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
 
-    // Fenetre a detruire
-    const [destroyWindowChat, setDestroyWindowChat] = useState(-1);
-    const [destroyWindowChannel, setDestroyWindowChannel] = useState(-1);
-
-    // Appel module create channel
-    const [createChannel, setCreateChannel] = useState(false);
-    // Permet de gerer la creation d'un channel quand j'appuis sur le bouton create channel
-    const toggleCreateChannel = () => {
+l
+    const [createChannel, setCreateChannel] = useState(false);                                          // Appel module create channe
+    const toggleCreateChannel = () => {                                                                             // Permet de gerer la creation d'un channel quand j'appuis sur le bouton create channel
         setCreateChannel(createChannel !== true);
     }
 
-    // Permet de configurer l'affichage, le contenue et le style du drawer
+    /* Permet de configurer l'affichage, le contenue et le style du drawer */
     const [drawerOpen, setDrawerOpen] = useState(false);
     const toggleDrawerOpen = () => {
         setDrawerOpen(drawerOpen !== true);
     }
+
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
     const [drawerContent, setDrawerContent] = useState<IChannel[]>([]);
@@ -49,7 +45,7 @@ function Chat() {
             setDrawerContent(channels.MyDms);
     }, []);
 
-    // Gere le basculement DM/Channel
+    /* Gere le basculement DM/Channel */
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
     }
@@ -58,8 +54,10 @@ function Chat() {
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
         if (channels)
-            setDrawerContent(displayChannelDrawer ? channels.MyChannels + channels.ChannelsToJoin : channels.MyDms);
-    }, [displayChannelDrawer, friends]);
+            setDrawerContent(displayChannelDrawer ?
+                channels.MyChannels + channels.ChannelsToJoin :
+                channels.MyDms);
+    }, [displayChannelDrawer, channels.MyDms]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
@@ -73,17 +71,7 @@ function Chat() {
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
     // TODO call luc pour effacer un channel
     useEffect(() => {
-        console.log("destroyWindowChat modified");
-        if (destroyWindowChat != -1) {
-            //setOpenDm((prevDm) =>
-            //    prevDm.filter((dm, index) => index !== destroyWindowChat));
-            setDestroyWindowChat(-1);
-        }
-        if (destroyWindowChannel != -1) {
-            //setOpenChannel((prevChannel) =>
-            //    prevChannel.filter((channel, index) => index !== destroyWindowChannel));
             setDestroyWindowChannel(-1);
-        }
         }, [destroyWindowChat, destroyWindowChannel]);
 
     return (
@@ -101,7 +89,7 @@ function Chat() {
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={`btn btn-ghost font-display ${target.type == 'MyDms' && target.members[0].connected ? "disabled" : ""} ` + colorDrawer.text}
-                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : "boutique"}
+                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : target.name}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost w-10">
