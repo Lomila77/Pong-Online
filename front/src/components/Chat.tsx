@@ -88,7 +88,7 @@ function Chat() {
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
-                            <button className={`btn btn-ghost font-display ${target.type == 'MyDms' && target.members[0].connected ? "disabled" : ""} ` + colorDrawer.text}
+                            <button className={"btn btn-ghost font-display" + (target.type == 'MyDms' && target.members[0].connected ? " disabled " : " ") +  colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : target.name}
                             </button>
                             {!displayChannelDrawer && (
