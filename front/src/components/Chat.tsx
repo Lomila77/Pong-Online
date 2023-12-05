@@ -70,8 +70,8 @@ function Chat() {
 
     // Efface une fenetre pour ne plus l'afficher, apres qu'il ete fermee via la croix
     useEffect(() => {
-        if (selectedTarget)
-            closeWindow(selectedTarget.id);
+        if (selectedTargetToDestroy)
+            closeWindow(selectedTargetToDestroy.id);
         setSelectedTargetToDestroy(null);
     }, [selectedTargetToDestroy]);
 
