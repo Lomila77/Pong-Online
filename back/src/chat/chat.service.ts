@@ -499,7 +499,7 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -528,7 +528,7 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -551,6 +551,7 @@ export class ChatService {
         },
         select: {
           id: true,
+          name: true,
           members: {
             where: {
               NOT: { refresh_token: token },
@@ -558,6 +559,7 @@ export class ChatService {
             select: {
               fortytwo_id: true,
               fortytwo_userName: true,
+              connected: true,
             }
           }
         },
@@ -1080,66 +1082,45 @@ export class ChatService {
     return channel;
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
-    const meFriends = (await this.prisma.user.findUnique({
-      where: { fortytwo_id: me.fortytwo_id},
-      select: { friends: true}
-    })).friends;
-    const friendId = (await this.prisma.user.findFirst({
-      where: { pseudo: friendPseudo, },
-      select: { fortytwo_id: true}
-    })).fortytwo_id;
-
-    if (!meFriends?.find(meFriend => meFriend === friendId)
-    && me.fortytwo_id != friendId) {
-      const mePrisma = await this.prisma.user.update({
-        where: { fortytwo_id: me.fortytwo_id, },
-        data: { friends: { push: friendId,},}
-      })
-      await this.prisma.user.update({
-        where: { fortytwo_id: friendId, },
-        data: { friends: { push: me.fortytwo_id,},}
-      })
-      this.notifyNewFriendAdded(me, friendId);
-      const dmChannel = await this.createDMChannel(me.fortytwo_id, friendId);
-      console.log("DM channel created: ", dmChannel);
-      console.log("addfriends result : ", mePrisma.friends);
+  async friendshipUpdatePrisma (adder: User, newFriend: User) : Promise<boolean>{
+    //if user is not adding him self && friend is not already in my list
+    if (adder.fortytwo_id != newFriend.fortytwo_id
+        && !adder.friends?.find(friendId => friendId === newFriend.fortytwo_id)) {
+        await this.prisma.user.update({
+          where: { fortytwo_id: adder.fortytwo_id, },
+          data: { friends: { push: newFriend.fortytwo_id,},}
+        })
+        return true;
     }
-    else if ( me.fortytwo_id != friendId)
-    console.log('you can not friend yourself\n')
-    else
-      console.log('already friend\n')
+    return false;
   }
 
-  async notifyNewFriendAdded(me: User, friendId: number): Promise<void>  {
-    const friendProfile = await this.userService.getUserbyId(friendId);
-
-		const goodFormatFriend = {
-			// id: friendProfile.fortytwo_id, //todo : id has been removed because it could be used as a channel id (also in getUserFriends)
-			name: friendProfile.pseudo,
-			connected: friendProfile.connected,
-			type: "MyDms",
-			members:[
-				{id : me.fortytwo_id, name: me.pseudo},
-				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo}
-			]
-		};
-    const goodFormatMe = {
-			// id: me.fortytwo_id,  //todo : id has been removed because it could be used as a channel id (also in getUserFriends)
-			name: me.pseudo,
-			connected: me.connected,
-			type: "MyDms",
-			members:[
-				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo},
-				{id : me.fortytwo_id, name: me.pseudo},
-			]
-		};
-    this.emitSignal(me.fortytwo_id, goodFormatFriend, "New Friends")
-    this.emitSignal(friendId, goodFormatMe, "New Friends")
+  async addFriends(me: User, friendPseudo: string): Promise<void> {
+    if (me.pseudo == friendPseudo)
+      return;
+    const newFriend = await this.prisma.user.findFirst({
+      where : {pseudo: friendPseudo},
+    })
+    let status = await this.friendshipUpdatePrisma(me, newFriend);
+    status = await this.friendshipUpdatePrisma(newFriend, me);
+    if (status) {
+      const dmChannel = await this.createDMChannel(me.fortytwo_id, newFriend.fortytwo_id);
+      const goodFormatDmChannel = {
+        id: dmChannel.id,
+        name: dmChannel.name,
+        type: "MyDms",
+        members:[
+        	{id : me.fortytwo_id, name: me.pseudo, connected: me.connected},
+        	{id : newFriend.fortytwo_id, name: newFriend.pseudo, connected: newFriend.connected}
+        ]
+      }
+      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "Channel Created")
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "Channel Created")
+    }
   }
 
-  async emitSignal(userId: number, obj: any, signal: string) {
-    this.chatGateway.emitSignal(userId, obj, signal)
+  async emitSignal(targetId: number, obj: any, signal: string) {
+    this.chatGateway.emitSignal(targetId, obj, signal)
   }
 
 
