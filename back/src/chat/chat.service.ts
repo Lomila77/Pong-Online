@@ -1115,8 +1115,8 @@ export class ChatService {
     this.emitSignal(friendId, goodFormatMe, "New Friends")
   }
 
-  async emitSignal(userId: number, obj: any, signal: string) {
-    this.chatGateway.emitSignal(userId, obj, signal)
+  async emitSignal(targetId: number, obj: any, signal: string) {
+    this.chatGateway.emitSignal(targetId, obj, signal)
   }
 
 
