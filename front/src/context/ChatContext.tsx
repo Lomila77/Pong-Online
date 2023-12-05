@@ -6,9 +6,10 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 
-// Todo : function that removes my self from users
+// Todo : function that removes my self from users || function that puts myId in frist position
 // Todo : const closeWindow(windowId)
 // Todo : update channels (change password, name new admin ....)
+
 
 // *npx prisma generate
 
@@ -46,10 +47,9 @@ export interface IChannel {
   name: string,
   type: string,
   members: IChatMember[],
-  // connected?: boolean //will be set only if friends tab
-  // friendInfo?: number
 }
 
+type ChannelType = keyof IChannels;
 export interface IChannels{
 	MyDms: IChannel[];
 	MyChannels: IChannel[];
@@ -100,8 +100,12 @@ export const ChatProvider = ({ children }) => {
       //   data.data && setFriends(data.data as IChannel[]);
       // })
       backRequest('chat/channels', 'GET').then((data) => {
+        let allChannels : IChannels = data.data as IChannels
+        allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
+        allChannels = moveMemberToFirstInIChannels(allChannels, "MyChannels", user?.fortytwo_id || 0)
+        allChannels = moveMemberToFirstInIChannels(allChannels, "ChannelsToJoin", user?.fortytwo_id || 0)
         console.log("channels route is giving : ", data, "\n");
-        data.data && setChannels(data.data as IChannels);
+        allChannels && setChannels(allChannels);
       })
       // newSocket?.on('New Friends', (friend) => {
       //   setFriends((prev) => [...prev, friend])
@@ -118,35 +122,39 @@ export const ChatProvider = ({ children }) => {
         //add message in the right conversation.
       })
 
-      newSocket?.on('Channel Created', (newChat : IChannel) => {
-        // todo : need a less repetitive way to do this
-        console.log("Channel Created signal received newChat =", newChat, "\n");
+      newSocket?.on('Channel Created', (newChannel : IChannel) => {
+        if (user)
+          newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
+        if (channels)
+          addChannelToChannelsByType(channels, newChannel)
+        // // todo : need a less repetitive way to do this
+        // console.log("Channel Created signal received newChat =", newChat, "\n");
 
-        switch (newChat.type) {
-          case "MyDms" :
-            if(!findIdInList(channels?.MyDms, newChat.id)) {
-              setChannels((prev) => ({
-                ...prev!,
-                MyDms: prev ? [...prev.MyDms, newChat] : [newChat],
-              }));
-            }
-          default :
-            if (newChat.members.find(member => member.name === user?.pseudo)) {
-              newChat.type = "MyChannels"
-              setChannels((prev) => ({
-                ...prev!,
-                MyChannels: prev ? [...prev.MyChannels, newChat] : [newChat],
-              }));
-            }
-            else {
-              newChat.type = "ChannelsToJoin"
-              setChannels((prev) => ({
-                ...prev!,
-                ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChat] : [newChat],
-              }));
-            }
-            break;
-        }
+        // switch (newChat.type) {
+        //   case "MyDms" :
+        //     if(!findIdInList(channels?.MyDms, newChat.id)) {
+        //       setChannels((prev) => ({
+        //         ...prev!,
+        //         MyDms: prev ? [...prev.MyDms, newChat] : [newChat],
+        //       }));
+        //     }
+        //   default :
+        //     if (newChat.members.find(member => member.name === user?.pseudo)) {
+        //       newChat.type = "MyChannels"
+        //       setChannels((prev) => ({
+        //         ...prev!,
+        //         MyChannels: prev ? [...prev.MyChannels, newChat] : [newChat],
+        //       }));
+        //     }
+        //     else {
+        //       newChat.type = "ChannelsToJoin"
+        //       setChannels((prev) => ({
+        //         ...prev!,
+        //         ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChat] : [newChat],
+        //       }));
+        //     }
+        //     break;
+        // }
       });
 
       newSocket?.on('Channel Joined', (newChat: IChannel) => {
@@ -187,6 +195,38 @@ export const ChatProvider = ({ children }) => {
 
   //   }
   // }
+
+
+  // moves specific member to first position in the channel if found && not already first;
+  const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
+
+    if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
+      newChannel.type = "ChannelsToJoin";
+    // if newChannel is not already in my list
+    if(!findIdInList(channels[newChannel.type], newChannel.id)) {
+      setChannels((prev) => ({
+        ...prev!,
+        [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
+      }));
+    }
+  }
+
+  const moveMemberToFirst = (members: IChatMember[], targetMemberId: number): IChatMember[] => {
+    const targetIndex = members.findIndex(member => member.id === targetMemberId)
+    if (targetIndex > 0) {
+      const [removedMember] = members.splice(targetIndex, 1);
+      members.unshift(removedMember);
+    }
+    return members;
+  }
+
+  const moveMemberToFirstInIChannels = (channels: IChannels, channelType: ChannelType, targetMemberId: number) => {
+    const updatedIChannel = channels[channelType].map(channel => ({
+      ...channel,
+      members: moveMemberToFirst(channel.members, targetMemberId),
+    }));
+    return { ... channels, [channelType] : updatedIChannel};
+  }
 
   const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
     const foundElem = list?.find(elem => elem.id === idToFind);
