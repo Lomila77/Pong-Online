@@ -138,12 +138,13 @@ export const ChatProvider = ({ children }) => {
                 MyChannels: prev ? [...prev.MyChannels, newChat] : [newChat],
               }));
             }
-            else
+            else {
               newChat.type = "ChannelsToJoin"
               setChannels((prev) => ({
                 ...prev!,
                 ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChat] : [newChat],
               }));
+            }
             break;
         }
       });
