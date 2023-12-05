@@ -82,7 +82,7 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
                 )}
                 {!displayUserProfil && (
                     <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                        {messages.map((msg, index) => (
+                        {messages && messages.map((msg, index) => (
                             <Message srcMsg={msg}
                                      srcPseudo={msg.owner.name}
                                      myMessage={!!isMyMessage(msg)}
@@ -99,7 +99,7 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                    onClick={sendMessage}><
+                    onClick={handleSendMessage}><
                         img src={Send} alt="Send" />
                 </button>
             </div>
