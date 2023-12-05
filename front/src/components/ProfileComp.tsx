@@ -10,7 +10,6 @@ const ProfileComp: React.FC = ({user}) => {
     useEffect(() => {
         backRequest('users/isFriend/' + user.pseudo, 'GET').then(data => {
             setFriendAdded(data.isFriend);
-            console.log("ISFRIEND?: " + friendAdded);
         })
     }, []);
 

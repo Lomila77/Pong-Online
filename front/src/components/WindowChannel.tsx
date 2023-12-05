@@ -5,12 +5,12 @@ import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
 
-function WindowChannel({chatName, me, destroyChannel, socket}) {
+function WindowChannel({chat, me, destroyChannel, socket}) {
     const [messages, setMessages] = useState([]);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
-    socket.emit('create channel', {chatName}); //TODO Appeler fonction Luc
+    socket.emit('create channel', {chat}); //TODO Appeler fonction Luc
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
