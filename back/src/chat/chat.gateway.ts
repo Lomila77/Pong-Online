@@ -158,6 +158,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ChannelMessageSendDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("channelId ",  data.channelId, " : ", data.message);
     const chat = await this.chatService.newMsg(data, this.clients[client.id].pseudo);
     const except_user = await this.chatService.getExceptUser(data.channelId, this.clients[client.id].fortytwo_id);
     let except = await this.server.in(data.channelId.toString()).fetchSockets().then((sockets) => {

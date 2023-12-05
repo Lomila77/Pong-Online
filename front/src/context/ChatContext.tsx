@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
@@ -68,18 +67,16 @@ export interface IFormData {
 
 export const ChatContext = createContext<{
   socket: Socket | null
-  // friends: IChannel[]
   channels: IChannels | null
   openedWindows: IChatWindow[] | null
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
-  sendMessage: (message: string, id: number) => void
+  sendMessage: (message: string, channelId: number) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
-  // const [friends, setFriends] = useState<IChannel[]>([])
   const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
@@ -118,7 +115,8 @@ export const ChatProvider = ({ children }) => {
       //   setDisconnectedFriends((prev) => [...prev, friend]);
       //   setConnectedFriends((prev) => prev.filter((f) => f !== friend));
       // });
-      newSocket?.on('sendMessage', (message) => {
+      newSocket?.on('Message Created', (message) => {
+        console.log("\n\n\nMessage Created", message);
         //add message in the right conversation.
       })
 
@@ -256,8 +254,9 @@ export const ChatProvider = ({ children }) => {
       handleOpenWindow(chatData);
   }
 
-  const sendMessage = (message: string, id: number) => {
-    socket?.emit('sendMessage', {message: message, channelId: id})
+  const sendMessage = (message: string, channelId: number) => {
+    if (message)
+      socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
   /*********** return ctx ************/
