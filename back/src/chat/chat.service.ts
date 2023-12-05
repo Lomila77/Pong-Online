@@ -1057,7 +1057,28 @@ export class ChatService {
             : {}
   }
 
-
+  async createDMChannel(user1Id: number, user2Id: number): Promise<Channel> {
+    const channel = await this.prisma.channel.create({
+      data: {
+        name: `DM-${user1Id}-${user2Id}`,  // Génère un nom unique pour le canal DM
+        owner: {
+          connect: { fortytwo_id: user1Id },  // Définit l'utilisateur 1 comme propriétaire du canal
+        },
+        isDM: true,
+        isPrivate: true,
+        members: {
+          connect: [
+            { fortytwo_id: user1Id },
+            { fortytwo_id: user2Id },
+          ],
+        },
+      },
+      include: {
+        members: true,
+      },
+    });
+    return channel;
+  }
 
   async addFriends(me: User, friendPseudo: string): Promise<void> {
     const meFriends = (await this.prisma.user.findUnique({
@@ -1080,6 +1101,8 @@ export class ChatService {
         data: { friends: { push: me.fortytwo_id,},}
       })
       this.notifyNewFriendAdded(me, friendId);
+      const dmChannel = await this.createDMChannel(me.fortytwo_id, friendId);
+      console.log("DM channel created: ", dmChannel);
       console.log("addfriends result : ", mePrisma.friends);
     }
     else if ( me.fortytwo_id != friendId)
