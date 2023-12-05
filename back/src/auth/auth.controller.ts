@@ -22,7 +22,7 @@ import * as process from "process";
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  
+
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
   async redirect(
@@ -95,5 +95,11 @@ export class AuthController {
   @Put('/verify')
   verify(@GetUser() user: User, @Body() body: frontReqInterface): backResInterface {
     return this.authService.verify(user, body.codeQRAuth);
+  }
+
+  @Get('/test')
+  async signinTest( @Res() res: Response,) {
+    await this.authService.testAnakin(res)
+    res.redirect(process.env.FRONT_HOME + '/');
   }
 }

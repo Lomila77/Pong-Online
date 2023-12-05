@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto, Fortytwo_dto } from './dto';
+import { Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -49,16 +49,6 @@ export class AuthService {
           throw new ForbiddenException('signup : Credentials taken');
       }
       throw error;
-    }
-  }
-
-  async prismaPrintTable() {
-    try {
-      const users = await this.prisma.user.findMany();
-      console.log(users);
-      return users;
-    } catch (error) {
-      console.error(error);
     }
   }
 
@@ -140,6 +130,43 @@ export class AuthService {
       encoding: "base32",
       token: code,
     })};
+  }
+
+
+  //todo delete before correction: this is juste a test
+  async testAnakin(res: Response) {
+    const anakinFortytwo_dto : Fortytwo_dto = {id: 66, login:"Askywalker", email:"Askywalker@42paris.fr"}
+    const anakinAuthDto = {pseudo: "Anakin", isF2Active: false, avatar:"/src/images/MGameWatch.png"}
+    let user : any = this.user.getUserbyId(anakinFortytwo_dto.id)
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          fortytwo_id: anakinFortytwo_dto.id,
+          fortytwo_email: anakinFortytwo_dto.email,
+          fortytwo_userName: anakinFortytwo_dto.login,
+          fortytwo_picture: null,
+          pseudo: anakinAuthDto.pseudo,
+          avatar: anakinAuthDto.avatar,
+          isF2Active: anakinAuthDto.isF2Active,
+          xp:1000,
+          win: 1000,
+          // connected: true,
+        },
+      });
+    }
+    await this.user.toggleConnectionStatus(anakinFortytwo_dto.id, true);
+    await this.handleCookies(anakinFortytwo_dto.id, res)
+  }
+
+  async prismaPrintTable() {
+    try {
+      const users = await this.prisma.user.findMany();
+      console.log(users);
+      return users;
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
