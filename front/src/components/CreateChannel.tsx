@@ -4,16 +4,8 @@ import {Socket} from "socket.io-client";
 import {IChannels} from "../context/ChatContext";
 import {useUser} from "../context/UserContext";
 
-function NewChannel({me, close}) {
-    const {socket,
-        channels,
-        openedWindows,
-        openWindow } = useChat() as {
-        socket: Socket | null;
-        channels: IChannels;
-        openedWindows: IChatWindow[];
-        openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
-    };
+function NewChannel({close}) {
+    const { openWindow } = useChat();
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
 
     const [formData, setFormData] = useState<IFormData>({

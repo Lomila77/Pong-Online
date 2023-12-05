@@ -13,15 +13,7 @@ import NewChannel from "../images/newChan.svg"
 import {data} from "autoprefixer";
 
 function Chat() {
-    const {socket, friends, channels, openedWindows, openWindow, closeWindow } = useChat() as {
-        socket: Socket | null;
-        friends: IChannel[];
-        channels: IChannels;
-        openedWindows: IChatWindow[];
-        openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void;
-        closeWindow: (id: number) => void;
-    };
-
+    const {channels, openedWindows, openWindow, closeWindow } = useChat();
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
@@ -122,8 +114,8 @@ function Chat() {
                                 <WindowChat user={channel.members[1].name}
                                             me={user}
                                             destroyChat={() => setSelectedTargetToDestroy(channel)}
-                                            socket={socket}
                                             history={channel.history}
+                                            chatId={channel.id}
                                 />
                             </div>
                         )
@@ -132,15 +124,13 @@ function Chat() {
                         channel.type == 'MyChannels' && (
                         <div key={index} className="px-5">
                             <WindowChannel chat={channel}
-                                        me={user}
                                         destroyChannel={() => setSelectedTargetToDestroy(channel)}
-                                        socket={socket}
-                                        history={channel.history}/>
+                            />
                         </div>
                     ))}
                 </div>
                 {createChannel && (
-                    <CreateChannel socket={socket} close={toggleCreateChannel}/>
+                    <CreateChannel close={toggleCreateChannel}/>
                 )}
             </div>
         </div>

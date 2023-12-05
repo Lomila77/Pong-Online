@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getMessage } from "../api/queries";
 import Message from "./Message";
 import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
+import {useChat} from "../context/ChatContext";
 
-function WindowChannel({chat, me, destroyChannel, socket, history}) {
+function WindowChannel({chat, destroyChannel}) {
+    const { sendMessage } = useChat();
     const [messages, setMessages] = useState(chat.history);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
@@ -18,8 +19,6 @@ function WindowChannel({chat, me, destroyChannel, socket, history}) {
         ban: false,
     })
     const [errorAdminData, setErrorAdminData] = useState(false);
-    // TODO create interface for block, mute or kick
-    socket.emit('create channel', {chat}); //TODO Appeler fonction Luc
 
     useEffect(() => {
         console.log(chat.members);
@@ -35,41 +34,23 @@ function WindowChannel({chat, me, destroyChannel, socket, history}) {
         setIsChecked(!isChecked);
     };
 
-    const openParam = () =>{
-        setDisplayParam(true);
-    }
+    const openParam = () => {setDisplayParam(true);}
 
-    const closeParam = () => {
-        setDisplayParam(false);
-    }
+    const closeParam = () => {setDisplayParam(false);}
 
     const sendAdminData = () => {
         //TODO: send to luc
     }
 
+
+    const handleSendMessage = () => {
+        sendMessage(message, chat.id);
+        setMessage('');
+    }
+
     useEffect(() => {
-        socket.on('update', (data) => { // TODO Appeler fonction Luc
-            if (data === 'chan updated') {
-                getMessage().then(data =>
-                    setMessages([...messages, data]))
-            }
-            scrollToBottom();
-        });
-
-        //return () => {
-        //    socket.disconnect();
-        //}
-    }, []);
-
-
-    //const sendMessage = () => {
-    //    if (!message)
-    //        return;
-    //    socket.emit('message', message); // TODO Appeler fonction Luc ?
-    //    setMessages([...messages, message]);
-    //    setMyMessages([...myMessages, message]);
-    //    setMessage('');
-    //}
+        scrollToBottom();
+    }, [messages]);
 
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container'); // TODO fix comme chez windowchat
@@ -209,8 +190,7 @@ function WindowChannel({chat, me, destroyChannel, socket, history}) {
                        value={message}
                        onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        //onClick={sendMessage}>
-                 >
+                        onClick={handleSendMessage}>
                     <img src={Send} alt="Send" />
                 </button>
             </div>
