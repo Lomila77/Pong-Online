@@ -232,6 +232,7 @@ export const ChatProvider = ({ children }) => {
   useEffect (() => {console.log("new newChannels set : ", channels)}, [channels])
 
   const closeWindow = (id : number) => {
+    console.log("closeWindow called \n", id);
     setOpenedWindows((prev) => prev ? prev.filter((f) => f.id !== id) : []);
   }
 
