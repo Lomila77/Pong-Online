@@ -16,8 +16,8 @@ function GameStatusesComponent({
         <>
             {
                 gameStatus === GameStatus.WAITING_FOR_PLAYERS ? (
-                    <>
-                        <p className='text-4xl font-display text-black NewGame mb-32'>
+                    <div className='flex flex-col items-center justify-center mb-8'>
+                        <p className='text-4xl font-display text-black NewGame mb-32 text-center'>
                             WAITING FOR OPPONENT
                         </p>
                         {/*    3 dots loading */}
@@ -26,7 +26,7 @@ function GameStatusesComponent({
                             height={100}
                             width={100}
                         />
-                    </>
+                    </div>
                 ) : null
             }
             {
@@ -47,10 +47,7 @@ function GameStatusesComponent({
             {
                 gameStatus === GameStatus.FINISHED ? (
                     <GameFinishedComponent
-                        winner={finishedGameState!.winner!}
-                        looser={finishedGameState!.looser!}
-                        winnerScore={finishedGameState!.scoreLeft}
-                        looserScore={finishedGameState!.scoreRight}
+                        finishedGameState={finishedGameState!}
                     />
                 ) : null
             }

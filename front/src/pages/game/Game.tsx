@@ -5,7 +5,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { User } from '../../api/queries';
 import GameStatusesComponent from './GameStatusesComponent';
 import { ThreeDots } from 'react-loader-spinner';
-import { Simulate } from 'react-dom/test-utils';
 
 export enum GameStatus {
     WAITING_FOR_PLAYERS = 'WAITING_FOR_PLAYERS',
@@ -24,10 +23,23 @@ interface JoinRoomMessage {
 
 export interface FinishedGameState {
     gameStatus: GameStatus;
-    winner: Player | null;
-    looser: Player | null;
+    winner: {
+        name: string;
+        side: string;
+        score: number;
+    } | null;
+    looser: {
+        name: string;
+        side: string;
+        score: number;
+    } | null;
     scoreLeft: number;
     scoreRight: number;
+    currentPlayer: {
+        name: string;
+        side: string;
+        score: number;
+    } | null;
 }
 
 export interface GameParameters {
@@ -46,6 +58,7 @@ export interface GameParameters {
 }
 
 function Game() {
+
     const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
@@ -62,6 +75,30 @@ function Game() {
     }, []);
 
 
+    
+    const handleResize = () => {
+        const newWidth = window.innerWidth;
+        const newHeight = window.innerHeight;
+        console.log("newWidth: " + newWidth)
+        console.log("newHeight: " + newHeight)
+        /* if (newWidth < 600 || newHeight < 700) {
+            //divide by 4
+        }
+        if (newWidth < 1000 || newHeight < 800) {
+            //divide by 2
+        }*/
+      };
+    
+      useEffect(() => {
+        // Add event listener for window resize
+        window.addEventListener('resize', handleResize);
+    
+        // Clean up event listener on component unmount
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, []);
+
     const [rightPaddlePositionY, setRightPaddlePositionY] = useState<number>(100);
     const [leftPaddlePositionY, setLeftPaddlePositionY] = useState<number>(100);
 
@@ -74,6 +111,7 @@ function Game() {
         looser: null,
         scoreLeft: 100,
         scoreRight: 0,
+        currentPlayer: null,
     });
     let playingSide = 'LEFT';
     const [paddleWidth, setPaddleWidth] = useState<number>(3);
@@ -129,9 +167,8 @@ function Game() {
         setGameStatus(gameStatus);
     };
 
-    // todo update canvasHeight when window is resized
     const canvasHeight = boardHeight;
-    //
+    
     const gameLoopInChild = () => {
 
     };
@@ -165,7 +202,9 @@ function Game() {
         canvasRef.current!.getContext('2d')!.font = '32px Arial';
         const leftScore = `${scoreLeft}`;
         const rightScore = `${scoreRight}`;
+        canvasRef.current!.getContext('2d')!.textAlign = 'right';
         canvasRef.current!.getContext('2d')!.fillText(leftScore, canvasRef.current!.width / 2 - scorePositionOffsetX, scorePositionOffsetY);
+        canvasRef.current!.getContext('2d')!.textAlign = 'left';
         canvasRef.current!.getContext('2d')!.fillText(rightScore, canvasRef.current!.width / 2 + scorePositionOffsetX, scorePositionOffsetY);
     };
 
@@ -310,14 +349,19 @@ function Game() {
         });
 
         socketRef.current?.on('endGame', function (data) {
-            // winner
             setFinishedGameState({
                 gameStatus: GameStatus.FINISHED,
                 winner: data.winner,
                 looser: data.looser,
                 scoreLeft: data.left_score,
                 scoreRight: data.right_score,
+                currentPlayer: user ? {
+                    name: user.pseudo,
+                    side: playingSide,
+                    score: 0,
+                } : null
             })
+
             setGameStatus(GameStatus.FINISHED);
         });
         socketRef.current?.on('ballPositionEvent', function (data) {
@@ -335,7 +379,7 @@ function Game() {
                     <GameStatusesComponent gameStatus={gameStatus} leftPlayer={leftPlayer} rightPlayer={rightPlayer}
                         finishedGameState={finishedGameState} />
                     {
-                        socketRef.current && (
+                        socketRef.current && gameStatus === GameStatus.IN_PROGRESS && (
                             <PongCanvas
                                 initializeCanvas={initializeCanvas}
                                 canvasRef={canvasRef}

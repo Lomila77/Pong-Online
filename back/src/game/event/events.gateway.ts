@@ -27,8 +27,9 @@ export class EventsGateway {
 
   @SubscribeMessage('joinRoom')
   handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
-    // si la room existe pas encore
     const mapPong = this.roomStoreService.getMapPong();
+    
+    // si la room existe pas encore
     if (!mapPong.get(data.room)) {
       mapPong.set(data.room, {
         "map": new Map(), "players": [], "game": {
@@ -38,7 +39,7 @@ export class EventsGateway {
           ySpeed: 3,
           canvasWidth: this.canvasWidth,
           canvasHeight: this.canvasHeight,
-          paddleWidth: 3,
+          paddleWidth: 10,
           paddleHeight: 100,
           leftPaddlePositionY: 100,
           rightPaddlePositionY: 100,
@@ -147,6 +148,20 @@ export class EventsGateway {
       const stop = this.handleGame(room, playerRight, playerLeft, client)
       if (stop === 1) {
         clearInterval(intervalId);
+
+        // TODO: envoyer infos dans la DB
+        // sendGameInfoToDB(player1, player2, time, )
+        /* GAME
+           end_timestamp
+           winner id
+           looser id
+           score winner
+           score looser
+           uid de la partie
+
+           USER winner
+           win +1 pour winner
+        */
         return;
       }
       this.notifyRoomWithBallStat(room);
@@ -211,29 +226,43 @@ export class EventsGateway {
   }
 
   private ballIsTouchingLeftPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number) {
-    return xBall - ballRadius <= leftPlayer.x + paddleWidth && yBall - this.ballRadius >= leftPlayer.y && yBall + this.ballRadius <= leftPlayer.y + paddleHeight;
+    const topBorderCollision: boolean = yBall + ballRadius == leftPlayer.y && this.paddleGapWithWall <= xBall && xBall <= this.paddleGapWithWall + paddleWidth;
+    const rightBoderCollision: boolean = xBall - ballRadius <= this.paddleGapWithWall + paddleWidth && yBall >= leftPlayer.y && yBall <= leftPlayer.y + paddleHeight;
+    const lowerBorderCollision: boolean = yBall - ballRadius == leftPlayer.y + paddleHeight && this.paddleGapWithWall <= xBall && xBall <= this.paddleGapWithWall + paddleWidth;
+
+    return lowerBorderCollision || topBorderCollision || rightBoderCollision;
+            
   }
 
   private ballIsTouchingRightPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, rightPlayer: GamePlayer, paddleHeight: number, canvaWidth: number) {
-    return xBall + ballRadius >= canvaWidth - paddleWidth - this.paddleGapWithWall && yBall - this.ballRadius >= rightPlayer.y && yBall + this.ballRadius <= rightPlayer.y + paddleHeight;
+    const topBorderCollision: boolean = yBall + ballRadius == rightPlayer.y && xBall >= canvaWidth - this.paddleGapWithWall - paddleWidth && xBall <= canvaWidth - this.paddleGapWithWall;
+    const leftBoderCollision: boolean = xBall + ballRadius >= canvaWidth - this.paddleGapWithWall - paddleWidth && yBall >= rightPlayer.y && yBall <= rightPlayer.y + paddleHeight;
+    const lowerBorderCollision: boolean = yBall - ballRadius == rightPlayer.y + paddleHeight && canvaWidth - this.paddleGapWithWall - paddleWidth <= xBall && xBall <= canvaWidth - this.paddleGapWithWall;
+
+    return lowerBorderCollision || topBorderCollision || leftBoderCollision;
   }
 
   private handleBouncingOnPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number, xSpeed: number, ySpeed: number, canvaWidth: number, rightPlayer: GamePlayer) {
-    // if (xBall - ballRadius <= paddleWidth && yBall >= leftPlayer.y && yBall <= leftPlayer.y + paddleHeight) {
+    //let xDir: number = xSpeed >= 0 ? 1 : 0;
+    //let yDir: number = ySpeed >= 0? 1: 0;
     if (this.ballIsTouchingLeftPaddle(xBall, ballRadius, paddleWidth, yBall, leftPlayer, paddleHeight)) {
-      xSpeed = -xSpeed;
-      // Pour donner un effet à la balle en fonction de l'endroit où elle touche la palette
-      let deltaY = yBall - ((leftPlayer.y + paddleHeight) / 2);
-      ySpeed = deltaY * 0.35;
+      const angleOfIncidence = Math.atan2(yBall - leftPlayer.y, xBall - (this.paddleGapWithWall + paddleWidth))
+      const newAngle = 2 * angleOfIncidence - Math.PI;
+      const speedMagnitude = Math.sqrt(xSpeed ** 2 + ySpeed ** 2);
+      xSpeed = speedMagnitude * Math.cos(newAngle);
+      ySpeed = speedMagnitude * Math.sin(newAngle);
+      /*xSpeed = -xSpeed;
+      let deltaY = yBall - (leftPlayer.y + paddleHeight / 2);
+      ySpeed = deltaY * 0.1; // You can adjust the multiplier for the desired effect*/
+      xBall = leftPlayer.x + paddleWidth + ballRadius; // To prevent the ball to be stuck
     }
 
     //Touche pad du joueur de droite
-    // if (xBall + ballRadius >= canvaWidth - paddleWidth && yBall >= rightPlayer.y && yBall <= rightPlayer.y + paddleHeight) {
     if (this.ballIsTouchingRightPaddle(xBall, ballRadius, paddleWidth, yBall, rightPlayer, paddleHeight, canvaWidth)) {
       xSpeed = -xSpeed;
-      // Pour donner un effet à la balle en fonction de l'endroit où elle touche la palette
-      let deltaY = yBall - ((rightPlayer.y + paddleHeight) / 2);
-      ySpeed = deltaY * 0.35;
+      let deltaY = yBall - (rightPlayer.y + paddleHeight / 2);
+      ySpeed = deltaY * 0.1; // You can adjust the multiplier for the desired effect
+      xBall = rightPlayer.x - ballRadius; //adjust the ball's position to prevent it from getting stuck inside the paddle
     }
     return { xSpeed, ySpeed };
   }

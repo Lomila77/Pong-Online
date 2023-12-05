@@ -35,7 +35,7 @@ export class CreatePublicGame {
                 ySpeed: 3,
                 canvasWidth: 800,
                 canvasHeight: 400,
-                paddleWidth: 3,
+                paddleWidth: 10,
                 paddleHeight: 100,
                 leftPaddlePositionY: 100,
                 rightPaddlePositionY: 100,

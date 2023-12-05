@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Player } from './Game';
+import { FinishedGameState, Player } from './Game';
 
 interface GameFinishedComponentProperties {
-    winner: Player;
-    looser: Player;
-    winnerScore: number;
-    looserScore: number;
+    finishedGameState: FinishedGameState;
 }
 
 type WinnerNameColor = 'text-green-300' | 'text-green-500';
 
 function GameFinishedComponent({
-    winner,
-    looser,
-    winnerScore,
-    looserScore,
+   finishedGameState,
 }: GameFinishedComponentProperties) {
 
     const [winnerNameColor, setWinnerNameColor] = useState<WinnerNameColor>('text-green-300');
@@ -37,14 +31,22 @@ function GameFinishedComponent({
 
     return (
         <>
-            <div className="flex flex-col">
+            <div className="flex flex-col scroll-auto items-center justify-center">
                 <div className="flex flex-col items-center justify-center">
-                    <h1 className={`text-5xl col-span-2 text-center font-display text-green-400 NewGame mb-32 ml-16 mr-16 ${winnerNameColor}`}>
-                        {winner.firstName} WON with {winnerScore} pts
+                    <h1 className={`text-4xl col-span-2 text-center font-display text-green-400 NewGame mb-32 ml-16 mr-16 ${winnerNameColor} xs:text-l sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl`}>
+                        {
+                            finishedGameState.winner!.name === finishedGameState.currentPlayer!.name
+                                ? 'You won' + ' with ' + finishedGameState.winner!.score + ' pts'
+                                : finishedGameState.winner!.name + ' won' + ' with ' + finishedGameState.winner!.score + ' pts'
+                        }
                     </h1>
-                    <p className='text-5xl font-display text-red-400 NewGame mb-32'>
-                        {looser.firstName} lost with {looserScore} pts
-                    </p>
+                    <h1 className={`text-4xl col-span-2 text-center font-display text-red-400 NewGame ml-16 mr-16 xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl`}>
+                        {
+                            finishedGameState.looser!.name === finishedGameState.currentPlayer!.name
+                                ? 'You lost' + ' with ' + finishedGameState.looser!.score + ' pts'
+                                : finishedGameState.looser!.name + ' lost' + ' with ' + finishedGameState.looser!.score + ' pts'
+                        }
+                    </h1>
                 </div>
             </div>
         </>
