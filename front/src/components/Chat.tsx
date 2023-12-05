@@ -54,7 +54,7 @@ function Chat() {
             {drawer: "bg-base-200", text: "text-orangeNG"});
         if (channels)
             setDrawerContent(displayChannelDrawer ?
-                channels.MyChannels + channels.ChannelsToJoin :
+                channels.MyChannels + channels.ChannelsToJoin || []:
                 channels.MyDms || []);
     }, [displayChannelDrawer, channels?.MyDms]);
 
