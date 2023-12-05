@@ -6,10 +6,12 @@ import Message from "./Message";
 import Send from "../images/send.svg"
 import Profil from "../images/profil.svg"
 import Cross from "../images/cross.svg"
+import {useChat} from "../context/ChatContext";
 
-function WindowChat({user, me, destroyChat, socket}) {
+function WindowChat({user, me, destroyChat, history, chatId}) {
+    const { sendMessage } = useChat();
     // Liste des messages recu et envoyees
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(history);
     // Liste de mes messages
     const [myMessages, setMyMessages] = useState([]);
     // Message a envoyer
@@ -35,13 +37,11 @@ function WindowChat({user, me, destroyChat, socket}) {
         setIsChecked(!isChecked);
     };
 
-    const sendMessage = () => {
-        if (!message)
-            return;
-        socket.emit('sendMessage', {message: message});
-        setMessages([...messages, message]);
-        setMyMessages([...myMessages, message]);
-        setMessage('');
+    const handleSendMessage = () => {
+        const handleSendMessage = () => {
+            sendMessage(message, chatId);
+            setMessage('');
+        }
     }
 
     useEffect(() => {
@@ -84,7 +84,7 @@ function WindowChat({user, me, destroyChat, socket}) {
                     <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                         {messages.map((msg, index) => (
                             <Message srcMsg={msg}
-                                     srcPseudo={isMyMessage(msg) ? me.pseudo : user}
+                                     srcPseudo={msg.owner.name}
                                      myMessage={!!isMyMessage(msg)}
                                      key={index}
                             />

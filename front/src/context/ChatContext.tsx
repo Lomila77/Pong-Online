@@ -65,7 +65,7 @@ export interface IFormData {
   type: string,
 }
 
-const ChatContext = createContext<{
+export const ChatContext = createContext<{
   socket: Socket | null
   // friends: IChannel[]
   channels: IChannels | null
