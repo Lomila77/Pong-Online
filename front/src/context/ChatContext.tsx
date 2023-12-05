@@ -46,6 +46,7 @@ export interface IChannel {
   type: string,
   members: IChatMember[],
   connected?: boolean //will be set only if friends tab
+  friendInfo?: number
 }
 
 export interface IChannels{
@@ -202,6 +203,7 @@ export const ChatProvider = ({ children }) => {
 
   const handleOpenWindow = async (chatData : IChannel) =>{
     if (!ischatOpenned(chatData.id)){
+      console.log("chat is not openned yet\n", chatData)
       const newWindow: IChatWindow = (await (backRequest('chat/chatWindow/' + chatData.id, 'GET'))).data
       newWindow.id = chatData.id;
       newWindow.name = chatData.name;

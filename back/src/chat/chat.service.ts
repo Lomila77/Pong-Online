@@ -1092,7 +1092,7 @@ export class ChatService {
     const friendProfile = await this.userService.getUserbyId(friendId);
 
 		const goodFormatFriend = {
-			id: friendProfile.fortytwo_id,
+			// id: friendProfile.fortytwo_id, //todo : id has been removed because it could be used as a channel id (also in getUserFriends)
 			name: friendProfile.pseudo,
 			connected: friendProfile.connected,
 			type: "MyDms",
@@ -1102,13 +1102,13 @@ export class ChatService {
 			]
 		};
     const goodFormatMe = {
-			id: me.fortytwo_id,
+			// id: me.fortytwo_id,  //todo : id has been removed because it could be used as a channel id (also in getUserFriends)
 			name: me.pseudo,
 			connected: me.connected,
 			type: "MyDms",
 			members:[
+				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo},
 				{id : me.fortytwo_id, name: me.pseudo},
-				{id : friendProfile.fortytwo_id, name: friendProfile.pseudo}
 			]
 		};
     this.emitSignal(me.fortytwo_id, goodFormatFriend, "New Friends")

@@ -139,7 +139,7 @@ export class ChatController {
 	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		const goodFormat = friends.map(friend => ({
-			id: friend.fortytwo_id,
+			// id: friend.fortytwo_id,	//todo : id has been removed because it could be used as a channel id (also in notifyNewFriendAdded)
 			name: friend.pseudo,
 			connected: friend.connected,
 			type: "MyDms",

@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Fortytwo_dto } from './dto';
+import { AuthDto, Fortytwo_dto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -134,28 +134,35 @@ export class AuthService {
 
 
   //todo delete before correction: this is juste a test
-  async testAnakin(res: Response) {
-    const anakinFortytwo_dto : Fortytwo_dto = {id: 66, login:"Askywalker", email:"Askywalker@42paris.fr"}
-    const anakinAuthDto = {pseudo: "Anakin", isF2Active: false, avatar:"/src/images/MGameWatch.png"}
-    let user : any = this.user.getUserbyId(anakinFortytwo_dto.id)
 
+  async creatProfile(dto1 : Fortytwo_dto, dto2: AuthDto ) {
+    let user : any = await this.user.getUserbyId(dto1.id)
+    console.log("user null ?", user===null ? "YEEEEES": "NOOOOOO")
     if (!user) {
       user = await this.prisma.user.create({
         data: {
-          fortytwo_id: anakinFortytwo_dto.id,
-          fortytwo_email: anakinFortytwo_dto.email,
-          fortytwo_userName: anakinFortytwo_dto.login,
+          fortytwo_id: dto1.id,
+          fortytwo_email: dto1.email,
+          fortytwo_userName: dto1.login,
           fortytwo_picture: null,
-          pseudo: anakinAuthDto.pseudo,
-          avatar: anakinAuthDto.avatar,
-          isF2Active: anakinAuthDto.isF2Active,
+          pseudo: dto2.pseudo,
+          avatar: dto2.avatar,
+          isF2Active: dto2.isF2Active,
           xp:1000,
           win: 1000,
-          // connected: true,
+          connected: true,
         },
       });
     }
-    await this.user.toggleConnectionStatus(anakinFortytwo_dto.id, true);
+    await this.user.toggleConnectionStatus(dto1.id, true);
+
+    return user
+  }
+
+  async testAnakin(res: Response) {
+    const anakinFortytwo_dto : Fortytwo_dto = {id: 66, login:"Askywalker", email:"Askywalker@42paris.fr"}
+    const anakinAuthDto: AuthDto = {pseudo: "Anakin", isF2Active: false, avatar:"/src/images/MGameWatch.png"}
+    await this.creatProfile(anakinFortytwo_dto, anakinAuthDto);
     await this.handleCookies(anakinFortytwo_dto.id, res)
   }
 
