@@ -86,7 +86,7 @@ fclean: clean
 	@docker system prune -a --volumes -f
 	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
 
-#re: fclean all
+re: fclean all
 
 # ---------------------------------
 

@@ -3,7 +3,9 @@
 
 #NODE_MODULES
 node_modules
+.idea
 
+<<<<<<< HEAD
 #MIGRATION
 /back/prisma/migrations/
 
@@ -11,3 +13,6 @@ node_modules
 gitignore
 back/prisma/migrations/migration_lock.toml
 back/prisma/migrations/20231201114112_to_deploy/migration.sql
+=======
+.DS_Store
+>>>>>>> 601bea5ac3afbd6d4542a459a26443975bf3c1f3
