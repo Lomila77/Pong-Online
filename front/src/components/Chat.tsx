@@ -133,7 +133,8 @@ function Chat() {
                             <WindowChannel chat={channel}
                                         me={user}
                                         destroyChannel={() => setSelectedTargetToDestroy(channel)}
-                                        socket={socket}/>
+                                        socket={socket}
+                                        history={channel.history}/>
                         </div>
                     ))}
                 </div>
