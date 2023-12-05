@@ -507,6 +507,7 @@ export class ChatService {
         members: source.members.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
+          connected: member.connected,
         })),
         type: 'ChannelsToJoin',
       }));
@@ -533,7 +534,11 @@ export class ChatService {
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
-        members: source.members.map(member => member.fortytwo_id),
+        members: source.members.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+          connected: member.connected,
+        })),
         type: 'MyChannels',
       }));
       return modifiedSources;
@@ -558,7 +563,7 @@ export class ChatService {
             },
             select: {
               fortytwo_id: true,
-              fortytwo_userName: true,
+              pseudo: true,
               connected: true,
             }
           }
@@ -566,9 +571,14 @@ export class ChatService {
       });
       const modifiedSources = sources.map((source) => ({
         ...source,
-        members: source.members.map(member => member.fortytwo_id),
+        members: source.members.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+          connected: member.connected,
+        })),
         type: 'MyDms',
       }));
+
       return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
