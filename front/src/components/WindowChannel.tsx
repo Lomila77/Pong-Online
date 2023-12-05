@@ -6,7 +6,7 @@ import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
 
 function WindowChannel({chat, me, destroyChannel, socket}) {
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(chat.history);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
@@ -55,7 +55,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
         <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
             <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
             <div className="collapse-title text-orangeNG font-display">
-                {chatName}
+                {chat.name}
             </div>
             <div className="absolute top-0 right-0">
                 <div className="absolute top-0 right-0 flex flex-row-reverse z-10">
@@ -76,8 +76,8 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
             </div>
             <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
                 {messages.map((msg, index) => ( //TODO changer message par la bonne strategie
-                    <Message srcMsg={msg}
-                             srcPseudo={isMyMessage(msg) ? me.pseudo : chatName} // TODO recuperer l'objet message et afficher le bon interlocuteur
+                    <Message srcMsg={msg.content}
+                             srcPseudo={msg.owner.name} // TODO recuperer l'objet message et afficher le bon interlocuteur
                              myMessage={!!isMyMessage(msg)}
                              key={index}
                     />
