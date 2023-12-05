@@ -29,6 +29,8 @@ function WindowChannel({chat, me, destroyChannel, socket, history}) {
         }
     }, [adminData]);
 
+
+
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
