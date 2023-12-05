@@ -30,6 +30,7 @@ import { io, Socket } from 'socket.io-client';
   }
 
 export interface IChatHistory {
+  id: number,
   owner: {
     name: string,
     id: number,
@@ -214,6 +215,7 @@ export const ChatProvider = ({ children }) => {
     }
   }
   useEffect (() => {console.log("new openned window set : ", openedWindows)}, [openedWindows])
+  useEffect (() => {console.log("new newChannels set : ", channels)}, [channels])
 
   // const handleCloseWindow = (id : string) => {
   //   const closingWingow: IChatWindow = {

@@ -499,7 +499,7 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -528,7 +528,7 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -551,6 +551,7 @@ export class ChatService {
         },
         select: {
           id: true,
+          name: true,
           members: {
             where: {
               NOT: { refresh_token: token },
@@ -558,6 +559,7 @@ export class ChatService {
             select: {
               fortytwo_id: true,
               fortytwo_userName: true,
+              connected: true,
             }
           }
         },
@@ -1099,8 +1101,6 @@ export class ChatService {
     const newFriend = await this.prisma.user.findFirst({
       where : {pseudo: friendPseudo},
     })
-    // todo error, should not emit signal if friendshipUpdatePrisma fails
-
     let status = await this.friendshipUpdatePrisma(me, newFriend);
     status = await this.friendshipUpdatePrisma(newFriend, me);
     if (status) {
@@ -1115,6 +1115,7 @@ export class ChatService {
         ]
       }
       this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "Channel Created")
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "Channel Created")
     }
   }
 
