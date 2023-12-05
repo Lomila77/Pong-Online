@@ -38,7 +38,7 @@ export interface IChannels{
 	message?: string;
 	avatar?: any;
 	isF2Active?: boolean;
-	fortytwo_id?: string;
+	fortytwo_id?: number;
 	isFriend?: boolean;
 	friends?: number[];
 	allUser?: User[];

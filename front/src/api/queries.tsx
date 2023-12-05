@@ -149,7 +149,7 @@ export interface frontReqInterface {
     message?: string;
     avatar?: any;
     isF2Active?: boolean;
-    fortytwo_id?: string;
+    fortytwo_id?: number;
     isFriend?: boolean;
     friends?: number[];
     allUser?: User[];

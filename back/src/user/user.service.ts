@@ -108,6 +108,7 @@ export class UserService {
 
   profil(user: User) : backResInterface{
     return {
+        fortytwo_id: user.fortytwo_id,
         pseudo: user.pseudo,
         avatar: user.avatar,
         isF2Active: user.isF2Active,
