@@ -25,7 +25,6 @@ function Chat() {
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
 
-l
     const [createChannel, setCreateChannel] = useState(false);                                          // Appel module create channe
     const toggleCreateChannel = () => {                                                                             // Permet de gerer la creation d'un channel quand j'appuis sur le bouton create channel
         setCreateChannel(createChannel !== true);
@@ -71,8 +70,9 @@ l
     // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
     // TODO call luc pour effacer un channel
     useEffect(() => {
-            setDestroyWindowChannel(-1);
-        }, [destroyWindowChat, destroyWindowChannel]);
+        // TODO func erase channel
+            setSelectedTargetToDestroy(null);
+        }, [selectedTargetToDestroy]);
 
     return (
         <div className={"drawer drawer-end flex flex-col-reverse h-full items-end static"}>
