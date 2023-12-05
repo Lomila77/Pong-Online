@@ -7,6 +7,7 @@ import { io, Socket } from 'socket.io-client';
 
 // Todo : Ichannel repartition seems incorrect on reception of event Channel Created
 // Todo : emit messages : might be type (message: string, channel : Ichannels);
+// Todo : creat interface and fonction to emit ban/mute/ user
 // Todo : update channels (change password, name new admin ....)
 
 
@@ -26,6 +27,7 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
+    // status; // owner, admin, user
   }
 
 export interface IChatHistory {
