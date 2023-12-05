@@ -6,9 +6,8 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 
-// Todo : change back, so it retuns Id and pseudo in members --> put it in data
-// Todo : handle channel Created event;
-// Todo: friends has no socket event and therefore do not selfactualise
+// Todo : function that removes my self from users
+// Todo : const closeWindow(windowId)
 // Todo : update channels (change password, name new admin ....)
 
 // *npx prisma generate
