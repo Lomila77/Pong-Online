@@ -118,7 +118,7 @@ function Chat() {
                     {drawerOpen && openedWindows.map((channel, index) =>
                         channel.type == 'MyDms' && (
                             <div key={index} className="px-5">
-                                <WindowChat user={channel.name} // TODO: fix name par le dest
+                                <WindowChat user={channel.members[0].name}
                                             me={user}
                                             destroyChat={() => setSelectedTargetToDestroy(channel)}
                                             socket={socket}
@@ -132,7 +132,7 @@ function Chat() {
                         <div key={index} className="px-5">
                             <WindowChannel chat={channel}
                                         me={user}
-                                        destroyChannel={() => setDestroyWindowChannel(index)}
+                                        destroyChannel={() => setSelectedTargetToDestroy(channel)}
                                         socket={socket}/>
                         </div>
                     ))}
