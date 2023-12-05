@@ -56,7 +56,7 @@ function Chat() {
             setDrawerContent(displayChannelDrawer ?
                 channels.MyChannels + channels.ChannelsToJoin :
                 channels.MyDms);
-    }, [displayChannelDrawer, channels.MyDms]);
+    }, [displayChannelDrawer, channels?.MyDms]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
@@ -120,7 +120,7 @@ function Chat() {
                             <div key={index} className="px-5">
                                 <WindowChat user={channel.name} // TODO: fix name par le dest
                                             me={user}
-                                            destroyChat={() => setDestroyWindowChat(index)}
+                                            destroyChat={() => setSelectedTargetToDestroy(channel)}
                                             socket={socket}
                                             history={channel.history}
                                 />
