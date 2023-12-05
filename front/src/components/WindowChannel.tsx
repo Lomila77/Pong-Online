@@ -5,7 +5,7 @@ import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
 
-function WindowChannel({chat, me, destroyChannel, socket}) {
+function WindowChannel({chat, me, destroyChannel, socket, history}) {
     const [messages, setMessages] = useState(chat.history);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
@@ -75,7 +75,7 @@ function WindowChannel({chat, me, destroyChannel, socket}) {
                 </div>
             </div>
             <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                {messages.map((msg, index) => ( //TODO changer message par la bonne strategie
+                {messages && messages.map((msg, index) => ( //TODO changer message par la bonne strategie
                     <Message srcMsg={msg.content}
                              srcPseudo={msg.owner.name} // TODO recuperer l'objet message et afficher le bon interlocuteur
                              myMessage={!!isMyMessage(msg)}
