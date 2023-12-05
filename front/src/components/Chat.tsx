@@ -54,8 +54,8 @@ function Chat() {
             {drawer: "bg-base-200", text: "text-orangeNG"});
         if (channels)
             setDrawerContent(displayChannelDrawer ?
-                channels.MyChannels + channels.ChannelsToJoin :
-                channels.MyDms);
+                channels.MyChannels + channels.ChannelsToJoin || []:
+                channels.MyDms || []);
     }, [displayChannelDrawer, channels?.MyDms]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
@@ -115,7 +115,7 @@ function Chat() {
                     </div>
                 </ul>
                 <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse overflow-hidden">
-                    {drawerOpen && openedWindows.map((channel, index) =>
+                    {drawerOpen && openedWindows.map((channel: IChatWindow, index: number) =>
                         channel.type == 'MyDms' && (
                             <div key={index} className="px-5">
                                 <WindowChat user={channel.members[0].name}
@@ -127,7 +127,7 @@ function Chat() {
                             </div>
                         )
                     )}
-                    {drawerOpen && openedWindows.map((channel, index) =>
+                    {drawerOpen && openedWindows.map((channel: IChatWindow, index: number) =>
                         channel.type == 'MyChannels' && (
                         <div key={index} className="px-5">
                             <WindowChannel chat={channel}
