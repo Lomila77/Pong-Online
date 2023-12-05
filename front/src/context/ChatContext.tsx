@@ -124,6 +124,7 @@ export const ChatProvider = ({ children }) => {
       })
 
       newSocket?.on('Channel Created', (newChannel : IChannel) => {
+        console.log("channel created signal recieved: \n\n\n", newChannel);
         if (user)
           newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
         if (channels)
