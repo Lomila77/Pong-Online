@@ -26,6 +26,7 @@ import { io, Socket } from 'socket.io-client';
   export interface IChatMember {
     name: string;
     id: number;
+    connected: boolean;
   }
 
 export interface IChatHistory {
@@ -45,8 +46,8 @@ export interface IChannel {
   name: string,
   type: string,
   members: IChatMember[],
-  connected?: boolean //will be set only if friends tab
-  friendInfo?: number
+  // connected?: boolean //will be set only if friends tab
+  // friendInfo?: number
 }
 
 export interface IChannels{
@@ -66,7 +67,7 @@ export interface IFormData {
 
 const ChatContext = createContext<{
   socket: Socket | null
-  friends: IChannel[]
+  // friends: IChannel[]
   channels: IChannels | null
   openedWindows: IChatWindow[] | null
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
@@ -102,9 +103,9 @@ export const ChatProvider = ({ children }) => {
         console.log("channels route is giving : ", data, "\n");
         data.data && setChannels(data.data as IChannels);
       })
-      newSocket?.on('New Friends', (friend) => {
-        setFriends((prev) => [...prev, friend])
-      })
+      // newSocket?.on('New Friends', (friend) => {
+      //   setFriends((prev) => [...prev, friend])
+      // })
       // newSocket?.on('friendConnected', (friend) => {
       //   setConnectedFriends((prev) => [...prev, friend]);
       //   setDisconnectedFriends((prev) => prev.filter((f) => f !== friend));
@@ -247,7 +248,7 @@ export const ChatProvider = ({ children }) => {
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, friends, /*connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow }}>
+    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow }}>
       {children}
     </ChatContext.Provider>
   );
