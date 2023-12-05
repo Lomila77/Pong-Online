@@ -76,7 +76,7 @@ const ChatContext = createContext<{
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [friends, setFriends] = useState<IChannel[]>([])
+  // const [friends, setFriends] = useState<IChannel[]>([])
   const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
@@ -95,10 +95,10 @@ export const ChatProvider = ({ children }) => {
     });
     newSocket.on('connect', () => {
       setSocket(newSocket);
-      backRequest('chat/friends', 'GET').then((data) => {
-        console.log("friends route is giving : ", data, "\n");
-        data.data && setFriends(data.data as IChannel[]);
-      })
+      // backRequest('chat/friends', 'GET').then((data) => {
+      //   console.log("friends route is giving : ", data, "\n");
+      //   data.data && setFriends(data.data as IChannel[]);
+      // })
       backRequest('chat/channels', 'GET').then((data) => {
         console.log("channels route is giving : ", data, "\n");
         data.data && setChannels(data.data as IChannels);
