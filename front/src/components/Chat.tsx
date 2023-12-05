@@ -101,7 +101,7 @@ function Chat() {
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
                             <button className={`btn btn-ghost font-display ${target.type == 'MyDms' && target.members[0].connected ? "disabled" : ""} ` + colorDrawer.text}
-                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : target.name}
+                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : "boutique"}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost w-10">
