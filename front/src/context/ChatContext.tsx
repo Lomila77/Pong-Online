@@ -25,7 +25,7 @@ import { io, Socket } from 'socket.io-client';
   export interface IChatMember {
     name: string;
     id: number;
-    connected: boolean;
+    connected?: boolean;
   }
 
 export interface IChatHistory {
@@ -61,7 +61,7 @@ export interface IFormData {
   isPrivate: boolean,
   isPassword: boolean,
   password: string,
-  members: number[],
+  members: IChatMember[],
   type: string,
 }
 
