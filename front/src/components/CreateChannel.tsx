@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {IChannel, IChatMember, IChatWindow, IFormData, useChat} from "../context/ChatContext";
 import {Socket} from "socket.io-client";
 import {IChannels} from "../context/ChatContext";
+import {useUser} from "../context/UserContext";
 
 function NewChannel({me, close}) {
     const {socket,
@@ -13,13 +14,14 @@ function NewChannel({me, close}) {
         openedWindows: IChatWindow[];
         openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
     };
+    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
 
     const [formData, setFormData] = useState<IFormData>({
         name: '',
         isPrivate: false,
         isPassword: false,
         password: '',
-        members: [{name: me.name, id: me.id}],
+        members: [{name: user.pseudo, id: user.fortytwo_id, connected: true}],
         type: 'MyChannels'
     })
 
