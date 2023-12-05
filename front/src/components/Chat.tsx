@@ -10,6 +10,7 @@ import Messagerie from "../images/chat.svg";
 import Play from "../images/play.svg"
 import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
+import {data} from "autoprefixer";
 
 function Chat() {
     const {socket, friends, channels, openedWindows, openWindow } = useChat() as {
@@ -19,11 +20,16 @@ function Chat() {
         openedWindows: IChatWindow[];
         openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
     };
+    useEffect(() => {
+        channels.MyDms.map(data => {
+            data.members[0].name == user.pseudo ? data.name = data.members[1].name : data.name = user.pseudo;
+        })
+    }, [channels.MyDms]);
 
     // Recuperation de la session de l'utilisateur
     const {user, setUser} = useUser();
     // Permet de selectionner le user pour afficher le dm avec celui-ci
-    const [selectedTarget, setSelectedTarget] = useState<IChatWindow>(null);
+    const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);
 
     // Liste des dms ouvert (en bas de page)
     //const [openDm, setOpenDm] = useState([]);
@@ -48,7 +54,7 @@ function Chat() {
     }
     const [displayChannelDrawer, setDisplayChannelDrawer] = useState(false);
     const [colorDrawer, setColorDrawer] = useState({drawer: "bg-base-200", text: "text-orangeNG"});
-    const [drawerContent, setDrawerContent] = useState<IChannel[]>(friends);
+    const [drawerContent, setDrawerContent] = useState<IChannel[]>(channels.MyDms);
     //useEffect(() => { TODO delete coms after test
     //    setDrawerContent(friends);
     //}, []);
@@ -61,7 +67,7 @@ function Chat() {
         setColorDrawer(displayChannelDrawer ?
             {drawer: "bg-[#E07A5F]", text: "text-white"} :
             {drawer: "bg-base-200", text: "text-orangeNG"});
-        setDrawerContent(displayChannelDrawer ? channels.MyChannels + channels.ChannelsToJoin : friends); //TODO trouver un moyen de separer MyChannels et ChannelsToJoin
+        setDrawerContent(displayChannelDrawer ? channels.MyChannels + channels.ChannelsToJoin : channels.MyDms); //TODO trouver un moyen de separer MyChannels et ChannelsToJoin
     }, [displayChannelDrawer, friends]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
