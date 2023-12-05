@@ -13,12 +13,13 @@ import NewChannel from "../images/newChan.svg"
 import {data} from "autoprefixer";
 
 function Chat() {
-    const {socket, friends, channels, openedWindows, openWindow } = useChat() as {
+    const {socket, friends, channels, openedWindows, openWindow, closeWindow } = useChat() as {
         socket: Socket | null;
         friends: IChannel[];
         channels: IChannels;
         openedWindows: IChatWindow[];
-        openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
+        openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void;
+        closeWindow: (id: number) => void;
     };
 
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
@@ -67,12 +68,11 @@ function Chat() {
         setSelectedTarget(null);
     }, [selectedTarget]);
 
-    // Efface un dm pour ne plus l'afficher, apres qu'il ete fermee via la croix
-    // TODO call luc pour effacer un channel
+    // Efface une fenetre pour ne plus l'afficher, apres qu'il ete fermee via la croix
     useEffect(() => {
-        // TODO func erase channel
-            setSelectedTargetToDestroy(null);
-        }, [selectedTargetToDestroy]);
+        closeWindow(selectedTarget.id);
+        setSelectedTargetToDestroy(null);
+    }, [selectedTargetToDestroy]);
 
     return (
         <div className={"drawer drawer-end flex flex-col-reverse h-full items-end static"}>
