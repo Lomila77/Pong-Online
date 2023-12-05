@@ -21,7 +21,7 @@ function NewChannel({me, close}) {
         isPrivate: false,
         isPassword: false,
         password: '',
-        members: [{name: user.name, id: user.fortytwo_id, connected: true}],
+        members: [{name: user.pseudo, id: user.fortytwo_id, connected: true}],
         type: 'MyChannels'
     })
 
