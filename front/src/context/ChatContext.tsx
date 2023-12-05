@@ -71,6 +71,7 @@ const ChatContext = createContext<{
   channels: IChannels | null
   openedWindows: IChatWindow[] | null
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
+  closeWindow: (id: number) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -127,34 +128,6 @@ export const ChatProvider = ({ children }) => {
           newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
         if (channels)
           addChannelToChannelsByType(channels, newChannel)
-        // // todo : need a less repetitive way to do this
-        // console.log("Channel Created signal received newChat =", newChat, "\n");
-
-        // switch (newChat.type) {
-        //   case "MyDms" :
-        //     if(!findIdInList(channels?.MyDms, newChat.id)) {
-        //       setChannels((prev) => ({
-        //         ...prev!,
-        //         MyDms: prev ? [...prev.MyDms, newChat] : [newChat],
-        //       }));
-        //     }
-        //   default :
-        //     if (newChat.members.find(member => member.name === user?.pseudo)) {
-        //       newChat.type = "MyChannels"
-        //       setChannels((prev) => ({
-        //         ...prev!,
-        //         MyChannels: prev ? [...prev.MyChannels, newChat] : [newChat],
-        //       }));
-        //     }
-        //     else {
-        //       newChat.type = "ChannelsToJoin"
-        //       setChannels((prev) => ({
-        //         ...prev!,
-        //         ChannelsToJoin: prev ? [...prev.ChannelsToJoin, newChat] : [newChat],
-        //       }));
-        //     }
-        //     break;
-        // }
       });
 
       newSocket?.on('Channel Joined', (newChat: IChannel) => {
@@ -257,14 +230,9 @@ export const ChatProvider = ({ children }) => {
   useEffect (() => {console.log("new openned window set : ", openedWindows)}, [openedWindows])
   useEffect (() => {console.log("new newChannels set : ", channels)}, [channels])
 
-  // const handleCloseWindow = (id : string) => {
-  //   const closingWingow: IChatWindow = {
-  //     id: '',
-  //     members: [],
-  //     history: [],
-  //   }
-  //   setOpenedWindows((prev) => prev ? prev.filter((f) => f !== closingWingow) : []);
-  // }
+  const closeWindow = (id : number) => {
+    setOpenedWindows((prev) => prev ? prev.filter((f) => f.id !== id) : []);
+  }
 
   const openWindow = async (chatData? : IChannel, form?: IFormData, password?: string) => {
     const data = {
@@ -290,7 +258,7 @@ export const ChatProvider = ({ children }) => {
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow }}>
+    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow }}>
       {children}
     </ChatContext.Provider>
   );
