@@ -88,8 +88,8 @@ function Chat() {
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between">
-                            <button className={"btn btn-ghost font-display" + (target.type == 'MyDms' && target.members[0].connected ? " disabled " : " ") +  colorDrawer.text}
-                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[0].name : target.name}
+                            <button className={"btn btn-ghost font-display" + (target.type == 'MyDms' && target.members[1].connected ? " disabled " : " ") +  colorDrawer.text}
+                                    onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost w-10">
@@ -118,7 +118,7 @@ function Chat() {
                     {drawerOpen && openedWindows.map((channel: IChatWindow, index: number) =>
                         channel.type == 'MyDms' && (
                             <div key={index} className="px-5">
-                                <WindowChat user={channel.members[0].name}
+                                <WindowChat user={channel.members[1].name}
                                             me={user}
                                             destroyChat={() => setSelectedTargetToDestroy(channel)}
                                             socket={socket}
