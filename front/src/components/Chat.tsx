@@ -56,7 +56,7 @@ function Chat() {
             setDrawerContent(displayChannelDrawer ?
                 [...channels.MyChannels, ...channels.ChannelsToJoin] :
                 channels.MyDms );
-    }, [displayChannelDrawer, channels?.MyDms]);
+    }, [displayChannelDrawer, channels?.MyChannels, channels?.ChannelsToJoin, channels?.MyDms]);
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
