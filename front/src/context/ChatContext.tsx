@@ -5,9 +5,8 @@ import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
-
-// Todo : function that removes my self from users || function that puts myId in frist position
-// Todo : const closeWindow(windowId)
+// Todo : Ichannel repartition seems incorrect on reception of event Channel Created
+// Todo : emit messages : might be type (message: string, channel : Ichannels);
 // Todo : update channels (change password, name new admin ....)
 
 
@@ -72,6 +71,7 @@ const ChatContext = createContext<{
   openedWindows: IChatWindow[] | null
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
+  sendMessage: (message: string, id: number) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -108,9 +108,6 @@ export const ChatProvider = ({ children }) => {
         console.log("channels route is giving : ", data, "\n");
         allChannels && setChannels(allChannels);
       })
-      // newSocket?.on('New Friends', (friend) => {
-      //   setFriends((prev) => [...prev, friend])
-      // })
       // newSocket?.on('friendConnected', (friend) => {
       //   setConnectedFriends((prev) => [...prev, friend]);
       //   setDisconnectedFriends((prev) => prev.filter((f) => f !== friend));
@@ -257,10 +254,13 @@ export const ChatProvider = ({ children }) => {
       handleOpenWindow(chatData);
   }
 
+  const sendMessage = (message: string, id: number) => {
+    socket?.emit('sendMessage', {message: message, channelId: id})
+  }
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow }}>
+    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage }}>
       {children}
     </ChatContext.Provider>
   );
