@@ -6,7 +6,7 @@ import Setting from "../images/setting.svg"
 import {useChat} from "../context/ChatContext";
 
 function WindowChannel({chat, destroyChannel}) {
-    const { sendMessage } = useChat();
+    const { sendMessage, sendAdminForm } = useChat();
     const [messages, setMessages] = useState(chat.history);
     const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
@@ -39,7 +39,7 @@ function WindowChannel({chat, destroyChannel}) {
     const closeParam = () => {setDisplayParam(false);}
 
     const sendAdminData = () => {
-        //TODO: send to luc
+        sendAdminForm(chat.id, adminData.target, adminData.mute, adminData.ban, adminData.kick);
     }
 
 

@@ -72,6 +72,7 @@ export const ChatContext = createContext<{
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
   sendMessage: (message: string, channelId: number) => void
+  sendAdminForm: (chatId: number, targetPseudo: string, mute: boolean, kick: boolean, ban: boolean) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -257,6 +258,16 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = (message: string, channelId: number) => {
     if (message)
       socket?.emit('sendMessage', {message: message, channelId: channelId})
+  }
+
+  const sendAdminForm = (chatId: number, targetPseudo: string, mute: boolean, kick: boolean, ban: boolean) => {
+    if (mute)
+      socket?.emit('mute', {chatId: chatId, pseudo: targetPseudo});
+    if (ban)
+      socket?.emit('ban', {chatId: chatId, pseudo: targetPseudo});
+    if (kick)
+      socket?.emit('kick', {chatId: chatId, pseudo: targetPseudo});
+    //TODO add unmute et unban
   }
 
   /*********** return ctx ************/

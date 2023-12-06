@@ -363,7 +363,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     await this.chatService.mute_Chan(data.username, data.chatId);
     this.server.to(data.chatId.toString()).emit("mute", { username: data.username });
-    // console.log("chan muteed");
+    console.log("chan muteed");
   }
 
 
