@@ -3,6 +3,8 @@ import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
+import {bool} from "yup";
+import {data} from "autoprefixer";
 
 // Todo : Ichannel repartition seems incorrect on reception of event Channel Created
 // Todo : emit messages : might be type (message: string, channel : Ichannels);
@@ -72,7 +74,12 @@ export const ChatContext = createContext<{
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
   sendMessage: (message: string, channelId: number) => void
-  sendAdminForm: (chatId: number, targetPseudo: string, mute: boolean, kick: boolean, ban: boolean) => void
+  sendAdminForm: (chatId: number, targetPseudo: string,
+                  mute: boolean, unMute: boolean,
+                  ban: boolean, unBan: boolean,
+                  kick: boolean, admin: boolean,
+                  isPassword: boolean, password: string) => void
+  addFriendToChannel: (nameToAdd: string, chatId: number) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -260,19 +267,43 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
-  const sendAdminForm = (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => {
+  const sendAdminForm = (chatId: number, targetId: number,
+                         mute: boolean, unMute: boolean,
+                         ban: boolean, unBan: boolean,
+                         kick: boolean, admin: boolean,
+                         isPassword: boolean, password: string) => {
     if (mute)
       socket?.emit('mute', {chatId: chatId, userId: targetId});
+    else if (unMute)
+      socket?.emit('unmute', {chatId: chatId, userId: targetId});
     if (ban)
       socket?.emit('ban', {chatId: chatId, userId: targetId});
+    else if (unBan)
+      socket?.emit('unban', {chatId: chatId, userId: targetId});
     if (kick)
       socket?.emit('kick', {chatId: chatId, userId: targetId});
-    //TODO add unmute et unban
+    if (admin)
+      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+    if (isPassword) // TODO add change pwd
+      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+  }
+
+  const addFriendToChannel = (nameToAdd: string, chatId: number) => {
+    let userId: number;
+    backRequest('users/isFriend/' + nameToAdd, 'GET').then(data => {
+      if (!data.isFriend)
+        return;
+      else
+        backRequest('users/user', 'PUT', {pseudo: nameToAdd}).then(data => {
+          userId = data.fortytwo_id;
+        })
+    })
+    socket?.emit('invit', {chatId: chatId, userId: userId});
   }
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm }}>
+    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel }}>
       {children}
     </ChatContext.Provider>
   );
