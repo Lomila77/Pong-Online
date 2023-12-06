@@ -12,20 +12,22 @@ function WindowChannel({chat, destroyChannel}) {
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
     const [displayParam, setDisplayParam] = useState(false);
+    const [errorAdminData, setErrorAdminData] = useState(false);
     const [adminData, setAdminData] = useState({
         target: '',
         mute: false,
         kick: false,
         ban: false,
     })
-    const [errorAdminData, setErrorAdminData] = useState(false);
 
     useEffect(() => {
-        console.log(chat.members);
         if (adminData?.target) {
             if (!chat.members.find(member => member.name == adminData.target))
-                setErrorAdminData(true)
-        }
+                setErrorAdminData(true);
+            else
+                setErrorAdminData(false);
+        } else if (!adminData?.target)
+            setErrorAdminData(false);
     }, [adminData]);
 
 
@@ -39,7 +41,7 @@ function WindowChannel({chat, destroyChannel}) {
     const closeParam = () => {setDisplayParam(false);}
 
     const sendAdminData = () => {
-        sendAdminForm(chat.id, adminData.target, adminData.mute, adminData.ban, adminData.kick);
+        sendAdminForm(chat.id, chat.members.find(member => member.name == adminData.target).id, adminData.mute, adminData.ban, adminData.kick);
     }
 
 
@@ -122,7 +124,7 @@ function WindowChannel({chat, destroyChannel}) {
                                 {!errorAdminData && adminData.target && (
                                     <label htmlFor={"targetAdminData"} className={"font-display text-green-400 text-xs mt-2"}>Founded</label>
                                 )}
-                                {!errorAdminData && !adminData.target && (
+                                {!errorAdminData && adminData.target == '' && (
                                     <label htmlFor={"targetAdminData"} className={"font-display text-base-200 text-xs mt-2"}>Enter a pseudo</label>
                                 )}
                             </div>

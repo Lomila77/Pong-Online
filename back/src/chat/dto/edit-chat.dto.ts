@@ -42,8 +42,8 @@ export class ActionsChanDto {
 	@IsNumber()
 	chatId?: number;
 
-	@IsString()
-	username?: string;
+	@IsNumber()
+	userId?: number;
 }
 
 export class JoinChanDto {

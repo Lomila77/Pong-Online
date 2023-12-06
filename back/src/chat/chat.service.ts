@@ -131,10 +131,10 @@ export class ChatService {
     });
   }
 
-  async invit_Chan(username: string, id: number) {
+  async invit_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -156,10 +156,10 @@ export class ChatService {
     });
   }
 
-  async ban_Chan(username: string, id: number) {
+  async ban_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -196,10 +196,10 @@ export class ChatService {
     });
   }
 
-  async unban_Chan(username: string, id: number) {
+  async unban_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -226,10 +226,10 @@ export class ChatService {
     });
   }
 
-  async kick_Chan(username: string, id: number) {
+  async kick_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -262,10 +262,10 @@ export class ChatService {
   }
 
 
-  async mute_Chan(username: string, id: number) {
+  async mute_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -287,10 +287,10 @@ export class ChatService {
     });
   }
 
-  async set_admin_Chan(username: string, id: number) {
+  async set_admin_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -314,10 +314,10 @@ export class ChatService {
 
 
 
-  async unmute_Chan(username: string, id: number) {
+  async unmute_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 

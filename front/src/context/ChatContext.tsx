@@ -260,19 +260,19 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
-  const sendAdminForm = (chatId: number, targetPseudo: string, mute: boolean, kick: boolean, ban: boolean) => {
+  const sendAdminForm = (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => {
     if (mute)
-      socket?.emit('mute', {chatId: chatId, pseudo: targetPseudo});
+      socket?.emit('mute', {chatId: chatId, pseudo: targetId});
     if (ban)
-      socket?.emit('ban', {chatId: chatId, pseudo: targetPseudo});
+      socket?.emit('ban', {chatId: chatId, pseudo: targetId});
     if (kick)
-      socket?.emit('kick', {chatId: chatId, pseudo: targetPseudo});
+      socket?.emit('kick', {chatId: chatId, pseudo: targetId});
     //TODO add unmute et unban
   }
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage }}>
+    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm }}>
       {children}
     </ChatContext.Provider>
   );
