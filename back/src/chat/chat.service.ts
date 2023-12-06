@@ -375,20 +375,24 @@ export class ChatService {
       if (!isMatch)
         return (3);
     }
-    await this.prisma.channel.update(
+    await this.prisma.user.update(
       {
         where: {
-          id: data.chatId,
+          fortytwo_id: user.fortytwo_id,
         },
         data: {
-          members: {
+          userChannels: {
             connect: {
-              fortytwo_id: user.fortytwo_id,
+              userId_channelId: {
+                userId: user.fortytwo_id,
+                channelId: data.chatId,
+              },
             },
           },
         },
       }
     )
+
     if (isinvit)
       await this.prisma.channel.update(
         {

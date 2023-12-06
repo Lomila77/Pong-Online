@@ -19,11 +19,11 @@ import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
 import { backResInterface } from './../shared/shared.interface';
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-}
+// export interface User {
+//   id: number;
+//   username: string;
+//   email: string;
+// }
 @UsePipes(new ValidationPipe())
 @WebSocketGateway({
   cors: true,
@@ -61,11 +61,21 @@ export class ChatGateway implements OnGatewayConnection {
           },
           select: {
             fortytwo_id: true,
-            fortytwo_userName : true,
+            fortytwo_userName: true,
             pseudo: true,
+            userChannels: true,
+            friends: true,
           }
         })
         this.clients[client.id] = user;
+
+        user.userChannels.forEach(channel => {
+          client.join(channel.channelId.toString());
+        });
+
+        user.friends.forEach(friendId => {
+          client.to(friendId.toString()).emit('Friend connected', user.fortytwo_id);
+        });
       } else {
         console.log('Invalid token');
         client.disconnect();
@@ -79,9 +89,25 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
-
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     console.log("Disconnect")
+    const user = this.clients[client.id];
+    if (user) {
+      const prismaUser = await this.prisma.user.findUnique({
+        where: {
+          fortytwo_id: user.fortytwo_id,
+        },
+        select: {
+          friends: true,
+        }
+      });
+
+      if (prismaUser) {
+        prismaUser.friends.forEach(friendId => {
+          client.to(friendId.toString()).emit('Friend disconnected', user.fortytwo_id);
+        });
+      }
+    }
     delete this.clients[client.id];
     client.disconnect();
   }
