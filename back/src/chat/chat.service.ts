@@ -1139,7 +1139,9 @@ export class ChatService {
   // to delete before correction
   async printAllChannels() {
     try {
-		  const channels = await this.prisma.channel.findMany()
+		  const channels = await this.prisma.channel.findMany({
+        include: {members : {select: {pseudo: true, fortytwo_id: true}}}
+      })
 		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
 		  return channels;
 		} catch (error) {
