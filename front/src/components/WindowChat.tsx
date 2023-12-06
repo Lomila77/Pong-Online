@@ -38,10 +38,8 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
     };
 
     const handleSendMessage = () => {
-        const handleSendMessage = () => {
-            sendMessage(message, chatId);
-            setMessage('');
-        }
+        sendMessage(message, chatId);
+        setMessage('');
     }
 
     useEffect(() => {
