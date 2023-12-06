@@ -70,4 +70,16 @@ export class UserController {
   async print() {
     return await this.userService.print();
   }
+
+  @Get('/cleanDb')
+  async cleanDb() {
+    const ret = await this.userService.cleanDb();
+    return ret
+  }
+
+  @Get('/fclean')
+  async killAllFriendShip() {
+    const ret = await this.userService.noFriendshipSpell();
+    return ret
+  }
 }

@@ -182,4 +182,45 @@ export class UserService {
       console.error(error);
     }
   }
+
+  async cleanDb() {
+    try {
+      // Supprimer toutes les données de la table UserChannel
+      await this.prisma.userChannel.deleteMany({});
+      // Supprimer toutes les données de la table Message
+      await this.prisma.message.deleteMany({});
+      // Supprimer toutes les données de la table Channel
+      await this.prisma.channel.deleteMany({});
+      // Supprimer toutes les données de la table User
+      await this.prisma.user.deleteMany({});
+      console.log('successfully deleted all data from prisma.');
+      return "successfully deleted all data from prisma."
+    } catch (error) {
+      console.error('fail in cleanDb :', error);
+      return  "fail in cleanDb"
+    }
+  }
+
+  async noFriendshipSpell() {
+    try {
+
+      const users = await this.prisma.user.findMany();
+
+      // go throught all user and delete friends
+      for (const user of users) {
+        await this.prisma.user.update({
+          where: { fortytwo_id: user.fortytwo_id },
+          data: { friends: { set: [] } },
+        });
+      }
+      await this.prisma.userChannel.deleteMany({});
+      await this.prisma.message.deleteMany({});
+      await this.prisma.channel.deleteMany({});
+      console.log('not a single friendship has escape');
+      return 'it s a friendless world'
+    } catch (error) {
+      console.error('something went wong in my spell :', error);
+      return 'something went wong in my spell :'+ error
+    }
+  }
 }

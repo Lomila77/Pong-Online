@@ -37,11 +37,11 @@ export class ChatController {
 	}
 
 	@Get('/channels/')
-	async getUserChannels(@Req() req:Request)
+	async getUserChannels(@Req() req:Request, @GetUser() user: User)
 	{
-		const dms = await this.chat_service.get__DmUser(req.headers["authorization"]);
-		const channels = await this.chat_service.get__channelsUserIn(req.headers["authorization"]);
-		const channels_to_join = await this.chat_service.get__channelsUserCanJoin(req.headers["authorization"]);
+		const dms = await this.chat_service.get__DmUser(user.fortytwo_id);
+		const channels = await this.chat_service.get__channelsUserIn(user.fortytwo_id);
+		const channels_to_join = await this.chat_service.get__channelsUserCanJoin(user.fortytwo_id);
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
@@ -135,7 +135,7 @@ export class ChatController {
 		return (listUsers);
 	}
 
-	@Get('/friends/')
+	@Get('/friends/') // Front do not use get friends anymore
 	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		const goodFormat = friends.map(friend => ({

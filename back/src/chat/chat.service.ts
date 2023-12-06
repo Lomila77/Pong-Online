@@ -485,7 +485,7 @@ export class ChatService {
     return (message);
   }
 
-  async get__channelsUserCanJoin(token: string) {
+  async get__channelsUserCanJoin(userId: number) {
     try {
       const sources = await this.prisma.channel.findMany({
         where: {
@@ -493,11 +493,11 @@ export class ChatService {
             {
               isPrivate: false
             },
-            { invited: { some: { refresh_token: token } } },
+            { invited: { some: { fortytwo_id: userId } } },
           ],
           AND: {
-            members: { none: { refresh_token: token } },
-            banned: { none: { refresh_token: token } },
+            members: { none: { fortytwo_id: userId } },
+            banned: { none: { fortytwo_id: userId } },
           }
         },
         select: {
@@ -523,11 +523,11 @@ export class ChatService {
     }
   }
 
-  async get__channelsUserIn(token: string) {
+  async get__channelsUserIn(userId: number) {
     try {
       const sources = await this.prisma.channel.findMany({
         where: {
-          members: { some: { refresh_token: token } },
+          members: { some: { fortytwo_id: userId } },
           isDM: false,
         },
         select: {
@@ -551,20 +551,17 @@ export class ChatService {
     }
   }
 
-  async get__DmUser(token: string) {
+  async get__DmUser(userId: number) {
     try {
       const sources = await this.prisma.channel.findMany({
         where: {
-          members: { some: { refresh_token: token } },
+          members: { some: { fortytwo_id: userId } },
           isDM: true,
         },
         select: {
           id: true,
           name: true,
           members: {
-            where: {
-              NOT: { refresh_token: token },
-            },
             select: {
               fortytwo_id: true,
               pseudo: true,
@@ -1128,8 +1125,9 @@ export class ChatService {
         	{id : newFriend.fortytwo_id, name: newFriend.pseudo, connected: newFriend.connected}
         ]
       }
-      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "Channel Created")
-      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "Channel Created")
+      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      // signal will be send to  second user if he is connected. So front can send 'join channel'
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created")
     }
   }
 
