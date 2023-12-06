@@ -140,8 +140,19 @@ export class ChatGateway implements OnGatewayConnection {
     const ret = await this.chatService.join_Chan({ chatId: channel.id }, user);
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
-      if (ret !== 5)
+      if (ret !== 5) {
         this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+        if (data.id) {
+          await this.prisma.channel.update({
+            where: { id: channel.id },
+            data: {
+              members: {
+                connect: { fortytwo_id: user.fortytwo_id },
+              },
+            },
+          });
+        }
+      }
       this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
 
       if (channel.isDM) {
@@ -329,7 +340,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
-    // console.log("chan banned");
+    console.log("chan banned");
   }
 
   @SubscribeMessage('unban')
@@ -379,7 +390,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     this.server.to(data.chatId.toString()).emit("kick", { username: data.userId });
-    // console.log("chan kicked");
+    console.log("chan kicked");
   }
 
 
@@ -395,7 +406,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     await this.chatService.mute_Chan(data.userId, data.chatId);
     this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
-    // console.log("chan muteed");
+    console.log("chan muteed");
   }
 
 

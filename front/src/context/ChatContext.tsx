@@ -78,6 +78,7 @@ export const ChatContext = createContext<{
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
   sendMessage: (message: string, channelId: number) => void
+  sendAdminForm: (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
@@ -101,11 +102,11 @@ export const ChatProvider = ({ children }) => {
       setSocket(newSocket);
 
       backRequest('chat/channels', 'GET').then((data) => {
+        console.log("chat/channels route is giving : ", data, "\n");
         let allChannels : IChannels = data.data as IChannels
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyChannels", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "ChannelsToJoin", user?.fortytwo_id || 0)
-        console.log("chat/channels route is giving : ", data, "\n");
         allChannels && setChannels(allChannels);
       })
 
@@ -334,13 +335,23 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
+  const sendAdminForm = (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => {
+    if (mute)
+      socket?.emit('mute', {chatId: chatId, userId: targetId});
+    if (ban)
+      socket?.emit('ban', {chatId: chatId, userId: targetId});
+    if (kick)
+      socket?.emit('kick', {chatId: chatId, userId: targetId});
+    //TODO add unmute et unban
+  }
+
   const addFriendToChannel = (nameToAdd: string, channelToAddIn) => {
     // todo : if newfriend is in my friendslist, add him into channel
   }
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, /*friends, connectedFriends, disconnectedFriends,*/ channels, openedWindows, openWindow, closeWindow, sendMessage }}>
+    <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm }}>
       {children}
     </ChatContext.Provider>
   );

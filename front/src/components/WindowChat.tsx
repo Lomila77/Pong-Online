@@ -9,20 +9,16 @@ import Cross from "../images/cross.svg"
 import {useChat} from "../context/ChatContext";
 
 function WindowChat({user, me, destroyChat, history, chatId}) {
+    if (!user)
+        return null;
+
     const { sendMessage } = useChat();
-    // Liste des messages recu et envoyees
-    const [messages, setMessages] = useState(history);
-    // Liste de mes messages
-    const [myMessages, setMyMessages] = useState([]);
-    // Message a envoyer
     const [message, setMessage] = useState('');
 
     const [isChecked, setIsChecked] = useState(false);
 
     const [displayUserProfil, setDisplayUserProfil] = useState(false);
     const [userProfil, setUserProfil] = useState(null);
-
-    //socket.emit('create channel', {pseudo2: user}); // TODO: Create Channel
     useEffect(() => {
         backRequest('users/user', 'PUT', {pseudo: user}).then(data => {
             setUserProfil(data);
@@ -42,10 +38,6 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
         setMessage('');
     }
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container' + user);
         if (messageContainer) {
@@ -53,11 +45,11 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
         }
     };
 
-    const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => { return myMsg === msg });
-    }
-    if (!user)
-        return null;
+    useEffect(() => {
+        scrollToBottom();
+    }, [history]);
+
+
     return (
         <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
             <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
@@ -79,11 +71,9 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
                     <ProfileComp user={userProfil}/>
                 )}
                 {!displayUserProfil && (
-                    <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                        {messages && messages.map((msg, index) => (
-                            <Message srcMsg={msg}
-                                     srcPseudo={msg.owner.name}
-                                     myMessage={!!isMyMessage(msg)}
+                    <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
+                        {history && history.map((msg, index) => (
+                            <Message message={msg}
                                      key={index}
                             />
                         ))}

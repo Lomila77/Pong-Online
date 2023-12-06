@@ -562,9 +562,6 @@ export class ChatService {
           id: true,
           name: true,
           members: {
-            where: {
-              NOT: { fortytwo_id: userId },
-            },
             select: {
               fortytwo_id: true,
               pseudo: true,
