@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
@@ -7,6 +6,7 @@ import { io, Socket } from 'socket.io-client';
 
 // Todo : Ichannel repartition seems incorrect on reception of event Channel Created
 // Todo : emit messages : might be type (message: string, channel : Ichannels);
+// Todo : creat interface and fonction to emit ban/mute/ user
 // Todo : update channels (change password, name new admin ....)
 
 
@@ -26,6 +26,7 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
+    // status; // owner, admin, user
   }
 
 export interface IChatHistory {
@@ -66,18 +67,16 @@ export interface IFormData {
 
 export const ChatContext = createContext<{
   socket: Socket | null
-  // friends: IChannel[]
   channels: IChannels | null
   openedWindows: IChatWindow[] | null
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
-  sendMessage: (message: string, id: number) => void
+  sendMessage: (message: string, channelId: number) => void
 } | null>(null);
 
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
-  // const [friends, setFriends] = useState<IChannel[]>([])
   const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
@@ -116,7 +115,8 @@ export const ChatProvider = ({ children }) => {
       //   setDisconnectedFriends((prev) => [...prev, friend]);
       //   setConnectedFriends((prev) => prev.filter((f) => f !== friend));
       // });
-      newSocket?.on('sendMessage', (message) => {
+      newSocket?.on('Message Created', (message) => {
+        console.log("\n\n\nMessage Created", message);
         //add message in the right conversation.
       })
 
@@ -254,8 +254,9 @@ export const ChatProvider = ({ children }) => {
       handleOpenWindow(chatData);
   }
 
-  const sendMessage = (message: string, id: number) => {
-    socket?.emit('sendMessage', {message: message, channelId: id})
+  const sendMessage = (message: string, channelId: number) => {
+    if (message)
+      socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
   /*********** return ctx ************/
