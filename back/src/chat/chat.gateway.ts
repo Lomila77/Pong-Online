@@ -269,9 +269,9 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.invit_Chan(data.username, data.chatId);
+    await this.chatService.invit_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
         let channel = await this.chatService.get__chanNamebyId(data.chatId);
         this.server.to(key).emit("invited", { chatId: data.chatId, name: channel.name })
         return;
@@ -290,9 +290,9 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.ban_Chan(data.username, data.chatId);
+    await this.chatService.ban_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
         this.server.fetchSockets().then(
           (sockets) => {
             sockets.find((socket) => socket.id === key).leave(data.chatId.toString());
@@ -302,7 +302,7 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("ban", { username: data.username });
+    this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
     // console.log("chan banned");
   }
 
@@ -317,14 +317,14 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.unban_Chan(data.username, data.chatId);
+    await this.chatService.unban_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
         this.server.to(key).emit("unbanned", { chatId: data.chatId });
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("unban", { username: data.username });
+    this.server.to(data.chatId.toString()).emit("unban", { userId: data.userId });
     // console.log("chan unbanned");
   }
 
@@ -338,10 +338,10 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.kick_Chan(data.username, data.chatId);
+    await this.chatService.kick_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
-        if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
+        if (this.clients[key].fortytwo_id === data.userId) {
           this.server.fetchSockets().then(
             (sockets) => {
               sockets.find((socket) => socket.id === key).leave(data.chatId.toString());
@@ -352,7 +352,7 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("kick", { username: data.username });
+    this.server.to(data.chatId.toString()).emit("kick", { username: data.userId });
     // console.log("chan kicked");
   }
 
@@ -367,8 +367,8 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.mute_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("mute", { username: data.username });
+    await this.chatService.mute_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
     // console.log("chan muteed");
   }
 
@@ -383,8 +383,8 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.unmute_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("unmute", { username: data.username });
+    await this.chatService.unmute_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("unmute", { username: data.userId });
     // console.log("chan unmuteed");
   }
 
@@ -397,8 +397,8 @@ export class ChatGateway implements OnGatewayConnection {
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.set_admin_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("set-admin", { username: data.username });
+    await this.chatService.set_admin_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("set-admin", { username: data.userId });
     // console.log("new admin");
   }
 
