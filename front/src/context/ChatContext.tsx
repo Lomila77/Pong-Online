@@ -4,11 +4,14 @@ import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
+
+// Todo : friendship Created
 // Todo : Ichannel repartition seems incorrect on reception of event Channel Created
 // Todo : emit messages : might be type (message: string, channel : Ichannels);
 // Todo : creat interface and fonction to emit ban/mute/ user
 // Todo : update channels (change password, name new admin ....)
-
+// Todo : see how to send admins info to Garance.
+// Todo : see if not better to not open window when new channel is created but to have an other color on screen ?
 
 // *npx prisma generate
 
@@ -80,8 +83,6 @@ export const ChatProvider = ({ children }) => {
   const [channels, setChannels ] = useState<IChannels | null>(null);
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
 
-  // const [openedWindows, setOpenedWindows] = useState<Map<number, IChatWindow> >()
-
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
   const initChatCtx = () => {
@@ -95,10 +96,7 @@ export const ChatProvider = ({ children }) => {
     });
     newSocket.on('connect', () => {
       setSocket(newSocket);
-      // backRequest('chat/friends', 'GET').then((data) => {
-      //   console.log("friends route is giving : ", data, "\n");
-      //   data.data && setFriends(data.data as IChannel[]);
-      // })
+
       backRequest('chat/channels', 'GET').then((data) => {
         let allChannels : IChannels = data.data as IChannels
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
@@ -107,27 +105,48 @@ export const ChatProvider = ({ children }) => {
         console.log("channels route is giving : ", data, "\n");
         allChannels && setChannels(allChannels);
       })
+
       // newSocket?.on('friendConnected', (friend) => {
-      //   setConnectedFriends((prev) => [...prev, friend]);
-      //   setDisconnectedFriends((prev) => prev.filter((f) => f !== friend));
+      //   setChannels((prev) => {
+      //     ...prev,
+
+      //   })
       // });
       // newSocket?.on('friendDisconnected', (friend) => {
       //   setDisconnectedFriends((prev) => [...prev, friend]);
       //   setConnectedFriends((prev) => prev.filter((f) => f !== friend));
       // });
+
       newSocket?.on('Message Created', (message) => {
         console.log("\n\n\nMessage Created", message);
         //add message in the right conversation.
       })
 
+      /* *********************************************************
+          * Channel Created :
+            - reformat members so current user is on top
+            - add Channel to the right place in channels:IChannels
+      ***********************************************************/
       newSocket?.on('Channel Created', (newChannel : IChannel) => {
         console.log("channel created signal recieved: \n\n\n", newChannel);
-        if (user)
-          newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
-        if (channels)
-          addChannelToChannelsByType(channels, newChannel)
+        handleEventChannelCreated(newChannel);
       });
 
+      /* *********************************************************
+          * friendship Created :
+            - reformat members so current user is on top
+            - add Channel to the right place in channels:IChannels
+            - emit back so socket .join can be run
+      ***********************************************************/
+      newSocket?.on('friendship Created', (newChannel : IChannel) => {
+        handleEventChannelCreated(newChannel);
+        newSocket?.emit("Join Channel", newChannel)
+      });
+
+      /* *********************************************************
+          * Channel Joined :
+            - if new channel joined, open channel window
+      ***********************************************************/
       newSocket?.on('Channel Joined', (newChat: IChannel) => {
         console.log("channel Joined signal received\n");
         handleOpenWindow(newChat);
@@ -167,21 +186,11 @@ export const ChatProvider = ({ children }) => {
   //   }
   // }
 
-
-  // moves specific member to first position in the channel if found && not already first;
-  const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
-
-    if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
-      newChannel.type = "ChannelsToJoin";
-    // if newChannel is not already in my list
-    if(!findIdInList(channels[newChannel.type], newChannel.id)) {
-      setChannels((prev) => ({
-        ...prev!,
-        [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
-      }));
-    }
-  }
-
+      /* *********************************************************
+          * moveMemberToFirst && moveMemberToFirstInIChannels:
+            - moves specific member to first position in the channel
+              if (found && not already first)
+      ***********************************************************/
   const moveMemberToFirst = (members: IChatMember[], targetMemberId: number): IChatMember[] => {
     const targetIndex = members.findIndex(member => member.id === targetMemberId)
     if (targetIndex > 0) {
@@ -199,24 +208,72 @@ export const ChatProvider = ({ children }) => {
     return { ... channels, [channelType] : updatedIChannel};
   }
 
+      /* *********************************************************
+          * findIdInList
+            - usage : if(findIdInList(channels[newChannel.type], newChannel.id))
+              --> check if channels[key] contains
+      ***********************************************************/
   const findIdInList = <T extends { id: number }>(list?: T[], idToFind?: number): T | undefined => {
     const foundElem = list?.find(elem => elem.id === idToFind);
     return foundElem;
   };
 
-  const isChannelKnown = (type: string, idToFind?: number) => {
+
+      /* *********************************************************
+          * isChannelKnown
+            - usage : if (usChannelKnown("MyDms", 42))
+              --> check if MyDms has a channel of id 42
+      ***********************************************************/
+  const isChannelKnown = (channelKey: string, idToFind?: number) => {
     if (!idToFind)
       return false;
-    return channels?.[type]?.find((channel: IChannel) => channel.id === idToFind);
+    return channels?.[channelKey]?.find((channel: IChannel) => channel.id === idToFind);
   };
 
+
+      /* *********************************************************
+          * ischatOpenned
+            - usage : if (ischatOpenned(26))
+              --> check if chat of id 26 is in openedWindows
+      ***********************************************************/
   const ischatOpenned = (idTofind: number) => {
     return openedWindows?.find((openedWindow: IChatWindow) => openedWindow.id === idTofind)
   }
 
+      /* *********************************************************
+          * handleEventChannelCreated
+            - usage : called after recieving event 'Channel Created && Friendship Created'
+              --> reformat members so current user is on top
+              --> add Channel to the right place in channels:IChannels
+      ***********************************************************/
+  const handleEventChannelCreated = (newChannel : IChannel) => {
+    if (user)
+    newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
+    if (channels)
+      addChannelToChannelsByType(channels, newChannel)
+  }
+
+  const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
+
+    if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
+      newChannel.type = "ChannelsToJoin";
+    // if newChannel is not already in my list
+    // if(!findIdInList(channels[newChannel.type], newChannel.id)) {
+    if(!isChannelKnown(newChannel.type, newChannel.id)) {
+      setChannels((prev) => ({
+        ...prev!,
+        [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
+      }));
+    }
+  }
+
+      /* *********************************************************
+          * handleOpenWindow
+            - usage : handleOpenWindow(ChannelToOpen)
+              --> turn Ichannel into IchatWindow (Ichannel + message history )
+      ***********************************************************/
   const handleOpenWindow = async (chatData : IChannel) =>{
     if (!ischatOpenned(chatData.id)){
-      console.log("chat is not openned yet\n", chatData)
       const newWindow: IChatWindow = (await (backRequest('chat/chatWindow/' + chatData.id, 'GET'))).data
       newWindow.id = chatData.id;
       newWindow.name = chatData.name;
@@ -225,6 +282,8 @@ export const ChatProvider = ({ children }) => {
       setOpenedWindows(current => {return([...current || [], newWindow])})
     }
   }
+
+
   useEffect (() => {console.log("new openned window set : ", openedWindows)}, [openedWindows])
   useEffect (() => {console.log("new newChannels set : ", channels)}, [channels])
 

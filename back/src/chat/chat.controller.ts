@@ -135,7 +135,7 @@ export class ChatController {
 		return (listUsers);
 	}
 
-	@Get('/friends/')
+	@Get('/friends/') // Front do not use get friends anymore
 	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
 		const goodFormat = friends.map(friend => ({

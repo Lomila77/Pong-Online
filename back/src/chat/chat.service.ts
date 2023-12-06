@@ -1124,8 +1124,9 @@ export class ChatService {
         	{id : newFriend.fortytwo_id, name: newFriend.pseudo, connected: newFriend.connected}
         ]
       }
-      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "Channel Created")
-      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "Channel Created")
+      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      // signal will be send to  second user if he is connected. So front can send 'join channel'
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created")
     }
   }
 
