@@ -115,16 +115,22 @@ export class ChatGateway implements OnGatewayConnection {
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5)
-        client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+        this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
       this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
 
-      if (channel.isDM)
-      {
+      if (channel.isDM) {
+        var client2 = await this.server.fetchSockets().then(
+          (sockets) => {
+            return sockets.find((socket) => socket.id === this.findSocketIdByUserId(data.members[1].id));
+          }
+        );
         const otherUser = await this.userService.getUserbyId(data.members[1].id);
         const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
         if (retOtherUser === 0 || retOtherUser === 5) {
-          client.to(channel.id.toString()).emit("NewUserJoin", { username: otherUser.fortytwo_userName, id: otherUser.fortytwo_id, avatarUrl: otherUser.avatar });
-          this.server.to(channel.id.toString()).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
+          client2.join(channel.id.toString());
+          if (retOtherUser !== 5)
+            this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+          this.server.to(client2.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type });
         }
       }
     }
