@@ -80,9 +80,14 @@ export const ChatContext = createContext<{
   openWindow: (chatData? : IChannel, form?: IFormData, password?: string) => void
   closeWindow: (id: number) => void
   sendMessage: (message: string, channelId: number) => void
-  sendAdminForm: (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => void
-  addFriendToChannel: (nameToAdd: string, channelId: number) => void
+  sendAdminForm: (  chatId: number, targetId: number,
+                    mute: boolean, unMute: boolean,
+                    ban: boolean, unBan: boolean,
+                    kick: boolean, admin: boolean,
+                    isPassword: boolean, password: string) => void
+  addFriendToChannel: (nameToAdd: string, chatId: number) => void
 } | null>(null);
+
 
 export const ChatProvider = ({ children }) => {
   const { user } = useUser();
@@ -365,20 +370,45 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
-  const sendAdminForm = (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => {
+  const sendAdminForm = (chatId: number, targetId: number,
+                         mute: boolean, unMute: boolean,
+                         ban: boolean, unBan: boolean,
+                         kick: boolean, admin: boolean,
+                         isPassword: boolean, password: string) => {
     if (mute)
       socket?.emit('mute', {chatId: chatId, userId: targetId});
+    else if (unMute)
+      socket?.emit('unmute', {chatId: chatId, userId: targetId});
     if (ban)
       socket?.emit('ban', {chatId: chatId, userId: targetId});
+    else if (unBan)
+      socket?.emit('unban', {chatId: chatId, userId: targetId});
     if (kick)
       socket?.emit('kick', {chatId: chatId, userId: targetId});
-    //TODO add unmute et unban
+    if (admin)
+      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+    if (isPassword) // TODO add change pwd
+      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
   }
 
-  const addFriendToChannel = (nameToAdd: string, channelId: number) => {
-    // todo : if newfriend is in my friendslist, add him into channel
+  // const addFriendToChannel = (nameToAdd: string, chatId: number) => {
+  //   let userId: number;
+  //   backRequest('users/isFriend/' + nameToAdd, 'GET').then(data => {
+  //     if (!data.isFriend)
+  //       return;
+  //     else
+  //       backRequest('users/user', 'PUT', {pseudo: nameToAdd}).then(data => {
+  //         userId = data.fortytwo_id;
+  //       })
+  //   })
+  //   socket?.emit('invit', {chatId: chatId, userId: userId});
+  // }
+  const addFriendToChannel = (newFriendName: string, chatId: number) => {
+    const friend = channels.MyDms.find((friend) => friend.name === newFriendName)
+    if (friend)
+      socket?.emit('invit', {chatId: chatId, userId: friend.id});
   }
-
+  
   /*********** return ctx ************/
   return (
     <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel }}>

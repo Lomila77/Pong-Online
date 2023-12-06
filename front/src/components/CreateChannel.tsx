@@ -56,7 +56,7 @@ function NewChannel({close}) {
                             />
                         </div>
                         <br/>
-                            <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
+                        <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
                             <label>Password ?</label>
                             <input className="input input-bordered input-sm max-w-xs w-10 checkbox"
                                    type={"checkbox"}

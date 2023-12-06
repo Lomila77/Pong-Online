@@ -85,8 +85,8 @@ function Chat() {
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                             </button>
                             {!displayChannelDrawer && (
-                                <button className="btn btn-square btn-ghost w-10">
-                                    <img src={Play} alt={"play"} />
+                                <button className="btn btn-square btn-ghost">
+                                    <img src={Play} alt={"play"} className={""}/>
                                 </button>
                             )}
                         </li>
