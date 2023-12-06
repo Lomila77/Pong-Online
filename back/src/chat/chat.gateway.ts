@@ -303,7 +303,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
-    // console.log("chan banned");
+    console.log("chan banned");
   }
 
   @SubscribeMessage('unban')
@@ -353,7 +353,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     this.server.to(data.chatId.toString()).emit("kick", { username: data.userId });
-    // console.log("chan kicked");
+    console.log("chan kicked");
   }
 
 
@@ -369,7 +369,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     await this.chatService.mute_Chan(data.userId, data.chatId);
     this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
-    // console.log("chan muteed");
+    console.log("chan muteed");
   }
 
 

@@ -262,11 +262,11 @@ export const ChatProvider = ({ children }) => {
 
   const sendAdminForm = (chatId: number, targetId: number, mute: boolean, kick: boolean, ban: boolean) => {
     if (mute)
-      socket?.emit('mute', {chatId: chatId, pseudo: targetId});
+      socket?.emit('mute', {chatId: chatId, userId: targetId});
     if (ban)
-      socket?.emit('ban', {chatId: chatId, pseudo: targetId});
+      socket?.emit('ban', {chatId: chatId, userId: targetId});
     if (kick)
-      socket?.emit('kick', {chatId: chatId, pseudo: targetId});
+      socket?.emit('kick', {chatId: chatId, userId: targetId});
     //TODO add unmute et unban
   }
 

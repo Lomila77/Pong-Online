@@ -3,15 +3,20 @@ import Message from "./Message";
 import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
+import BlockUser from "../images/blockUser.svg"
+import AddFriend from "../images/addFriend.svg"
 import {useChat} from "../context/ChatContext";
+import {useUser} from "../context/UserContext";
 
 function WindowChannel({chat, destroyChannel}) {
+    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const { sendMessage, sendAdminForm } = useChat();
-    const [messages, setMessages] = useState(chat.history);
-    const [myMessages, setMyMessages] = useState([]);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
     const [displayParam, setDisplayParam] = useState(false);
+    const [displayMemberList, setDisplayMemberList] = useState(false);
+    const [displayAddFriend, setDisplayAddFriend] = useState(false);
+    const [displaySettings, setDisplaySettings] = useState(false);
     const [errorAdminData, setErrorAdminData] = useState(false);
     const [adminData, setAdminData] = useState({
         target: '',
@@ -19,6 +24,7 @@ function WindowChannel({chat, destroyChannel}) {
         kick: false,
         ban: false,
     })
+    const [addFriendPseudo, setAddFriendPseudo] = useState('');
 
     useEffect(() => {
         if (adminData?.target) {
@@ -30,15 +36,27 @@ function WindowChannel({chat, destroyChannel}) {
             setErrorAdminData(false);
     }, [adminData]);
 
+    const handleAddFriend = () => {
+        if (addFriendPseudo)
+            ;//TODO appeler luc fonction qui prends le pseudo
+    }
+
 
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
-    const openParam = () => {setDisplayParam(true);}
+    const toggleAddFriend = () => {setDisplayAddFriend(displayAddFriend !== true)};
+    const toggleDisplaySettings = () => {setDisplaySettings(displaySettings !== true)}
 
-    const closeParam = () => {setDisplayParam(false);}
+    const openParam = () => {setDisplayParam(true); setDisplayMemberList(false);};
+    const openMemberList = () => {setDisplayMemberList(true); setDisplayParam(false);};
+
+
+    const closeParam = () => {setDisplayParam(false);};
+    const closeMemberList = () => {setDisplayMemberList(false);};
+
 
     const sendAdminData = () => {
         sendAdminForm(chat.id, chat.members.find(member => member.name == adminData.target).id, adminData.mute, adminData.ban, adminData.kick);
@@ -52,7 +70,7 @@ function WindowChannel({chat, destroyChannel}) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [chat?.history]);
 
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container'); // TODO fix comme chez windowchat
@@ -60,10 +78,6 @@ function WindowChannel({chat, destroyChannel}) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
     };
-
-    const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => { return myMsg === msg });
-    }
 
     return (
         <div className={`collapse bg-orangeNG px-5 w-96 window-chat ${isChecked ? 'checked' : ''}`}>
@@ -77,23 +91,66 @@ function WindowChannel({chat, destroyChannel}) {
                             onClick={destroyChannel}>
                         <img src={Cross} alt={"cross"} className={"p-2"}/>
                     </button>
+
                     <div className="dropdown dropdown-end">
-                        <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1">
-                            <img src={Setting} alt={"setting"} className={"p-2"}/>
+                        <button className={"btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1"}
+                                onClick={toggleDisplaySettings}>
+                            <img src={Setting} alt={"setting"} className={"p-1"}/>
                         </button>
-                        {!displayParam && (
-                            <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                                <li><button onClick={openParam}>Settings</button></li>
-                                {//chat.owner.id == me.fortytwo_id (
-                                    //    <li><a>Item 2</a></li>
-                                    //)
-                                }
+                        {displaySettings && (
+                            <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52 text-orangeNG font-display">
+                                <li><button onClick={openMemberList}>Members</button></li>
+                                {/*chat.owner.id == user.fortytwo_id &&*/  (
+                                    <li><button onClick={openParam}>Settings</button></li>
+                                )}
                             </ul>
                         )}
-
                     </div>
+                    <div className="dropdown dropdown-end">
+                        <button onClick={toggleAddFriend} className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center">
+                            <img src={AddFriend} alt={"addFriend"} className={"p-1"}/>
+                        </button>
+                        {displayAddFriend && (
+                            <div className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-72 text-orangeNG font-display">
+                                <label htmlFor={"AddFriend"} className={"font-display text-orangeNG p-2"}>Friend pseudo: </label>
+                                <div className={"flex flex-row justify-between p-2"}>
+                                    <input id={"AddFriend"}
+                                           className={"input input-bordered input-sm max-w-xs w-52"}
+                                           type={"text"}
+                                           value={adminData.target}
+                                           required={true}
+                                           minLength={1}
+                                           onChange={(e) => (
+                                               setAddFriendPseudo((e.target.value)))}/>
+                                    <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center">
+                                        <img src={AddFriend} alt={"addFriend"} className={"p-1"}/>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                 </div>
             </div>
+            {displayMemberList && (
+                <div className={"absolute card h-full w-full bg-orangeNG shadow-xl"}>
+                    <div className="card-body flex flex-col overflow-auto">
+                        <ul className="bg-orangeNG rounded-box mt-5">
+                            {chat.members.map(member => (
+                                <li className={"flex flex-row border-b-4 font-display justify-between items-center p-2"}>
+                                    <div className={"text-base-200"}>
+                                        {member.name}
+                                    </div>
+                                    <button className={"btn btn-error text-base-200 btn-xs"}>BLOCK</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="card-actions absolute bottom-5 right-5 my-2 font-display">
+                        <button className="btn btn-primary btn-sm bg-base-200" onClick={closeMemberList}>Close Member</button>
+                    </div>
+                </div>
+            )}
             {displayParam && (
                 <div className="absolute card h-full w-full bg-orangeNG shadow-xl">
                     <div className="card-body flex flex-col">
@@ -169,18 +226,16 @@ function WindowChannel({chat, destroyChannel}) {
                             </div>
                         </div>
                         <br/>
-                        <div className="card-actions justify-end my-2">
-                            <button className={"btn btn-primary bg-base-200"} onClick={sendAdminData}>Send</button>
-                            <button className="btn btn-primary bg-base-200" onClick={closeParam}>Close param</button>
+                        <div className="card-actions absolute bottom-5 right-5 my-2">
+                            <button className={"btn btn-sm bg-base-200 font-display"} onClick={sendAdminData}>Send</button>
+                            <button className="btn btn-sm bg-base-200 font-display" onClick={closeParam}>Close param</button>
                         </div>
                     </div>
                 </div>
             )}
-            <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                {messages && messages.map((msg, index) => ( //TODO changer message par la bonne strategie
-                    <Message srcMsg={msg.content}
-                             srcPseudo={msg.owner.name} // TODO recuperer l'objet message et afficher le bon interlocuteur
-                             myMessage={!!isMyMessage(msg)}
+            <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
+                {chat?.history && chat.history.map((msg, index) => ( //TODO changer message par la bonne strategie
+                    <Message message={msg}
                              key={index}
                     />
                 ))}
