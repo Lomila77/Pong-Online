@@ -429,7 +429,7 @@ export class ChatService {
       return (false)
   }
 
-  async isAdmin_Chan(pseudo: string, id: number) {
+  async isAdmin_Chan(userId: number, id: number) {
     const chan = await this.prisma.channel.findFirst({
       where: {
         id: id,
@@ -439,7 +439,7 @@ export class ChatService {
         admins: true,
       }
     })
-    const isad: User = chan.admins.find(admins => admins.pseudo == pseudo)
+    const isad: User = chan.admins.find(admins => admins.fortytwo_id == userId)
     if (isad)
       return (true)
     else
@@ -716,7 +716,7 @@ export class ChatService {
     else {
       info.isPassword = false;
     }
-    if (await this.isAdmin_Chan(info.pseudo, info.channelid) == true) {
+    if (await this.isAdmin_Chan(info.userId, info.channelid) == true) {
       if (info.isPassword)
         if (!info.Password)
           return (1);

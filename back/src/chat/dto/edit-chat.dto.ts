@@ -12,8 +12,8 @@ export class EditChannelCreateDto {
 	@IsOptional()
 	Password?: string;
 
-	@IsString()
-	pseudo?: string;
+	@IsNumber()
+	userId?: number;
 }
 
 export class QuitChanDto {
