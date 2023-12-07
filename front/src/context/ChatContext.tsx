@@ -160,7 +160,7 @@ export const ChatProvider = ({ children }) => {
       ***********************************************************/
       newSocket?.on('Channel Joined', (newChannel: IChannel) => {
         // todo : if channel was in channelsToJoin, I need to put it in my channels.
-        if(!isChannelKnown("ChannelsToJoin", newChannel.id)) {
+        if(isChannelKnown("ChannelsToJoin", newChannel.id)) {
           setChannels((prev) => ({
             ...prev!,
             MyChannels: addChannel(channels.MyChannels, newChannel),
