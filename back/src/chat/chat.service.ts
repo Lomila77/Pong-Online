@@ -106,10 +106,10 @@ export class ChatService {
     )
   }
 
-  async quit_Chan(username: string, id: number) {
+  async quit_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -412,7 +412,7 @@ export class ChatService {
     return (0);
   }
 
-  async isBan_Chan(username: string, id: number) {
+  async isBan_Chan(userId: number, id: number) {
     const chan = await this.prisma.channel.findFirst({
       where: {
         id: id,
@@ -422,7 +422,7 @@ export class ChatService {
         banned: true,
       }
     })
-    const isban: User = chan.banned.find(banned => banned.fortytwo_userName == username)
+    const isban: User = chan.banned.find(banned => banned.fortytwo_id == userId)
     if (isban)
       return (true)
     else

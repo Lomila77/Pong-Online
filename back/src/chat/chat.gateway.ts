@@ -395,7 +395,7 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("kick", { username: data.userId });
+    this.server.to(data.chatId.toString()).emit("kick", { id: data.userId });
     console.log("chan kicked");
   }
 
@@ -441,7 +441,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!isAdmin)
       return;
     await this.chatService.set_admin_Chan(data.userId, data.chatId);
-    this.server.to(data.chatId.toString()).emit("set-admin", { username: data.userId });
+    this.server.to(data.chatId.toString()).emit("set-admin", { id: data.userId });
     console.log("new admin");
   }
 
