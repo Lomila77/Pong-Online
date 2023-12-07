@@ -1090,6 +1090,20 @@ export class ChatService {
         members: true,
       },
     });
+    // Update Prisma relation so channels appear in user1's and user2's Prisma UserChannel.
+    await this.prisma.userChannel.create({
+      data: {
+        userId: user1Id,
+        channelId: channel.id,
+      },
+    });
+
+    await this.prisma.userChannel.create({
+      data: {
+        userId: user2Id,
+        channelId: channel.id,
+      },
+    });
     return channel;
   }
 

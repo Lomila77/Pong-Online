@@ -63,12 +63,13 @@ export class ChatGateway implements OnGatewayConnection {
             fortytwo_id: true,
             fortytwo_userName: true,
             pseudo: true,
+
             userChannels: true,
             friends: true,
           }
         })
         this.clients[client.id] = user;
-
+        console.log("client channel list : ", user.userChannels);
         user.userChannels.forEach(channel => {
           client.join(channel.channelId.toString());
         });
@@ -76,6 +77,7 @@ export class ChatGateway implements OnGatewayConnection {
         user.friends.forEach(friendId => {
           client.to(friendId.toString()).emit('Friend connected', user.fortytwo_id);
         });
+        console.log("newSocketConnected : ", user.pseudo, " ", client.id);
       } else {
         console.log('Invalid token');
         client.disconnect();
@@ -90,7 +92,7 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   async handleDisconnect(client: Socket) {
-    console.log("Disconnect")
+    // console.log("Disconnect")
     const user = this.clients[client.id];
     if (user) {
       const prismaUser = await this.prisma.user.findUnique({
@@ -108,6 +110,7 @@ export class ChatGateway implements OnGatewayConnection {
         });
       }
     }
+    console.log("disconnecting : ", user.pseudo, " ", client.id);
     delete this.clients[client.id];
     client.disconnect();
   }
@@ -201,9 +204,10 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ChannelMessageSendDto,
     @ConnectedSocket() client: Socket,
   ) {
-    console.log("channelId ",  data.channelId, " : ", data.message);
+    console.log("channelId ",  data.channelId, " ", this.clients[client.id].pseudo, " : ", data.message);
     const chat = await this.chatService.newMsg(data, this.clients[client.id].pseudo);
     const except_user = await this.chatService.getExceptUser(data.channelId, this.clients[client.id].fortytwo_id);
+    console.log("except_user : ", except_user);
     let except = await this.server.in(data.channelId.toString()).fetchSockets().then((sockets) => {
       let except_user_socket = [];
       sockets.forEach((socket) => {
@@ -214,6 +218,8 @@ export class ChatGateway implements OnGatewayConnection {
     });
     if (chat == null)
       return "error";
+    // const roomName = data.channelId.toString();
+    // let socketsInRoom = this.server.in(roomName).allSockets();
     this.server.to(data.channelId.toString()).except(except).emit("Message Created", chat);
   }
 

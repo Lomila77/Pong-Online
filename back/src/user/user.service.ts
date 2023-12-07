@@ -175,7 +175,16 @@ export class UserService {
 
   async print() {
     try {
-      const users = await this.prisma.user.findMany();
+      const users = await this.prisma.user.findMany({
+        include: {
+          ownedChannels: true,
+          userChannels: {
+            include: {
+              channel: true,
+            },
+          },
+        },
+      });
       console.log("****** PRINTING ALL USERS ******\n", users);
       return users;
     } catch (error) {
