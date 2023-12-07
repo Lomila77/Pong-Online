@@ -39,7 +39,7 @@ model User {
   friends       Int[]
   blocked       Int[]
   ownedChannels Channel[]     @relation("OwnedChannels")
-  userChannels  UserChannel[]
+  userChannels  Int[]
 
   @@map("users")
 }
@@ -72,7 +72,6 @@ model Channel {
 
   ownerId      Int
   owner        User          @relation("OwnedChannels", fields: [ownerId], references: [fortytwo_id])
-  userChannels UserChannel[]
   admins       User[]        @relation("admins")
   members      User[]        @relation("members")
   banned       User[]        @relation("banned")
@@ -80,13 +79,4 @@ model Channel {
   invited      User[]        @relation("invited")
 
   @@unique([id])
-}
-
-model UserChannel {
-  userId    Int
-  channelId Int
-  user      User    @relation(fields: [userId], references: [fortytwo_id])
-  channel   Channel @relation(fields: [channelId], references: [id])
-
-  @@id([userId, channelId])
 }

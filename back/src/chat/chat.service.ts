@@ -382,12 +382,7 @@ export class ChatService {
         },
         data: {
           userChannels: {
-            connect: {
-              userId_channelId: {
-                userId: user.fortytwo_id,
-                channelId: data.chatId,
-              },
-            },
+            push: data.chatId,
           },
         },
       }
@@ -616,13 +611,6 @@ export class ChatService {
     const users = await this.prisma.user.findMany({
       where: {
         fortytwo_id: idChan,
-      },
-      include: {
-        userChannels: {
-          include: {
-            channel: true,
-          },
-        },
       },
     });
     return users;
@@ -1069,20 +1057,17 @@ export class ChatService {
         members: true,
       },
     });
-    // Update Prisma relation so channels appear in user1's and user2's Prisma UserChannel.
-    await this.prisma.userChannel.create({
-      data: {
-        userId: user1Id,
-        channelId: channel.id,
-      },
+
+    await this.prisma.user.update({
+      where: { fortytwo_id: user1Id },
+      data: { userChannels: { push: channel.id } },
     });
 
-    await this.prisma.userChannel.create({
-      data: {
-        userId: user2Id,
-        channelId: channel.id,
-      },
+    await this.prisma.user.update({
+      where: { fortytwo_id: user2Id },
+      data: { userChannels: { push: channel.id } },
     });
+
     return channel;
   }
 

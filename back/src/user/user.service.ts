@@ -178,11 +178,6 @@ export class UserService {
       const users = await this.prisma.user.findMany({
         include: {
           ownedChannels: true,
-          userChannels: {
-            include: {
-              channel: true,
-            },
-          },
         },
       });
       console.log("****** PRINTING ALL USERS ******\n", users);
@@ -194,8 +189,6 @@ export class UserService {
 
   async cleanDb() {
     try {
-      // Supprimer toutes les données de la table UserChannel
-      await this.prisma.userChannel.deleteMany({});
       // Supprimer toutes les données de la table Message
       await this.prisma.message.deleteMany({});
       // Supprimer toutes les données de la table Channel
@@ -206,13 +199,12 @@ export class UserService {
       return "successfully deleted all data from prisma."
     } catch (error) {
       console.error('fail in cleanDb :', error);
-      return  "fail in cleanDb"
+      return "fail in cleanDb"
     }
   }
 
   async noFriendshipSpell() {
     try {
-
       const users = await this.prisma.user.findMany();
 
       // go throught all user and delete friends
@@ -222,14 +214,13 @@ export class UserService {
           data: { friends: { set: [] } },
         });
       }
-      await this.prisma.userChannel.deleteMany({});
       await this.prisma.message.deleteMany({});
       await this.prisma.channel.deleteMany({});
       console.log('not a single friendship has escape');
       return 'it s a friendless world'
     } catch (error) {
       console.error('something went wong in my spell :', error);
-      return 'something went wong in my spell :'+ error
+      return 'something went wong in my spell :' + error
     }
   }
 }
