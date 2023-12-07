@@ -401,10 +401,18 @@ export const ChatProvider = ({ children }) => {
   //   })
   //   socket?.emit('invit', {chatId: chatId, userId: userId});
   // }
-  const addFriendToChannel = (newFriendName: string, chatId: number) => {
-    const friend = channels.MyDms.find((friend) => friend.name === newFriendName)
-    if (friend)
+  const addFriendToChannel = (nameToAdd: string, chatId: number) => {
+    //check if name is in channels.MyDms (is friend)
+    const foundChannel = channels.MyDms.find((channel) =>
+      channel.members.some((member) => member.name === nameToAdd)
+    );
+    //get friend profile via pseudo
+    const friend = foundChannel ? foundChannel.members.find((member) => member.name === nameToAdd) : undefined;
+    console.log(friend);
+    if (friend) {
+      console.log('emit : invit chatid: ', chatId, "/", friend.id);
       socket?.emit('invit', {chatId: chatId, userId: friend.id});
+    }
   }
 
   /*********** return ctx ************/
