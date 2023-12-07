@@ -106,10 +106,10 @@ export class ChatService {
     )
   }
 
-  async quit_Chan(username: string, id: number) {
+  async quit_Chan(userId: number, id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        fortytwo_userName: username,
+        fortytwo_id: userId,
       },
     });
 
@@ -412,7 +412,7 @@ export class ChatService {
     return (0);
   }
 
-  async isBan_Chan(username: string, id: number) {
+  async isBan_Chan(userId: number, id: number) {
     const chan = await this.prisma.channel.findFirst({
       where: {
         id: id,
@@ -422,14 +422,14 @@ export class ChatService {
         banned: true,
       }
     })
-    const isban: User = chan.banned.find(banned => banned.fortytwo_userName == username)
+    const isban: User = chan.banned.find(banned => banned.fortytwo_id == userId)
     if (isban)
       return (true)
     else
       return (false)
   }
 
-  async isAdmin_Chan(username: string, id: number) {
+  async isAdmin_Chan(userId: number, id: number) {
     const chan = await this.prisma.channel.findFirst({
       where: {
         id: id,
@@ -439,7 +439,7 @@ export class ChatService {
         admins: true,
       }
     })
-    const isad: User = chan.admins.find(admins => admins.fortytwo_userName == username)
+    const isad: User = chan.admins.find(admins => admins.fortytwo_id == userId)
     if (isad)
       return (true)
     else
@@ -707,22 +707,16 @@ export class ChatService {
   async update_chan(info: EditChannelCreateDto) {
 
     const idchat = info.channelid;
-    // if (info.isPrivate == undefined)
-    //   info.isPrivate = false;
-    // const isPass = info.isPassword.valueOf();
     let hash = "";
     if (info.Password != undefined && info.Password != null && info.Password != "") {
       const salt = await bcrypt.genSalt();
       hash = await bcrypt.hash(info.Password, salt);
-      // console.log("hash updated !:" + hash);
       info.isPassword = true;
     }
     else {
-      // console.log("IS PASSWORD NULL ?");
       info.isPassword = false;
     }
-    // console.log("isPass : ", isPass);
-    if (await this.isAdmin_Chan(info.username, info.channelid) == true) {
+    if (await this.isAdmin_Chan(info.userId, info.channelid) == true) {
       if (info.isPassword)
         if (!info.Password)
           return (1);
@@ -736,24 +730,9 @@ export class ChatService {
           data: {
             password: hash,
             isPassword: info.isPassword,
-            // isPrivate : info.isPrivate,
-            //isPrivate : info.Private,
           }
         }
       )
-      // if (info.newname)
-      // {
-      //   await this.prisma.channel.update(
-      //     {
-      //       where: {
-      //         id: idchat,
-      //       },
-      //       data: {
-      //         name : info.newname,
-      //       },
-      //     }
-      //   )
-      // }
       return (0);
     }
     else

@@ -294,7 +294,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.channel_id);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.channel_id);
     // console.log("is admin: " + isAdmin);
     if (isAdmin)
       this.server.to(client.id).emit("isAdmin", { isAdmin: isAdmin });
@@ -309,7 +309,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.invit_Chan(data.userId, data.chatId);
@@ -330,7 +330,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.ban_Chan(data.userId, data.chatId);
@@ -357,7 +357,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (this.clients[client.id] === undefined)
       return;
     // console.log(data);
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.unban_Chan(data.userId, data.chatId);
@@ -378,7 +378,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.kick_Chan(data.userId, data.chatId);
@@ -395,7 +395,7 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("kick", { username: data.userId });
+    this.server.to(data.chatId.toString()).emit("kick", { id: data.userId });
     console.log("chan kicked");
   }
 
@@ -407,7 +407,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.mute_Chan(data.userId, data.chatId);
@@ -423,7 +423,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.unmute_Chan(data.userId, data.chatId);
@@ -437,11 +437,11 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.set_admin_Chan(data.userId, data.chatId);
-    this.server.to(data.chatId.toString()).emit("set-admin", { username: data.userId });
+    this.server.to(data.chatId.toString()).emit("set-admin", { id: data.userId });
     console.log("new admin");
   }
 
@@ -450,7 +450,6 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: EditChannelCreateDto,
     @ConnectedSocket() client: Socket,
   ) {
-
     const res: number = await this.chatService.update_chan(data);
     if (res == 1)
       client.broadcast.emit('Password is empty but chan need password', data);
