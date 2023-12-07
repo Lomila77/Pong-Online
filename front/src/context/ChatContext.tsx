@@ -5,18 +5,16 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 
-// Todo : friendship Created
-
 // Todo : emit messages : might be type (message: string, channel : Ichannels);
 
-// Todo : update channels (change password, name new admin ....)
-// Todo : see how to send admins info to Garance.
 
-// Todo : see if not better to not open window when new channel is created but to have an other color on screen ?
-// todo : if channel was in channelsToJoin, I need to put it in my channels.
-// Todo : addFriendToChannel
+// Todo : update channels (change password, name new admin ....)
+
+// Todo : see if better to not open window when new channel is created but to have an other color on screen ?
+
 // Todo : update channel --> update a channel inside Ichannels. idee de prototype : ('updateChannel', 'channel:Ichannel')
-//Todo : need to handle error event with case : NotInvited, Banned, Wrong password, This channel does not exist!!!
+// Todo : need to handle error event with case : NotInvited, Banned, Wrong password, This channel does not exist!!!
+// todo : need to handle newFriend in channel event
 
 // *npx prisma generate
 
@@ -408,7 +406,7 @@ export const ChatProvider = ({ children }) => {
     if (friend)
       socket?.emit('invit', {chatId: chatId, userId: friend.id});
   }
-  
+
   /*********** return ctx ************/
   return (
     <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel }}>
