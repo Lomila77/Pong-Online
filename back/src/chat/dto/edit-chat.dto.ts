@@ -4,14 +4,6 @@ export class EditChannelCreateDto {
 	@IsNumber()
 	channelid?: number;
 
-	// @IsString()
-	// @IsOptional()
-	// newname?: string;
-
-	// @IsOptional()
-	// @IsBoolean()
-	// isPrivate?: boolean;
-
 	@IsOptional()
 	@IsBoolean()
 	isPassword?: boolean;
@@ -21,11 +13,7 @@ export class EditChannelCreateDto {
 	Password?: string;
 
 	@IsString()
-	username?: string;
-
-	// @IsString()
-	// @IsOptional()
-	// PasswordConfirmation?: string;
+	pseudo?: string;
 }
 
 export class QuitChanDto {

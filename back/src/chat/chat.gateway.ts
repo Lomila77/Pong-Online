@@ -450,7 +450,6 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: EditChannelCreateDto,
     @ConnectedSocket() client: Socket,
   ) {
-
     const res: number = await this.chatService.update_chan(data);
     if (res == 1)
       client.broadcast.emit('Password is empty but chan need password', data);
