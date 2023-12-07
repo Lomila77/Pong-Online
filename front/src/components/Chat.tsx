@@ -80,9 +80,10 @@ function Chat() {
                 <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay opacity-0"></label>
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
-                        <li key={index} className="flex flex-row justify-between">
-                            <button className={"btn btn-ghost font-display" + (target.type == 'MyDms' && target.members[1].connected ? " avatar online " : " avatar offline ") +  colorDrawer.text}
+                        <li key={index} className="flex flex-row justify-between items-center">
+                            <button className={"overflow-auto btn btn-ghost font-display " +  colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
+                                <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
                             </button>
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost">

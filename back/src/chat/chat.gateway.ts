@@ -428,7 +428,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     await this.chatService.unmute_Chan(data.userId, data.chatId);
     this.server.to(data.chatId.toString()).emit("unmute", { username: data.userId });
-    // console.log("chan unmuteed");
+    console.log("chan unmuteed");
   }
 
   @SubscribeMessage('set-admin')
