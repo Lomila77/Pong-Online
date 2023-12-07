@@ -122,18 +122,21 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     console.log("Join Channel received data = ", data, "socketId = ", client.id, "/n")
     let channel;
+    let isChannelCreated = false;
 
     if (data.id && data.type) {
       channel = await this.chatService.getChannelById(data.id);
     } else {
       channel = await this.chatService.CreateChan(data);
+      isChannelCreated = true;
     }
-    if (!channel.isPrivate && !channel.isDM) {
-      this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
-    } else {
-      this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+    if (isChannelCreated) {
+      if (!channel.isPrivate && !channel.isDM) {
+        this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+      } else {
+        this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+      }
     }
-
     // Rejoindre le canal
     if (this.clients[client.id] === undefined) {
       this.server.to(client.id).emit("error", "Error refresh the page!!!");
