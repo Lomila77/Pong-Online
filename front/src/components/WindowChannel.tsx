@@ -94,21 +94,23 @@ function WindowChannel({chat, destroyChannel}) {
                                 {displaySettings && (
                                     <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52 text-orangeNG font-display">
                                         <li><button onClick={openMemberList}>Members</button></li>
-                                        {/*chat.owner.id == user.fortytwo_id &&*/  (
+                                        {(chat.owner.id == user.fortytwo_id ||
+                                            chat.admins.find(admin => admin.id == user.fortytwo_id)) && (
                                             <li><button onClick={openParam}>Settings</button></li>
                                         )}
                                     </ul>
                                 )}
                             </div>
-                            <div className="dropdown dropdown-end">
-                                <button onClick={toggleAddFriend} className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center">
-                                    <img src={Addfriend} alt={"addFriend"} className={"p-1"}/>
-                                </button>
-                                {displayAddFriend && (
-                                    <AddFriend chat={chat} unBlockDisplayFunc={trueDisplayAddFriend}/>
-                                )}
-                            </div>
-
+                            {chat.isPrivate && (
+                                <div className="dropdown dropdown-end">
+                                    <button onClick={toggleAddFriend} className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center">
+                                        <img src={Addfriend} alt={"addFriend"} className={"p-1"}/>
+                                    </button>
+                                    {displayAddFriend && (
+                                        <AddFriend chat={chat} unBlockDisplayFunc={trueDisplayAddFriend}/>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                     {displayMemberList && (

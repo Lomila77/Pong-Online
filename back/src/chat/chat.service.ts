@@ -500,8 +500,8 @@ export class ChatService {
           id: true,
           name: true,
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          admins: {select: {fortytwo_id: true}},
-          owner: {select: {fortytwo_id: true}},
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
           isPrivate: true,
           isPassword: true,
         },
@@ -514,12 +514,16 @@ export class ChatService {
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
-          isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
-          isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'ChannelsToJoin',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        admins: source.admins.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+          connected: member.connected,
+        })),
       }));
 
       return modifiedSources;
@@ -540,8 +544,8 @@ export class ChatService {
           id: true,
           name: true,
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          admins: {select: {fortytwo_id: true}},
-          owner: {select: {fortytwo_id: true}},
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
           isPrivate: true,
           isPassword: true,
         },
@@ -560,6 +564,12 @@ export class ChatService {
         type: 'MyChannels',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        admins: source.admins.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+          connected: member.connected,
+        })),
       }));
       return modifiedSources;
     } catch (error) {
@@ -586,6 +596,8 @@ export class ChatService {
           },
           isPassword: true,
           isPrivate: true,
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -600,6 +612,12 @@ export class ChatService {
         type: 'MyDms',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        admins: source.admins.map((member) => ({
+          id: member.fortytwo_id,
+          name: member.pseudo,
+          connected: member.connected,
+        })),
       }));
 
       return modifiedSources;
@@ -1173,8 +1191,8 @@ export class ChatService {
         id: true,
         name: true,
         members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-        admins: {select: {fortytwo_id: true}},
-        owner: {select: {fortytwo_id: true}},
+        admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+        owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         isPrivate: true,
         isPassword: true,
       },
@@ -1192,6 +1210,12 @@ export class ChatService {
       type: type,
       isPrivate: channel.isPrivate,
       isPassword: channel.isPassword,
+      owner: {id: channel.owner.fortytwo_id, name: channel.owner.pseudo, connected: channel.owner.connected},
+      admins: channel.admins.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+      })),
     }
     return modifiedSources;
   }
