@@ -54,6 +54,8 @@ export interface IChannel {
   name: string,
   type: string,
   members: IChatMember[],
+  isPrivate: boolean,
+  isPassword: boolean,
 }
 
 type ChannelType = keyof IChannels;
@@ -177,6 +179,17 @@ export const ChatProvider = ({ children }) => {
           }))
           handleOpenWindow(newChannel);
         }
+      });
+
+      /* *********************************************************
+          * Channel Quited :
+
+            - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
+      ***********************************************************/
+      newSocket?.on('quited', (chatId: number) => {
+        console.log("Channel quited: \n\n\n", chatId);
+        console.log("\n\n", channels);
+
       });
 
       socketRef.current = newSocket;
@@ -430,8 +443,18 @@ export const ChatProvider = ({ children }) => {
 
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
-    // TODO supprimer du chat ma presence
-    // TODO Supprimer le chan de ma liste de chan
+    const channelToQuit = channels.MyChannels.find(channel => channel.id == chatId);
+    channelToQuit.isPrivate ?
+        setChannels((prev) => ({
+          ...prev!,
+          MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
+        })) :
+        setChannels((prev) => ({
+          ...prev!,
+          MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
+          ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
+        }));
+    closeWindow(channelToQuit.id);
   }
 
   /*********** return ctx ************/

@@ -502,6 +502,8 @@ export class ChatService {
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
           admins: {select: {fortytwo_id: true}},
           owner: {select: {fortytwo_id: true}},
+          isPrivate: true,
+          isPassword: true,
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -516,6 +518,8 @@ export class ChatService {
           isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'ChannelsToJoin',
+        isPrivate: source.isPrivate,
+        isPassword: source.isPassword,
       }));
 
       return modifiedSources;
@@ -538,6 +542,8 @@ export class ChatService {
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
           admins: {select: {fortytwo_id: true}},
           owner: {select: {fortytwo_id: true}},
+          isPrivate: true,
+          isPassword: true,
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -552,6 +558,8 @@ export class ChatService {
           isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'MyChannels',
+        isPrivate: source.isPrivate,
+        isPassword: source.isPassword,
       }));
       return modifiedSources;
     } catch (error) {
@@ -575,7 +583,9 @@ export class ChatService {
               pseudo: true,
               connected: true,
             }
-          }
+          },
+          isPassword: true,
+          isPrivate: true,
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -588,6 +598,8 @@ export class ChatService {
           isOwner: true,
         })),
         type: 'MyDms',
+        isPrivate: source.isPrivate,
+        isPassword: source.isPassword,
       }));
 
       return modifiedSources;
@@ -1163,6 +1175,8 @@ export class ChatService {
         members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
         admins: {select: {fortytwo_id: true}},
         owner: {select: {fortytwo_id: true}},
+        isPrivate: true,
+        isPassword: true,
       },
     });
     const modifiedSources = {
@@ -1176,6 +1190,8 @@ export class ChatService {
         isOwner: channel.owner ? channel.owner.fortytwo_id === member.fortytwo_id : false,
       })),
       type: type,
+      isPrivate: channel.isPrivate,
+      isPassword: channel.isPassword,
     }
     return modifiedSources;
   }

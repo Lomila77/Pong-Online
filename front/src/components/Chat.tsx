@@ -91,7 +91,7 @@ function Chat() {
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                                 <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
                             </button>
-                            {displayChannelDrawer && (
+                            {displayChannelDrawer && target.type != "ChannelsToJoin" && (
                                 <button className="btn btn-square btn-ghost btn-sm p-2" onClick={() => setLeaveChanID(target.id)}>
                                     <img src={Cross} alt={"LeaveChat"} className={""}/>
                                 </button>
