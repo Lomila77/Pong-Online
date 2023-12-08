@@ -32,7 +32,8 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
-    // status; // owner, admin, user
+    isAdmin: boolean;
+    isOwner: boolean;
   }
 
 export interface IChatHistory {
@@ -96,6 +97,12 @@ export const ChatProvider = ({ children }) => {
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
   const initChatCtx = () => {
+    const currentUser: IChatMember = {name : user?.pseudo || "",
+                                      id: user?.fortytwo_id || 0,
+                                      connected: user?.isAuthenticated,
+                                      isAdmin: false,
+                                      isOwner: false,
+    };
     const token = Cookies.get('jwtToken');
     if (!token)
       return
@@ -116,21 +123,20 @@ export const ChatProvider = ({ children }) => {
         allChannels && setChannels(allChannels);
       })
 
-      // newSocket?.on('friendConnected', (friend) => {
-      //   setChannels((prev) => {
-      //     ...prev,
-
-      //   })
-      // });
-      // newSocket?.on('friendDisconnected', (friend) => {
-      //   setDisconnectedFriends((prev) => [...prev, friend]);
-      //   setConnectedFriends((prev) => prev.filter((f) => f !== friend));
-      // });
-
-      newSocket?.on('Message Created', (message) => {
-        console.log("\n\n\nMessage Created", message);
-        //add message in the right conversation.
-      })
+      newSocket?.on('Message Created', (message: IChatHistory, channelId: number) => {
+        console.log(message);
+        setOpenedWindows(prevWindow => {
+          return prevWindow.map((window) => {
+            if (window.id === channelId) {
+              return {
+                ...window,
+                history: [...window.history, message]
+              }
+            }
+            return window
+          });
+        });
+      });
 
       /* *********************************************************
           * Channel Created :
@@ -156,19 +162,20 @@ export const ChatProvider = ({ children }) => {
 
       /* *********************************************************
           * Channel Joined :
+
             - if new channel joined, open channel window //todo not accurate anymore
       ***********************************************************/
       newSocket?.on('Channel Joined', (newChannel: IChannel) => {
-        // todo : if channel was in channelsToJoin, I need to put it in my channels.
-        if(isChannelKnown("ChannelsToJoin", newChannel.id)) {
+        console.log("channel Joined signal received\n", newChannel);
+        if (newChannel.type != "MyDms"){
+          newChannel.type = "MyChannels"
           setChannels((prev) => ({
             ...prev!,
-            MyChannels: addChannel(channels.MyChannels, newChannel),
-            ChannelsToJoin: removeChannel(channels.ChannelsToJoin, newChannel.id),
+            MyChannels: addChannel(prev.MyChannels, newChannel),
+            ChannelsToJoin: removeChannel(prev.ChannelsToJoin, newChannel.id),
           }))
+          handleOpenWindow(newChannel);
         }
-        console.log("channel Joined signal received\n", newChannel);
-        // handleOpenWindow(newChat);
       });
 
       socketRef.current = newSocket;
@@ -238,14 +245,13 @@ export const ChatProvider = ({ children }) => {
   };
 
   /* *********************************************************
-      * isChannelKnown
+      * isChannelKnown // USELESS DUE TO ASYNCRO OF SETCHANNELS
         - usage : if (usChannelKnown("MyDms", 42))
           --> check if MyDms has a channel of id 42
   ***********************************************************/
   const isChannelKnown = (channelKey: string, idToFind?: number) => {
     if (!idToFind)
       return false;
-    console.log("channels." + channelKey + "= " + channels[channelKey]);
     return channels[channelKey].find((channel: IChannel) => channel.id === idToFind);
   };
 
@@ -285,10 +291,15 @@ export const ChatProvider = ({ children }) => {
   }
 
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
+    console.log("removeChannel : initial channel list ", channelList);
+    const filteredlist = channelList.filter((channel) => channel.id !== channelId);
+    console.log("removeChannel : filtered channel list ", filteredlist);
     return channelList.filter((channel) => channel.id !== channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
+    console.log("addChannel : initial channel list ", channelList);
+
     const channelExists = channelList.find((channel) => channel.id === newChannel.id);
     if (!channelExists) {
       return [...channelList, newChannel];
@@ -313,16 +324,14 @@ export const ChatProvider = ({ children }) => {
   ***********************************************************/
           const handleOpenWindow = async (chatData : IChannel) =>{
             if (!ischatOpenned(chatData.id)){
-              // if selected window is ChannelsToJoin
-              if (chatData.type === 'ChannelsToJoin' && !findIdInList(chatData.members, user?.fortytwo_id))
-                socket?.emit("Join Channel", chatData)
-
-              const newWindow: IChatWindow = (await (backRequest('chat/chatWindow/' + chatData.id, 'GET'))).data
-              newWindow.id = chatData.id;
-              newWindow.name = chatData.name;
-              newWindow.type = chatData.type;
-              newWindow.members = chatData.members;
-              setOpenedWindows(current => {return([...current || [], newWindow])})
+              await (backRequest('chat/chatWindowHistory/' + chatData.id, 'GET')).then(ret => {
+                const newWindow: IChatWindow = {
+                  ...chatData,
+                  history: ret?.data || []
+                }
+                setOpenedWindows(current => {return([...current || [], newWindow])})
+              }
+              )
             }
           }
 
@@ -353,14 +362,17 @@ export const ChatProvider = ({ children }) => {
       password:    form?.password?    form.password    :  "",
     }
     // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if (data.type && !isChannelKnown(data.type, data.id)) {
-      console.log("openWindoc called : data = ", data);
-      console.log("socket = ", socket);
+    if (data.type && !isChannelKnown(data.type, data.id)
+      || data.type === 'ChannelsToJoin') {
+      console.log("Join Channel called from openWindow")
+      // console.log("openWindoc called : data = ", data);
+      // console.log("socket = ", socket);
       socket?.emit('Join Channel', data)
     }
-    // if channel is known, open window directly
-    else if (chatData)
+    else if (chatData) {
+      console.log("inside openWindow before calling handleOpenWindow: ", chatData);
       handleOpenWindow(chatData);
+    }
   }
 
   const sendMessage = (message: string, channelId: number) => {

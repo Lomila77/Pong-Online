@@ -470,10 +470,11 @@ export class ChatService {
         id: true,
         owner: {
           select: {
-            avatar: true,
+            fortytwo_id: true,
             pseudo: true,
           }
         },
+        message: true,
       }
     });
 
@@ -499,14 +500,20 @@ export class ChatService {
           id: true,
           name: true,
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          admins: {select: {fortytwo_id: true}},
+          owner: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
-        ...source,
+        // ...source,
+        id: source.id,
+        name: source.name,
         members: source.members.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
+          isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'ChannelsToJoin',
       }));
@@ -529,14 +536,20 @@ export class ChatService {
           id: true,
           name: true,
           members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          admins: {select: {fortytwo_id: true}},
+          owner: {select: {fortytwo_id: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
-        ...source,
+        // ...source,
+        id: source.id,
+        name: source.name,
         members: source.members.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
+          isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'MyChannels',
       }));
@@ -571,6 +584,8 @@ export class ChatService {
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          isAdmin: true,
+          isOwner: true,
         })),
         type: 'MyDms',
       }));
@@ -994,7 +1009,7 @@ export class ChatService {
   }
 
   // find props in source and replace it by newprops (MULTI)
-  private replacePropNames<T extends object>(source: T, props: string[], newprops: string[]): T {
+  replacePropNames<T extends object>(source: T, props: string[], newprops: string[]): T {
   if (typeof source !== 'object' || source === null) {
     return source;
   }
@@ -1017,7 +1032,7 @@ export class ChatService {
   return newSource;
 }
 
-  async getChannelInfo(channelId: number, user: User) {
+  async getChatWindow(channelId: number, user: User) {
 
     const channel = await this.prisma.channel.findUnique({
       where: {
@@ -1027,6 +1042,7 @@ export class ChatService {
         id: true,
         members: {select: {pseudo: true, fortytwo_id: true}},
         messages: {select:{
+          id: true,
           message: true,
           owner:{select:{pseudo: true, fortytwo_id: true}}
         }},
@@ -1035,6 +1051,28 @@ export class ChatService {
     return (channel && this.membershipCheck(channel.members, user.pseudo))
             ? this.replacePropNames(channel, ['fortytwo_id', 'pseudo'], ['id', 'name'])
             : {}
+  }
+
+  async getChatWindowHistory(channelId: number, user: User) {
+
+    const history = await this.prisma.channel.findUnique({
+      where: {
+        id:channelId
+      },
+      select: {
+        messages: {select:{
+          id: true,
+          message: true,
+          owner:{select:{pseudo: true, fortytwo_id: true}}
+        }},
+      }
+    });
+    const reformatHistory = history.messages.map((message) => ({
+      id: message.id,
+      owner: {id : message.owner.fortytwo_id, name: message.owner.pseudo},
+      content: message.message,
+    }))
+    return reformatHistory
   }
 
   async createDMChannel(user1Id: number, user2Id: number): Promise<Channel> {
@@ -1114,11 +1152,68 @@ export class ChatService {
   }
 
 
+  async getUpdatedChannelForFront(channelId: number, type: string) {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id: channelId,
+      },
+      select: {
+        id: true,
+        name: true,
+        members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+        admins: {select: {fortytwo_id: true}},
+        owner: {select: {fortytwo_id: true}},
+      },
+    });
+    const modifiedSources = {
+      id: channel.id,
+      name: channel.name,
+      members: channel.members.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+        isAdmin: channel.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
+        isOwner: channel.owner ? channel.owner.fortytwo_id === member.fortytwo_id : false,
+      })),
+      type: type,
+    }
+    return modifiedSources;
+  }
+
+  // const sources = await this.prisma.channel.findMany({
+  //   where: {
+  //     members: { some: { fortytwo_id: userId } },
+  //     isDM: false,
+  //   },
+  //   select: {
+  //     id: true,
+  //     name: true,
+  //     members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+  //     admins: {select: {fortytwo_id: true}},
+  //     owner: {select: {fortytwo_id: true}},
+  //   },
+  // });
+  // const modifiedSources = sources.map((source) => ({
+  //   // ...source,
+  //   id: source.id,
+  //   name: source.name,
+  //   members: source.members.map((member) => ({
+  //     id: member.fortytwo_id,
+  //     name: member.pseudo,
+  //     connected: member.connected,
+  //     isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
+  //     isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
+  //   })),
+  //   type: 'MyChannels',
+  // }));
+
+
+
   // to delete before correction
   async printAllChannels() {
     try {
 		  const channels = await this.prisma.channel.findMany({
-        include: {members : {select: {pseudo: true, fortytwo_id: true}}}
+        include: {members : {select: {pseudo: true, fortytwo_id: true, messages: true}}}
       })
 		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
 		  return channels;

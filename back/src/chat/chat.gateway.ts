@@ -132,9 +132,15 @@ export class ChatGateway implements OnGatewayConnection {
     }
     if (isChannelCreated) {
       if (!channel.isPrivate && !channel.isDM) {
-        this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.emit("Channel Created", objToEmit);
+        })
+        // this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
       } else {
-        this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.to(channel.id.toString()).emit("Channel Created", objToEmit);
+        })
+        // this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
       }
     }
     // Rejoindre le canal
@@ -156,11 +162,13 @@ export class ChatGateway implements OnGatewayConnection {
                 connect: { fortytwo_id: user.fortytwo_id },
               },
             },
+            select : {members : true, id: true, name: true, }
           });
         }
       }
-      this.server.to(client.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type});
-
+      await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+        this.server.to(client.id).emit("Channel Joined", objToEmit);
+      })
       if (channel.isDM) {
         var client2 = await this.server.fetchSockets().then(
           (sockets) => {
@@ -173,7 +181,10 @@ export class ChatGateway implements OnGatewayConnection {
           client2.join(channel.id.toString());
           if (retOtherUser !== 5)
             this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-          this.server.to(client2.id).emit("Channel Joined", { id: channel.id, name: data.name, members: data.members, type: data.type });
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.to(client2.id).emit("Channel Joined", objToEmit);
+        })
+
         }
       }
     }
@@ -223,7 +234,8 @@ export class ChatGateway implements OnGatewayConnection {
       return "error";
     // const roomName = data.channelId.toString();
     // let socketsInRoom = this.server.in(roomName).allSockets();
-    this.server.to(data.channelId.toString()).except(except).emit("Message Created", chat);
+    const ret = this.chatService.replacePropNames(chat, ['fortytwo_id', 'pseudo', 'message'], ['id', 'name', 'content'])
+    this.server.to(data.channelId.toString()).except(except).emit("Message Created", ret, data.channelId);
   }
 
   // @SubscribeMessage('joinNewChannel')

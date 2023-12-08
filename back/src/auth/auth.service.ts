@@ -63,7 +63,7 @@ export class AuthService {
     };
     const secret = process.env.JWT_SECRET;
     const token = await this.jwt.signAsync(data, {
-      expiresIn: '120m',
+      expiresIn: '999m',
       secret: secret,
     });
     return { access_token: token };
