@@ -415,18 +415,6 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('set-admin', {chatId: chatId, userId: targetId});
   }
 
-  // const addFriendToChannel = (nameToAdd: string, chatId: number) => {
-  //   let userId: number;
-  //   backRequest('users/isFriend/' + nameToAdd, 'GET').then(data => {
-  //     if (!data.isFriend)
-  //       return;
-  //     else
-  //       backRequest('users/user', 'PUT', {pseudo: nameToAdd}).then(data => {
-  //         userId = data.fortytwo_id;
-  //       })
-  //   })
-  //   socket?.emit('invit', {chatId: chatId, userId: userId});
-  // }
   const addFriendToChannel = (nameToAdd: string, chatId: number) => {
     //check if name is in channels.MyDms (is friend)
     const foundChannel = channels.MyDms.find((channel) =>
