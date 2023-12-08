@@ -192,9 +192,6 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("error", "NotInvited", data.id);
     else if (ret == 2)
       this.server.to(client.id).emit("error", "Banned", data.id);
-    else if (ret == 3) {
-      this.server.to(client.id).emit("error", "Wrong password", data.id);
-    }
     else {
       this.server.to(client.id).emit("error", "This channel does not exist!!!");
     }
