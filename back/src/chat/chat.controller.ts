@@ -168,7 +168,14 @@ export class ChatController {
 	@UseGuards(JwtGuard)
 	async getChannelWindow(@Param("id", ParseIntPipe) id: number, @GetUser() user: User)
 	{
-		return {data : await this.chat_service.getChannelInfo(id, user) };
+		return {data : await this.chat_service.getChatWindow(id, user) };
+	}
+
+	@Get('/chatWindowHistory/:id')
+	@UseGuards(JwtGuard)
+	async getChatWindowHistory(@Param("id", ParseIntPipe) id: number, @GetUser() user: User)
+	{
+		return {data : await this.chat_service.getChatWindowHistory(id, user) };
 	}
 
 	//debug to delete before correction
