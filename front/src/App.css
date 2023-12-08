@@ -1,16 +1,9 @@
 #mainContainer {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100vh;
-  min-width: 400px;
-  min-height: 400px;
+  height: 100%;
 }
 
 #pageContent {
-  height: 100%;
   padding-bottom: 70px;
-  overflow-y: auto;
 }
 
 .Background {
@@ -55,30 +48,9 @@
   filter: drop-shadow(3px 3px 0px #cecccc);
 }
 
-.Buildings {
-  filter: drop-shadow(7px 7px 1px #919191);
-  bottom: 0;
-  left: 0;
-  max-height: 100%;
-  object-fit: cover;
-  position: absolute;
-}
-
 .NewGame {
   filter: drop-shadow(4px 4px 0px #a1a1a1);
   height: fit-content;
-}
-
-.Foot {
-  position: absolute;
-  height: 70px;
-  bottom: 0;
-  left: 0;
-}
-
-.Parent {
-  position: relative;
-  height: 100%;
 }
 
 .enfant {
@@ -125,4 +97,22 @@
 
 .window-chat.checked {
   transform: translateY(85%);
+}
+
+.slider-thumb-orange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px; /* Taille du thumb */
+  height: 25px; /* Taille du thumb */
+  background: orange; /* Couleur du thumb */
+  border-radius: 50%; /* Rend le thumb rond */
+  cursor: pointer; /* Curseur en forme de pointeur */
+}
+
+.slider-thumb-orange::-moz-range-thumb {
+  width: 25px; /* Taille du thumb */
+  height: 25px; /* Taille du thumb */
+  background: blueviolet; /* Couleur du thumb */
+  border-radius: 50%; /* Rend le thumb rond */
+  cursor: pointer; /* Curseur en forme de pointeur */
 }

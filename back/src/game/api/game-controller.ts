@@ -1,14 +1,14 @@
 
 
-import { Body, Controller, Get, Param, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { GameDto, GameResponse } from './game-dto';
 import { CreatePublicGame } from './create-public-game';
 import { CreatePrivateGame } from './create-private-game';
 import { RoomStoreService } from '../store/room-store.service';
 import { GameRankingResponse } from './ranking-dto';
 import { RankingService } from './ranking-service';
-import { GameService, StatsByUser } from './game-service';
-
+import { GameService, StatsByUser, UserHistoric } from './game-service';
+import { JwtGuard } from 'src/auth/guard';
 
 @Controller('game')
 export class GameController {
@@ -41,12 +41,21 @@ export class GameController {
         return { leaderbord: leaderBoard.leaderbord };
     }
 
-    @Get('user/:id')
+    @Get('users/:id')
     @UsePipes(new ValidationPipe())
     async getStatByUser(@Param('id') userId: string): Promise<StatsByUser> {
         const id = Number(userId)
         const stats = await this.gameService.GetStatByUserId(id);
         return stats;
+    }
+
+    @Get('users/me/:id')
+    //@UseGuards(JwtGuard)
+    @UsePipes(new ValidationPipe())
+    async getUserHistoric(@Param('id') userId: string): Promise<UserHistoric[]> {
+        const id = Number(userId)
+        const historic = await this.gameService.GetUserHistoric(id);
+        return historic;
     }
 
 }

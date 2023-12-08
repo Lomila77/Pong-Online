@@ -27,6 +27,7 @@ export interface GamePlayer {
     leftPaddlePositionY: number;
     rightPaddlePositionY: number;
     intervalId: NodeJS.Timeout;
+    private: Boolean
   }
 
 

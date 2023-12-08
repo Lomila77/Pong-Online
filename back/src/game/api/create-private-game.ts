@@ -36,7 +36,8 @@ export class CreatePrivateGame {
                 paddleWidth: paddleWidth[dto.paddleWidth - 1],
                 leftPaddlePositionY: 100,
                 rightPaddlePositionY: 100,
-                intervalId: null
+                intervalId: null,
+                private: true
             }
         })
         return { name: uuid };

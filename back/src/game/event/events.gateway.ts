@@ -169,6 +169,7 @@ export class EventsGateway {
     const mapPlayer = this.roomStoreService.getMapPong();
     const player1 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
     const player2 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
+    const isPublicGame = mapPlayer.get(room).game.private === false;
     const playerRight = player1.side === "RIGHT" ? player1 : player2;
     const playerLeft = player1.side === "LEFT" ? player1 : player2;
     const intervalId = setInterval(() => {
@@ -177,10 +178,13 @@ export class EventsGateway {
         clearInterval(intervalId);
 
         // TODO: envoyer infos dans la DB
-        const winner = playerLeft.score > playerRight.score ? playerLeft : playerRight;
-        const looser = playerLeft.score > playerRight.score ? playerRight : playerLeft
+        if (isPublicGame) {
 
-        this.gameService.Insert(winner.name, looser.name, winner.score, looser.score)
+          const winner = playerLeft.score > playerRight.score ? playerLeft : playerRight;
+          const looser = playerLeft.score > playerRight.score ? playerRight : playerLeft
+  
+          this.gameService.Insert(winner.name, looser.name, winner.score, looser.score)
+        }
         // sendGameInfoToDB(player1, player2, time, )
         /* GAME
            end_timestamp

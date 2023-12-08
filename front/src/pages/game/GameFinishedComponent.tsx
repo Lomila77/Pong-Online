@@ -31,16 +31,16 @@ function GameFinishedComponent({
 
     return (
         <>
-            <div className="flex flex-col scroll-auto items-center justify-center">
+            <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-col items-center justify-center">
-                    <h1 className={`text-4xl col-span-2 text-center font-display text-green-400 NewGame mb-32 ml-16 mr-16 ${winnerNameColor} xs:text-l sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl`}>
+                    <h1 className={`text-4xl col-span-2 text-center font-display text-green-400 NewGame mb-32 ml-16 mr-16 ${winnerNameColor} xs:text-l sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl break-all`}>
                         {
                             finishedGameState.winner!.name === finishedGameState.currentPlayer!.name
                                 ? 'You won' + ' with ' + finishedGameState.winner!.score + ' pts'
                                 : finishedGameState.winner!.name + ' won' + ' with ' + finishedGameState.winner!.score + ' pts'
                         }
                     </h1>
-                    <h1 className={`text-4xl col-span-2 text-center font-display text-red-400 NewGame ml-16 mr-16 xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl`}>
+                    <h1 className={`text-4xl col-span-2 text-center font-display text-red-400 NewGame ml-16 mr-16 xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl break-all`}>
                         {
                             finishedGameState.looser!.name === finishedGameState.currentPlayer!.name
                                 ? 'You lost' + ' with ' + finishedGameState.looser!.score + ' pts'

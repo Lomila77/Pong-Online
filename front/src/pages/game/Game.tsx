@@ -307,8 +307,9 @@ function Game() {
                 }
             }
 
-            document.addEventListener('keydown', (e) => {
-                movePaddle(e);
+            document.addEventListener('keydown', (event) => {
+                event.preventDefault()
+                movePaddle(event);
             });
         });
 
@@ -368,10 +369,14 @@ function Game() {
 
     return (
         <>
-            <div className='flex items-stretch Parent relative flex-col-reverse md:flex-row '>
+            <div className='flex items-stretch relative flex-col-reverse md:flex-row '>
                 <div className='flex flex-1 flex-col items-center justify-center sm:py-2 sm:px-5'>
-                    <GameStatusesComponent gameStatus={gameStatus} leftPlayer={leftPlayer} rightPlayer={rightPlayer}
-                        finishedGameState={finishedGameState} />
+                    <GameStatusesComponent
+                        gameStatus={gameStatus}
+                        leftPlayer={leftPlayer}
+                        rightPlayer={rightPlayer}
+                        finishedGameState={finishedGameState}
+                    />
                     {
                         socketRef.current && gameStatus === GameStatus.IN_PROGRESS && (
                             <PongCanvas

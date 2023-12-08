@@ -41,7 +41,8 @@ export class CreatePublicGame {
                 rightPaddlePositionY: 100,
                 victoryPoints: 5,
                 ballRadius: 10,
-                intervalId: null
+                intervalId: null,
+                private: false
             }
         })
 
