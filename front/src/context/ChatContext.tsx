@@ -84,6 +84,7 @@ export const ChatContext = createContext<{
                     kick: boolean, admin: boolean,
                     isPassword: boolean, password: string) => void
   addFriendToChannel: (nameToAdd: string, chatId: number) => void
+  leaveChannel: (chatId: number) => void
 } | null>(null);
 
 
@@ -415,9 +416,15 @@ export const ChatProvider = ({ children }) => {
     }
   }
 
+  const leaveChannel = (chatId: number) => {
+    socket?.emit('quit', {chatId: chatId});
+    // TODO supprimer du chat ma presence
+    // TODO Supprimer le chan de ma liste de chan
+  }
+
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel }}>
+    <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel, leaveChannel }}>
       {children}
     </ChatContext.Provider>
   );

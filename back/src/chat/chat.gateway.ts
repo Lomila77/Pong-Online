@@ -283,7 +283,7 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("DM:quit");
       return;
     }
-    const quit = await this.chatService.quit_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const quit = await this.chatService.quit_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     client.leave(data.chatId.toString());
     this.server.to(client.id).emit("quited", { chatId: data.chatId });
     this.server.to(data.chatId.toString()).emit("quit", { username: this.clients[client.id].fortytwo_userName })

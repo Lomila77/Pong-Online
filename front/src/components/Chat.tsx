@@ -10,14 +10,20 @@ import Messagerie from "../images/chat.svg";
 import Play from "../images/play.svg"
 import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
-import {data} from "autoprefixer";
+import Cross from "../images/cross.svg"
 
 function Chat() {
-    const {channels, openedWindows, openWindow, closeWindow } = useChat();
+    const {channels, openedWindows, openWindow, closeWindow, leaveChannel } = useChat();
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
-
+    const [leaveChanId, setLeaveChanID] = useState(-1);
+    useEffect(() => {
+        if (leaveChanId != -1) {
+            leaveChannel(leaveChanId);
+            setLeaveChanID(-1);
+        }
+    }, [leaveChanId]);
     const [createChannel, setCreateChannel] = useState(false);                                          // Appel module create channe
     const toggleCreateChannel = () => {                                                                             // Permet de gerer la creation d'un channel quand j'appuis sur le bouton create channel
         setCreateChannel(createChannel !== true);
@@ -85,8 +91,14 @@ function Chat() {
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                                 <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
                             </button>
+                            {displayChannelDrawer && (
+                                <button className="btn btn-square btn-ghost btn-sm p-2" onClick={() => setLeaveChanID(target.id)}>
+                                    <img src={Cross} alt={"LeaveChat"} className={""}/>
+                                </button>
+                            )}
+
                             {!displayChannelDrawer && (
-                                <button className="btn btn-square btn-ghost">
+                                <button className="btn btn-square btn-ghost btn-sm">
                                     <img src={Play} alt={"play"} className={""}/>
                                 </button>
                             )}
