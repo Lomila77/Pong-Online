@@ -432,17 +432,19 @@ export const ChatProvider = ({ children }) => {
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
     const channelToQuit = channels.MyChannels.find(channel => channel.id == chatId);
-    channelToQuit.isPrivate ?
-        setChannels((prev) => ({
-          ...prev!,
-          MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-        })) :
-        setChannels((prev) => ({
-          ...prev!,
-          MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-          ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
-        }));
-    closeWindow(channelToQuit.id);
+    if (channelToQuit) {
+      channelToQuit?.isPrivate ?
+          setChannels((prev) => ({
+            ...prev!,
+            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
+          })) :
+          setChannels((prev) => ({
+            ...prev!,
+            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
+            ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
+          }));
+      closeWindow(channelToQuit.id);
+    }
   }
 
   /*********** return ctx ************/
