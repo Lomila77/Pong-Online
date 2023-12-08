@@ -1,99 +1,145 @@
 import React, { useEffect, useState } from "react";
-import { getMessage } from "../api/queries";
 import Message from "./Message";
 import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
+import Setting from "../images/setting.svg"
+import Addfriend from "../images/addFriend.svg"
+import {useChat} from "../context/ChatContext";
+import {useUser} from "../context/UserContext";
+import InputPassword from "./InputPassword";
+import AddFriend from "./AddFriend";
+import ChatMemberList from "./ChatMemberList";
+import SettingsChat from "./SettingsChat";
 
-function WindowChannel({chat, me, destroyChannel, socket}) {
-    const [messages, setMessages] = useState([]);
-    const [myMessages, setMyMessages] = useState([]);
+function WindowChannel({chat, destroyChannel}) {
+    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+    const { sendMessage, sendAdminForm, addFriendToChannel } = useChat();
+    const [displayChat, setDisplayChat] = useState(chat.isPassword !== true);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
-    socket.emit('create channel', {chat}); //TODO ai-je besoin d'envoyer les param un a un ou comme ca c bon ?
+    const [displayParam, setDisplayParam] = useState(false);
+    const [displayMemberList, setDisplayMemberList] = useState(false);
+    const [displayAddFriend, setDisplayAddFriend] = useState(false);
+    const [displaySettings, setDisplaySettings] = useState(false);
+
+    const toggleDisplayChat = () => {
+        setDisplayChat(displayChat !== true);
+    }
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
 
-    useEffect(() => {
-        socket.on('update', (data) => { // TODO update chan ?
-            if (data === 'chan updated') { // TODO it is right func ?
-                getMessage().then(data =>
-                    setMessages([...messages, data]))
-            }
-            scrollToBottom();
-        });
+    const trueDisplayAddFriend = () => {setDisplayAddFriend(true)};
+    const toggleAddFriend = () => {setDisplayAddFriend(displayAddFriend !== true)};
+    const toggleDisplaySettings = () => {setDisplaySettings(displaySettings !== true)}
 
-        //return () => {
-        //    socket.disconnect();
-        //}
-    }, []);
+    const openParam = () => {
+        setDisplayParam(true);
+        setDisplayMemberList(false);
+        setDisplaySettings(false);
+    };
+    const openMemberList = () => {
+        setDisplayMemberList(true);
+        setDisplayParam(false);
+        setDisplaySettings(false);
+    };
 
 
-    const sendMessage = () => {
-        if (!message)
-            return;
-        socket.emit('message', message); // TODO send message to channel
-        setMessages([...messages, message]);
-        setMyMessages([...myMessages, message]);
+    const closeParam = () => {setDisplayParam(false);};
+    const closeMemberList = () => {setDisplayMemberList(false);};
+
+
+    const handleSendMessage = () => {
+        sendMessage(message, chat.id);
         setMessage('');
     }
 
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [chat?.history]);
+
     const scrollToBottom = () => {
-        const messageContainer = document.getElementById('message-container' + user); // TODO fix comme chez windowchat
+        const messageContainer = document.getElementById('message-container'); // TODO fix comme chez windowchat
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
     };
 
-    const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => { return myMsg === msg });
-    }
 
     return (
-        <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
+        <div className={`collapse bg-orangeNG px-5 w-96 window-chat ${isChecked ? 'checked' : ''}`}>
             <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
-            <div className="collapse-title text-orangeNG font-display">
-                {chat.chatName}
+            <div className="collapse-title text-white font-display">
+                {chat.name}
             </div>
-            <div className="absolute top-0 right-0">
-                <div className="absolute top-0 right-0 flex flex-row-reverse z-10">
-                    <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                            onClick={destroyChannel}>
-                        <img src={Cross} alt={"cross"} className={"p-2"}/>
-                    </button>
-                    <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1">
-                            <img src={Cross} alt={"profil"} className={""}/> {//TODO change Cross by settings
-                        }
+            {!displayChat && (
+                <InputPassword chat={chat} unblockFunc={toggleDisplayChat} />
+            )}
+            {displayChat && (
+                <div>
+                    <div className="absolute top-0 right-0">
+                        <div className="absolute top-0 right-0 flex flex-row-reverse z-10">
+                            <button className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
+                                    onClick={destroyChannel}>
+                                <img src={Cross} alt={"cross"} className={"p-2"}/>
+                            </button>
+
+                            <div className="dropdown dropdown-end">
+                                <button className={"btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center mx-1"}
+                                        onClick={toggleDisplaySettings}>
+                                    <img src={Setting} alt={"setting"} className={"p-1"}/>
+                                </button>
+                                {displaySettings && (
+                                    <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52 text-orangeNG font-display">
+                                        <li><button onClick={openMemberList}>Members</button></li>
+                                        {(chat.owner.id == user.fortytwo_id ||
+                                            chat.admins.find(admin => admin.id == user.fortytwo_id)) && (
+                                            <li><button onClick={openParam}>Settings</button></li>
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+                            {chat.isPrivate && (
+                                <div className="dropdown dropdown-end">
+                                    <button onClick={toggleAddFriend} className="btn btn-square btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center">
+                                        <img src={Addfriend} alt={"addFriend"} className={"p-1"}/>
+                                    </button>
+                                    {displayAddFriend && (
+                                        <AddFriend chat={chat} unBlockDisplayFunc={trueDisplayAddFriend}/>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a>Item 1</a></li>
-                            <li><a>Item 2</a></li>
-                        </ul>
+                    </div>
+                    {displayMemberList && (
+                        <ChatMemberList chat={chat} closeList={closeMemberList} />
+                    )}
+                    {displayParam && (
+                        <SettingsChat chat={chat} closeSettings={closeParam} />
+                    )}
+                    <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
+                        {chat?.history && chat.history.map((msg, index) => ( //TODO changer message par la bonne strategie
+                            <Message message={msg}
+                                     key={index}
+                            />
+                        ))}
+                    </div>
+                    <div className="flex flex-row justify-between py-4">
+                        <input className="input input-bordered input-sm max-w-xs w-60"
+                               placeholder="Tapez votre message..."
+                               type="text"
+                               value={message}
+                               onChange={(e) => setMessage(e.target.value)} />
+                        <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
+                                onClick={handleSendMessage}>
+                            <img src={Send} alt="Send" />
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div id={"message-container" + chat.chatName} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                {messages.map((msg, index) => (
-                    <Message srcMsg={msg}
-                             srcPseudo={isMyMessage(msg) ? me.pseudo : chat.chatName} // TODO changer chat name par personne qui parle: comment faire ?
-                             myMessage={!!isMyMessage(msg)}
-                             key={index}
-                    />
-                ))}
-            </div>
-            <div className="flex flex-row justify-between py-4">
-                <input className="input input-bordered input-sm max-w-xs w-60"
-                       placeholder="Tapez votre message..."
-                       type="text"
-                       value={message}
-                       onChange={(e) => setMessage(e.target.value)} />
-                <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                        onClick={sendMessage}><
-                    img src={Send} alt="Send" />
-                </button>
-            </div>
+            )}
+
         </div>
     )
 }

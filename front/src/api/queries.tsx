@@ -1,3 +1,5 @@
+import { IChannel, IChannels } from "../context/ChatContext";
+
 export const createUser = async (params: any) => {
   try {
     const response = await fetch(
@@ -119,33 +121,48 @@ export interface frontReqInterface {
   isF2Active?: boolean;
   token?: string;
   win?: number;
+  codeQRAuth?: string;
 }
 
-export interface IChannel {
-  id: number,
-  channelName: string,
-}
+// export interface IChannel {
+// 	id: number,
+// 	name: string,
+// 	type: string,
+// 	members: IChatMember[],
+// 	connected?: boolean
+//   }
+//   export interface IChatMember {
+//     id: number;
+//     name: string;
+//   }
 
-export interface IChannels{
-	MyDms: IChannel[];
-	MyChannels: IChannel[];
-	ChannelsToJoin : IChannel[];
-  }
 
-export interface backResInterface {
-  pseudo?: string;
-  isOk?: boolean;
-  message?: string;
-  avatar?: any;
-  isF2Active?: boolean;
-  fortytwo_id?: string;
-  friends?: string[];
-  allUser?: User[]
-  isAuthenticated?: boolean;
-  channels?: IChannels;
-  data?: any;
-  win?: number;
-}
+// export interface IChannels{
+// 	MyDms: IChannel[];
+// 	MyChannels: IChannel[];
+// 	ChannelsToJoin : IChannel[];
+//   }
+
+  export interface backResInterface {
+    pseudo?: string;
+    isOk?: boolean;
+    message?: string;
+    avatar?: any;
+    isF2Active?: boolean;
+    fortytwo_id?: number;
+    isFriend?: boolean;
+    friends?: number[];
+    allUser?: User[];
+    isAuthenticated?: boolean;
+    channels?: IChannels;
+    xp?: number;
+    win?: number;
+    chatFriends?: IChannel[]
+    data?: any;
+    qrCodeUrl?: string;
+    verifyQrCode?: boolean;
+    }
+
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
   try {
@@ -158,7 +175,7 @@ export async function backRequest(url: string, method: string, params?: frontReq
       body: params ? JSON.stringify(params) : undefined
     };
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
-    console.log("response of url ", url ," : ", response);
+    // console.log("response of url ", url ," : ", response);
     return response.ok ? await response.json() : {isOk:false, message:response.status}
   }
   catch (error) {

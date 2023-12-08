@@ -2,7 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { v4 as uuidv4 } from 'uuid';
 
-interface StatsByUser {
+export interface StatsByUser {
+    gamesPlayed: number;
+    gamesWin: number;
+    username: string;
+}
+
+export interface UserHistoric {
     gamesPlayed: number;
     gamesWin: number;
     username: string;
@@ -15,25 +21,29 @@ export class GameService {
     ) { }
 
     async Insert(usernameWinner: string, usernameLooser: string, scoreWinner: number, scoreLooser: number) {
-        const userIdWinner = await this.findUserIdByUsername(usernameWinner);
-        const userIdLooser = await this.findUserIdByUsername(usernameLooser);
-        const timestamp = this.getUtcTimestamp();
+        // const userIdWinner = await this.findUserIdByUsername(usernameWinner);
+        // const userIdLooser = await this.findUserIdByUsername(usernameLooser);
+        const userIdWinner = 1;
+        const userIdLooser = 2;
+        const isoString = this.getDateInISOString();
         const uuid = this.generateUuid();
-        await this.prisma.game.create({
-            data: {
-                id: uuid,
-                winner_id: userIdWinner,
-                looser_id: userIdLooser,
+            await this.prisma.game.create({
+                data: {
+                    id: uuid,
+                    winner_id: userIdWinner,
+                    looser_id: userIdLooser,
                 score_winner: scoreWinner,
                 score_looser: scoreLooser,
-                end_timestamp: timestamp.toString()
+                end_timestamp: isoString
             },
         });
 
     }
 
-    async GetStatByUser(username: string): Promise<StatsByUser> {
-        const userId = await this.findUserIdByUsername(username);
+    async GetStatByUserId(id: number): Promise<StatsByUser> {
+        //const userId = await this.findUserIdByUsername(username);
+        const userId = id
+        const username = "john"
         const games = await this.findGamesWonByUser(userId);
         if (games === null) {
             return {
@@ -125,13 +135,13 @@ export class GameService {
         }
     }
 
-    getUtcTimestamp(): number {
+    getDateInISOString(): string {
         const now = new Date();
         const timeOffsetInMinutes = now.getTimezoneOffset();
 
         const utcDate = new Date(now.getTime() - timeOffsetInMinutes * 60000);
 
-        return utcDate.getTime();
+        return new Date(utcDate.getTime()).toISOString();
     }
 
     generateUuid(): string {

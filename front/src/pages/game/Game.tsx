@@ -75,7 +75,7 @@ function Game() {
     }, []);
 
 
-    
+
     const handleResize = () => {
         const newWidth = window.innerWidth;
         const newHeight = window.innerHeight;
@@ -87,17 +87,7 @@ function Game() {
         if (newWidth < 1000 || newHeight < 800) {
             //divide by 2
         }*/
-      };
-    
-      useEffect(() => {
-        // Add event listener for window resize
-        window.addEventListener('resize', handleResize);
-    
-        // Clean up event listener on component unmount
-        return () => {
-          window.removeEventListener('resize', handleResize);
-        };
-      }, []);
+    };
 
     const [rightPaddlePositionY, setRightPaddlePositionY] = useState<number>(100);
     const [leftPaddlePositionY, setLeftPaddlePositionY] = useState<number>(100);
@@ -168,7 +158,7 @@ function Game() {
     };
 
     const canvasHeight = boardHeight;
-    
+
     const gameLoopInChild = () => {
 
     };
@@ -323,13 +313,13 @@ function Game() {
         });
 
         socketRef.current?.on('gameData', function (data) {
-                setLeftPlayer({
-                    firstName: data.playerLeft,
-                });
-                setRightPlayer({
-                    firstName: data.playerRight,
-                });
-                setGameParameters(data.gameData);
+            setLeftPlayer({
+                firstName: data.playerLeft,
+            });
+            setRightPlayer({
+                firstName: data.playerRight,
+            });
+            setGameParameters(data.gameData);
         });
 
         socketRef.current?.on('startGame', function (data) {
@@ -347,6 +337,10 @@ function Game() {
                 setGameStatus(GameStatus.WAITING_FOR_PLAYERS);
             }
         });
+
+        socketRef.current?.on('gameDoesNotExist', function (data) {
+            navigate('/')
+        })
 
         socketRef.current?.on('endGame', function (data) {
             setFinishedGameState({

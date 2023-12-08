@@ -1,17 +1,19 @@
 
 
-import { Body, Controller, Get, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { GameDto, GameResponse } from './game-dto';
 import { CreatePublicGame } from './create-public-game';
 import { CreatePrivateGame } from './create-private-game';
 import { RoomStoreService } from '../store/room-store.service';
 import { GameRankingResponse } from './ranking-dto';
 import { RankingService } from './ranking-service';
+import { GameService, StatsByUser } from './game-service';
+
 
 @Controller('game')
 export class GameController {
 
-    constructor(private roomStoreService: RoomStoreService, private rankingService: RankingService) { }
+    constructor(private roomStoreService: RoomStoreService, private rankingService: RankingService, private gameService: GameService) { }
 
     @Post('classic')
     @UsePipes(new ValidationPipe())
@@ -29,7 +31,7 @@ export class GameController {
         const roomName = await createPrivateGame.handle(gameDto);
         return { roomName: roomName.name };
     }
-    
+
 
     @Get('ranking')
     @UsePipes(new ValidationPipe())
@@ -37,6 +39,14 @@ export class GameController {
 
         const leaderBoard = await this.rankingService.getLeaderBoardRanking();
         return { leaderbord: leaderBoard.leaderbord };
+    }
+
+    @Get('user/:id')
+    @UsePipes(new ValidationPipe())
+    async getStatByUser(@Param('id') userId: string): Promise<StatsByUser> {
+        const id = Number(userId)
+        const stats = await this.gameService.GetStatByUserId(id);
+        return stats;
     }
 
 }

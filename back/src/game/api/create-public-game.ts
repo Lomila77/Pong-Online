@@ -40,7 +40,8 @@ export class CreatePublicGame {
                 leftPaddlePositionY: 100,
                 rightPaddlePositionY: 100,
                 victoryPoints: 5,
-                ballRadius: 10
+                ballRadius: 10,
+                intervalId: null
             }
         })
 

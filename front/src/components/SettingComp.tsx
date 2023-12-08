@@ -12,6 +12,7 @@ import { backRequest } from '../api/queries';
 import { useUser } from '../context/UserContext';
 import Gallery from './Gallery';
 import SettingsInput from './SettingsInputComp'
+import GameHistory from "./GameHistory";
 
 const MAX_FILE_SIZE: number = 4 * 1024 * 1024; // 4 Mo
 let fileSize: number = 0;
@@ -189,6 +190,9 @@ const SettingComp: React.FC = () => {
           </div>
         </form>
         <Gallery setFile={setFile}/>
+        <div className={"mt-5"}>
+          <GameHistory />
+        </div>
       </div>
     </div>
   );

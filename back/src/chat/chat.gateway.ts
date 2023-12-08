@@ -17,12 +17,13 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
+import { backResInterface } from './../shared/shared.interface';
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-}
+// export interface User {
+//   id: number;
+//   username: string;
+//   email: string;
+// }
 @UsePipes(new ValidationPipe())
 @WebSocketGateway({
   cors: true,
@@ -60,11 +61,23 @@ export class ChatGateway implements OnGatewayConnection {
           },
           select: {
             fortytwo_id: true,
-            fortytwo_userName : true,
+            fortytwo_userName: true,
             pseudo: true,
+
+            userChannels: true,
+            friends: true,
           }
         })
         this.clients[client.id] = user;
+        console.log("client channel list : ", user.userChannels);
+        user.userChannels.forEach(channelId => {
+          client.join(channelId.toString());
+        });
+
+        user.friends.forEach(friendId => {
+          client.to(friendId.toString()).emit('Friend connected', user.fortytwo_id);
+        });
+        console.log("newSocketConnected : ", user.pseudo, " ", client.id);
       } else {
         console.log('Invalid token');
         client.disconnect();
@@ -78,42 +91,102 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
-  handleDisconnect(client: Socket) {
-    console.log("Disconnect")
+  async handleDisconnect(client: Socket) {
+    // console.log("Disconnect")
+    const user = this.clients[client.id];
+    if (user) {
+      const prismaUser = await this.prisma.user.findUnique({
+        where: {
+          fortytwo_id: user.fortytwo_id,
+        },
+        select: {
+          friends: true,
+        }
+      });
+
+      if (prismaUser) {
+        prismaUser.friends.forEach(friendId => {
+          client.to(friendId.toString()).emit('Friend disconnected', user.fortytwo_id);
+        });
+      }
+    }
+    console.log("disconnecting : ", user.pseudo, " ", client.id);
     delete this.clients[client.id];
     client.disconnect();
   }
 
   @SubscribeMessage('Join Channel')
   async joinOrCreateChannel(
-    @MessageBody() data: { info: ChannelCreateDto },
+    @MessageBody() data: ChannelCreateDto, /*: { info: ChannelCreateDto },*/
     @ConnectedSocket() client: Socket,
   ) {
-    // Vérifiez si le canal existe
-    if (data.info.chanId !== undefined || data.info.chanId !== null)
-      var channel = await this.chatService.getChannelById(data.info.chanId);
+    console.log("Join Channel received data = ", data, "socketId = ", client.id, "/n")
+    let channel;
+    let isChannelCreated = false;
 
-    // Creer le canal s'il n'existe pas
-    if (!channel) {
-      channel = await this.chatService.CreateChan(data.info, this.clients[client.id].pseudo, data.info.pseudo2);
-      if (!channel.isPrivate && !channel.isDM)
-        this.server.emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
-      else
-        this.server.to(client.id).emit("Channel Created", { id: channel.id, name: data.info.name, members: data.info.members });
+    if (data.id && data.type) {
+      channel = await this.chatService.getChannelById(data.id);
+    } else {
+      channel = await this.chatService.CreateChan(data);
+      isChannelCreated = true;
     }
-
+    if (isChannelCreated) {
+      if (!channel.isPrivate && !channel.isDM) {
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.emit("Channel Created", objToEmit);
+        })
+        // this.server.emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+      } else {
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.to(channel.id.toString()).emit("Channel Created", objToEmit);
+        })
+        // this.server.to(channel.id.toString()).emit("Channel Created", { id: channel.id, name: data.name, members: data.members, type: data.type });
+      }
+    }
     // Rejoindre le canal
     if (this.clients[client.id] === undefined) {
       this.server.to(client.id).emit("error", "Error refresh the page!!!");
       return;
     }
-    const user = await this.userService.getUser(this.clients[client.id].fortytwo_userName);
+    const user = await this.userService.getUser(this.clients[client.id].pseudo);
     const ret = await this.chatService.join_Chan({ chatId: channel.id }, user);
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
-      if (ret !== 5)
-        client.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
-      this.server.to(client.id).emit("Joined", { chatId: channel.id });
+      if (ret !== 5) {
+        this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+        if (data.id) {
+          await this.prisma.channel.update({
+            where: { id: channel.id },
+            data: {
+              members: {
+                connect: { fortytwo_id: user.fortytwo_id },
+              },
+            },
+            select : {members : true, id: true, name: true, }
+          });
+        }
+      }
+      await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+        this.server.to(client.id).emit("Channel Joined", objToEmit);
+      })
+      if (channel.isDM) {
+        var client2 = await this.server.fetchSockets().then(
+          (sockets) => {
+            return sockets.find((socket) => socket.id === this.findSocketIdByUserId(data.members[1].id));
+          }
+        );
+        const otherUser = await this.userService.getUserbyId(data.members[1].id);
+        const retOtherUser = await this.chatService.join_Chan({ chatId: channel.id }, otherUser);
+        if (retOtherUser === 0 || retOtherUser === 5) {
+          client2.join(channel.id.toString());
+          if (retOtherUser !== 5)
+            this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+        await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+          this.server.to(client2.id).emit("Channel Joined", objToEmit);
+        })
+
+        }
+      }
     }
     else if (ret == 1)
       this.server.to(client.id).emit("error", "NotInvited");
@@ -145,8 +218,10 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ChannelMessageSendDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("channelId ",  data.channelId, " ", this.clients[client.id].pseudo, " : ", data.message);
     const chat = await this.chatService.newMsg(data, this.clients[client.id].pseudo);
     const except_user = await this.chatService.getExceptUser(data.channelId, this.clients[client.id].fortytwo_id);
+    console.log("except_user : ", except_user);
     let except = await this.server.in(data.channelId.toString()).fetchSockets().then((sockets) => {
       let except_user_socket = [];
       sockets.forEach((socket) => {
@@ -157,7 +232,10 @@ export class ChatGateway implements OnGatewayConnection {
     });
     if (chat == null)
       return "error";
-    this.server.to(data.channelId.toString()).except(except).emit("Message Created", chat);
+    // const roomName = data.channelId.toString();
+    // let socketsInRoom = this.server.in(roomName).allSockets();
+    const ret = this.chatService.replacePropNames(chat, ['fortytwo_id', 'pseudo', 'message'], ['id', 'name', 'content'])
+    this.server.to(data.channelId.toString()).except(except).emit("Message Created", ret, data.channelId);
   }
 
   // @SubscribeMessage('joinNewChannel')
@@ -217,7 +295,7 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(client.id).emit("DM:quit");
       return;
     }
-    const quit = await this.chatService.quit_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const quit = await this.chatService.quit_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     client.leave(data.chatId.toString());
     this.server.to(client.id).emit("quited", { chatId: data.chatId });
     this.server.to(data.chatId.toString()).emit("quit", { username: this.clients[client.id].fortytwo_userName })
@@ -231,7 +309,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.channel_id);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.channel_id);
     // console.log("is admin: " + isAdmin);
     if (isAdmin)
       this.server.to(client.id).emit("isAdmin", { isAdmin: isAdmin });
@@ -246,14 +324,15 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.invit_Chan(data.username, data.chatId);
+    await this.chatService.invit_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
-        let channel = await this.chatService.get__chanNamebyId(data.chatId);
-        this.server.to(key).emit("invited", { chatId: data.chatId, name: channel.name })
+      if (this.clients[key].fortytwo_id === data.userId) {
+        await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+          this.server.to(key).emit("invited", objToEmit);
+        });
         return;
       }
     }
@@ -267,12 +346,12 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.ban_Chan(data.username, data.chatId);
+    await this.chatService.ban_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
         this.server.fetchSockets().then(
           (sockets) => {
             sockets.find((socket) => socket.id === key).leave(data.chatId.toString());
@@ -282,8 +361,8 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("ban", { username: data.username });
-    // console.log("chan banned");
+    this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
+    console.log("chan banned");
   }
 
   @SubscribeMessage('unban')
@@ -294,17 +373,17 @@ export class ChatGateway implements OnGatewayConnection {
     if (this.clients[client.id] === undefined)
       return;
     // console.log(data);
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.unban_Chan(data.username, data.chatId);
+    await this.chatService.unban_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
         this.server.to(key).emit("unbanned", { chatId: data.chatId });
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("unban", { username: data.username });
+    this.server.to(data.chatId.toString()).emit("unban", { userId: data.userId });
     // console.log("chan unbanned");
   }
 
@@ -315,13 +394,13 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.kick_Chan(data.username, data.chatId);
+    await this.chatService.kick_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
-      if (this.clients[key].fortytwo_userName === data.username) {
-        if (this.clients[key].fortytwo_userName === data.username) {
+      if (this.clients[key].fortytwo_id === data.userId) {
+        if (this.clients[key].fortytwo_id === data.userId) {
           this.server.fetchSockets().then(
             (sockets) => {
               sockets.find((socket) => socket.id === key).leave(data.chatId.toString());
@@ -332,8 +411,8 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("kick", { username: data.username });
-    // console.log("chan kicked");
+    this.server.to(data.chatId.toString()).emit("kick", { id: data.userId });
+    console.log("chan kicked");
   }
 
 
@@ -344,12 +423,12 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.mute_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("mute", { username: data.username });
-    // console.log("chan muteed");
+    await this.chatService.mute_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
+    console.log("chan muteed");
   }
 
 
@@ -360,12 +439,12 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.unmute_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("unmute", { username: data.username });
-    // console.log("chan unmuteed");
+    await this.chatService.unmute_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("unmute", { username: data.userId });
+    console.log("chan unmuteed");
   }
 
   @SubscribeMessage('set-admin')
@@ -374,12 +453,12 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,) {
     if (this.clients[client.id] === undefined)
       return;
-    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_userName, data.chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
     if (!isAdmin)
       return;
-    await this.chatService.set_admin_Chan(data.username, data.chatId);
-    this.server.to(data.chatId.toString()).emit("set-admin", { username: data.username });
-    // console.log("new admin");
+    await this.chatService.set_admin_Chan(data.userId, data.chatId);
+    this.server.to(data.chatId.toString()).emit("set-admin", { id: data.userId });
+    console.log("new admin");
   }
 
   @SubscribeMessage('update')
@@ -387,7 +466,6 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: EditChannelCreateDto,
     @ConnectedSocket() client: Socket,
   ) {
-
     const res: number = await this.chatService.update_chan(data);
     if (res == 1)
       client.broadcast.emit('Password is empty but chan need password', data);
@@ -405,5 +483,46 @@ export class ChatGateway implements OnGatewayConnection {
   //     const msg = await this.chatService.newMsg({ chatId: data.chatId, msg: "Link to Play with me:\n" + `${process.env.FRONTEND_URL}` + "/Game/" + room.name }, this.clients[client.id].fortytwo_id);
   //     this.server.to(data.chatId.toString()).emit("NewMessage", msg);
   //   }, 2000);
+  // }
+
+  private findSocketIdByUserId(userId: number): string | undefined {
+    return Object.keys(this.clients).find((id) => this.clients[id]?.fortytwo_id === userId);
+  }
+
+  async emitSignal(userId: number, obj: any, signal: string) {
+    const userSocketId = this.findSocketIdByUserId(userId)
+
+    if (userSocketId) {
+      this.server.to(userSocketId).emit(signal,  obj);
+    }
+  }
+
+  // async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
+  //   const meFriends = (await this.prisma.user.findUnique({
+  //     where: { fortytwo_id: me.id },
+  //     select: { friends: true }
+  //   })).friends;
+  //   const friendId = (await this.prisma.user.findFirst({
+  //     where: { pseudo: friendPseudo },
+  //     select: { fortytwo_id: true }
+  //   })).fortytwo_id;
+
+  //   if (!meFriends?.find(meFriend => meFriend === friendId) && me.id != friendId) {
+  //     const mePrisma = await this.prisma.user.update({
+  //       where: { fortytwo_id: me.id },
+  //       data: { friends: { push: friendId } }
+  //     });
+  //     console.log("addfriends result : ", mePrisma.friends);
+
+  //     const friend = await this.userService.getUserbyId(friendId);
+  //     this.server.to(this.clients[me.id]).emit("New Friends", { friend });
+
+  //     return { isFriend: true };
+  //   } else if (me.id != friendId) {
+  //     console.log('you can not friend yourself\n');
+  //   } else {
+  //     console.log('already friend\n');
+  //   }
+  //   return { isFriend: false };
   // }
 }

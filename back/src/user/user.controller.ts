@@ -41,12 +41,11 @@ export class UserController {
     return this.userService.checkPseudo(body.pseudo)
   }
 
-  @Post('/addfriend')
+  @Get('/isFriend/:pseudo')
   @UseGuards(JwtGuard)
-  async addFriend(@GetUser() me: User, @Body() body: frontReqInterface) {
-    return await this.userService.addFriends(me, body.pseudo);
+  async isFriend(@GetUser() me: User, @Param('pseudo') pseudo: string): Promise<backResInterface> {
+    return await this.userService.isFriend(me, pseudo);
   }
-
 
   @Post('update')
   @UseGuards(JwtGuard)
@@ -70,5 +69,17 @@ export class UserController {
   @Get('/print')
   async print() {
     return await this.userService.print();
+  }
+
+  @Get('/cleanDb')
+  async cleanDb() {
+    const ret = await this.userService.cleanDb();
+    return ret
+  }
+
+  @Get('/fclean')
+  async killAllFriendShip() {
+    const ret = await this.userService.noFriendshipSpell();
+    return ret
   }
 }

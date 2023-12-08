@@ -1,22 +1,24 @@
 import {useEffect, useState} from "react";
+import {IChannel, IChatMember, IChatWindow, IFormData, useChat} from "../context/ChatContext";
+import {Socket} from "socket.io-client";
+import {IChannels} from "../context/ChatContext";
+import {useUser} from "../context/UserContext";
 
-function NewChannel({me, socket, close}) {
-    const [formData, setFormData] = useState({
-        chatName: '',
+function NewChannel({close}) {
+    const { openWindow } = useChat();
+    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+
+    const [formData, setFormData] = useState<IFormData>({
+        name: '',
         isPrivate: false,
         isPassword: false,
-        Password: '',
-        members: [],
+        password: '',
+        members: [{name: user.pseudo, id: user.fortytwo_id, connected: true}],
+        type: 'MyChannels'
     })
 
-    useEffect(() =>
-        setFormData(prevState => ({
-            ...prevState,
-            members: [...prevState.members, me]}
-        )), []);
-
     const toggleCreateChannel = () => {
-        socket.emit('create channel', formData);
+        openWindow(undefined, formData, undefined); // TODO tests
         close();
     }
 
@@ -30,11 +32,11 @@ function NewChannel({me, socket, close}) {
                             <input className="input input-bordered input-sm max-w-xs w-60 text-black"
                                    type={"text"}
                                    placeholder={"Title"}
-                                   value={formData.chatName}
+                                   value={formData.name}
                                    onChange={(e) =>
                                        setFormData(prevFormData => ({
                                            ...prevFormData,
-                                           chatName: e.target.value,
+                                           name: e.target.value,
                                            }))}
                                    required={true}
                                    minLength={1}
@@ -47,14 +49,14 @@ function NewChannel({me, socket, close}) {
                                    type={"checkbox"}
                                    checked={formData.isPrivate}
                                    onChange={(e) =>
-                                       setFormData(prevFormData => ({
+                                    setFormData(prevFormData => ({
                                            ...prevFormData,
                                            isPrivate: (e.target.checked),
                                        }))}
                             />
                         </div>
                         <br/>
-                            <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
+                        <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
                             <label>Password ?</label>
                             <input className="input input-bordered input-sm max-w-xs w-10 checkbox"
                                    type={"checkbox"}
@@ -75,25 +77,11 @@ function NewChannel({me, socket, close}) {
                                    onChange={(e) =>
                                        setFormData(prevFormData => ({
                                            ...prevFormData,
-                                           Password: e.target.value,
+                                           password: e.target.value,
                                        }))}
                                    minLength={1}
                                    disabled={!formData.isPassword}
                             />
-                        </div>
-                        <br/>
-                        <div className={"flex flex-row justify-between items-center my-5 mx-5"}>
-                            <label>Friends:</label>
-                            <input className="input input-bordered input-sm max-w-xs w-60 text-black"
-                               placeholder="Friend1, Friend2, ..."
-                               type="text"
-                               value={formData.members}
-                               onChange={(e) =>
-                                   setFormData(prevFormData => ({
-                                       ...prevFormData,
-                                       members: e.target.value.split(' '),
-                               }))}
-                               />
                         </div>
                         <button className="btn text-orangeNG" type={"submit"}>Create</button>
                     </form>

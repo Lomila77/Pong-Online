@@ -29,7 +29,7 @@ export class AuthService {
       await this.handleCookies(incommingUser.id, res);
       firstConnection = false;
     }
-    return firstConnection;
+    return {firstConnection: firstConnection, isF2Active: prismaRet? prismaRet.isF2Active : false};
   }
 
   async signup(incommingUser: Fortytwo_dto) {
@@ -52,16 +52,6 @@ export class AuthService {
     }
   }
 
-  async prismaPrintTable() {
-    try {
-      const users = await this.prisma.user.findMany();
-      console.log(users);
-      return users;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   private async handleCookies(id: number, res: Response){
     const token = await this.signToken(id);
     res.cookie('jwtToken', token.access_token);
@@ -73,7 +63,7 @@ export class AuthService {
     };
     const secret = process.env.JWT_SECRET;
     const token = await this.jwt.signAsync(data, {
-      expiresIn: '120m',
+      expiresIn: '999m',
       secret: secret,
     });
     return { access_token: token };
@@ -116,23 +106,74 @@ export class AuthService {
     }
   }
 
-  twoFA(user: User) {
+  async twoFA(user: User): Promise<backResInterface> {
     const secret = speakeasy.generateSecret({
       name: user.pseudo,
     });
-    user.secretOf2FA = secret.base32;
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: user.fortytwo_id,
+      },
+      data: {
+        secretOf2FA: secret.base32,
+      }
+    })
     qrcode.toDataURL(secret.otpauth_url, function (err) {
       if (err) throw err;
     });
-    return secret.otpauth_url;
+    return {qrCodeUrl: secret.otpauth_url};
   }
 
-  verify(user: User, code: string) {
-    return speakeasy.totp.verify({
+  verify(user: User, code: string): backResInterface {
+    return {verifyQrCode: speakeasy.totp.verify({
       secret: user.secretOf2FA,
-      encoding: 'base32',
+      encoding: "base32",
       token: code,
-    });
+    })};
+  }
+
+
+  //todo delete before correction: this is juste a test
+
+  async creatProfile(dto1 : Fortytwo_dto, dto2: AuthDto ) {
+    let user : any = await this.user.getUserbyId(dto1.id)
+    console.log("user null ?", user===null ? "YEEEEES": "NOOOOOO")
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          fortytwo_id: dto1.id,
+          fortytwo_email: dto1.email,
+          fortytwo_userName: dto1.login,
+          fortytwo_picture: null,
+          pseudo: dto2.pseudo,
+          avatar: dto2.avatar,
+          isF2Active: dto2.isF2Active,
+          xp:1000,
+          win: 1000,
+          connected: true,
+        },
+      });
+    }
+    await this.user.toggleConnectionStatus(dto1.id, true);
+
+    return user
+  }
+
+  async testAnakin(res: Response) {
+    const anakinFortytwo_dto : Fortytwo_dto = {id: 66, login:"Askywalker", email:"Askywalker@42paris.fr"}
+    const anakinAuthDto: AuthDto = {pseudo: "Anakin", isF2Active: false, avatar:"/src/images/MGameWatch.png"}
+    await this.creatProfile(anakinFortytwo_dto, anakinAuthDto);
+    await this.handleCookies(anakinFortytwo_dto.id, res)
+  }
+
+  async prismaPrintTable() {
+    try {
+      const users = await this.prisma.user.findMany();
+      console.log(users);
+      return users;
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 

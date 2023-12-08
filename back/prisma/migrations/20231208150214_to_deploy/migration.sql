@@ -14,9 +14,11 @@ CREATE TABLE "users" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updateAt" TIMESTAMP(3) NOT NULL,
     "connected" BOOLEAN NOT NULL DEFAULT false,
+    "win" INTEGER NOT NULL DEFAULT 0,
     "ownerId" INTEGER,
     "friends" INTEGER[],
     "blocked" INTEGER[],
+    "userChannels" INTEGER[],
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("fortytwo_id")
 );
@@ -37,7 +39,7 @@ CREATE TABLE "Channel" (
     "id" SERIAL NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "channelName" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "password" TEXT,
     "isPassword" BOOLEAN NOT NULL DEFAULT false,
     "isDM" BOOLEAN NOT NULL DEFAULT false,
@@ -48,11 +50,15 @@ CREATE TABLE "Channel" (
 );
 
 -- CreateTable
-CREATE TABLE "UserChannel" (
-    "userId" INTEGER NOT NULL,
-    "channelId" INTEGER NOT NULL,
+CREATE TABLE "Game" (
+    "id" TEXT NOT NULL,
+    "winner_id" INTEGER NOT NULL,
+    "looser_id" INTEGER NOT NULL,
+    "end_timestamp" TIMESTAMP(3) NOT NULL,
+    "score_winner" INTEGER NOT NULL,
+    "score_looser" INTEGER NOT NULL,
 
-    CONSTRAINT "UserChannel_pkey" PRIMARY KEY ("userId","channelId")
+    CONSTRAINT "Game_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -138,12 +144,6 @@ ALTER TABLE "Message" ADD CONSTRAINT "Message_channelId_fkey" FOREIGN KEY ("chan
 
 -- AddForeignKey
 ALTER TABLE "Channel" ADD CONSTRAINT "Channel_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("fortytwo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserChannel" ADD CONSTRAINT "UserChannel_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("fortytwo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserChannel" ADD CONSTRAINT "UserChannel_channelId_fkey" FOREIGN KEY ("channelId") REFERENCES "Channel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_admins" ADD CONSTRAINT "_admins_A_fkey" FOREIGN KEY ("A") REFERENCES "Channel"("id") ON DELETE CASCADE ON UPDATE CASCADE;

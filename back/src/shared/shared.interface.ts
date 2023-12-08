@@ -6,32 +6,30 @@ export interface User {
 	win?: number;
   }
 
-export interface Channel {
-	MyDms: string[];
-	MyChannels: string[];
-	ChannelsToJoin: string[];
-}
-
 export interface frontReqInterface {
 	pseudo?: string;
 	avatar?: any;
 	isF2Active?: boolean;
 	fortytwo_id?: string;
+	codeQRAuth?: string;
 }
 
+export interface IChannel {
+	id: number,
+	name: string,
+	type: string,
+  }
+
 export interface IChannels{
-	MyDms: {
-	  id: string,
-	  channelName: string,
-	}[];
-	MyChannels: {
-		id: string,
-		channelName: string,
-	}[]
-	ChannelsToJoin : {
-		id: string,
-		channelName: string,
-	}[]
+	MyDms: IChannel[];
+	MyChannels: IChannel[];
+	ChannelsToJoin : IChannel[];
+  }
+
+  export interface IChatFriend {
+	id: number
+	name: string
+	connected: boolean
   }
 
   export interface backResInterface {
@@ -40,12 +38,16 @@ export interface IChannels{
 	message?: string;
 	avatar?: any;
 	isF2Active?: boolean;
-	fortytwo_id?: string;
+	fortytwo_id?: number;
+	isFriend?: boolean;
 	friends?: number[];
 	allUser?: User[];
 	isAuthenticated?: boolean;
 	channels?: IChannels;
-	data?: any;
 	xp?: number;
 	win?: number;
+	chatFriends?: IChatFriend[]
+	data?: any;
+	qrCodeUrl?: string;
+	verifyQrCode?: boolean;
   }

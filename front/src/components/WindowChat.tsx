@@ -6,21 +6,19 @@ import Message from "./Message";
 import Send from "../images/send.svg"
 import Profil from "../images/profil.svg"
 import Cross from "../images/cross.svg"
+import {useChat} from "../context/ChatContext";
 
-function WindowChat({user, me, destroyChat, socket}) {
-    // Liste des messages recu et envoyees
-    const [messages, setMessages] = useState([]);
-    // Liste de mes messages
-    const [myMessages, setMyMessages] = useState([]);
-    // Message a envoyer
+function WindowChat({user, me, destroyChat, history, chatId}) {
+    if (!user)
+        return null;
+
+    const { sendMessage } = useChat();
     const [message, setMessage] = useState('');
 
     const [isChecked, setIsChecked] = useState(false);
 
     const [displayUserProfil, setDisplayUserProfil] = useState(false);
     const [userProfil, setUserProfil] = useState(null);
-
-    //socket.emit('create channel', {pseudo2: user}); // TODO: Create Channel
     useEffect(() => {
         backRequest('users/user', 'PUT', {pseudo: user}).then(data => {
             setUserProfil(data);
@@ -35,20 +33,11 @@ function WindowChat({user, me, destroyChat, socket}) {
         setIsChecked(!isChecked);
     };
 
-    const sendMessage = () => {
-        if (!message)
-            return;
-        socket.emit('sendMessage', {message: message});
-        setMessages([...messages, message]);
-        setMyMessages([...myMessages, message]);
+    const handleSendMessage = () => {
+        sendMessage(message, chatId);
         setMessage('');
     }
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    //TODO no usage ?!
     const scrollToBottom = () => {
         const messageContainer = document.getElementById('message-container' + user);
         if (messageContainer) {
@@ -56,11 +45,11 @@ function WindowChat({user, me, destroyChat, socket}) {
         }
     };
 
-    const isMyMessage = (msg) => {
-        return myMessages.find(myMsg => { return myMsg === msg });
-    }
-    if (!user)
-        return null;
+    useEffect(() => {
+        scrollToBottom();
+    }, [history]);
+
+
     return (
         <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
             <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
@@ -82,11 +71,9 @@ function WindowChat({user, me, destroyChat, socket}) {
                     <ProfileComp user={userProfil}/>
                 )}
                 {!displayUserProfil && (
-                    <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-scroll">
-                        {messages.map((msg, index) => (
-                            <Message srcMsg={msg}
-                                     srcPseudo={isMyMessage(msg) ? me.pseudo : user}
-                                     myMessage={!!isMyMessage(msg)}
+                    <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
+                        {history && history.map((msg, index) => (
+                            <Message message={msg}
                                      key={index}
                             />
                         ))}
@@ -100,7 +87,7 @@ function WindowChat({user, me, destroyChat, socket}) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                    onClick={sendMessage}><
+                    onClick={handleSendMessage}><
                         img src={Send} alt="Send" />
                 </button>
             </div>

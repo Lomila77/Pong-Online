@@ -37,8 +37,6 @@ const SettingsInput: React.FC<SettingsInputProps> = (props) => {
 
   useEffect(() => {
   if (userInput && userInput != user?.pseudo) {
-	  // console.log("checking validity for userImput", userInput)
-	  // console.log("checking validity for userImput", user?.pseudo)
 	  backRequest("users/checkpseudo", "PUT", { pseudo: userInput }).then(ret => setInputValidity(
 	  {isValid: ret.isOk, message: ret.message}));
   }

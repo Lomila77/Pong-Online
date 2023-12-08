@@ -5,12 +5,6 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CheckPseudoDto } from './dto/user.dto';
 
-// interface userUpdate {
-//   pseudo: string;
-//   avatar: string;
-//   isF2Active: boolean;
-// }
-
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -98,28 +92,23 @@ export class UserService {
     }
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
-    const friend = await this.prisma.user.findFirst({
-      where: {
-        pseudo: friendPseudo,
-      }
-    })
-    //const friendId = friend.then(data => (data.fortytwo_id));
-    console.log("FRIEND ID: " + friend);
-    const mePrisma = await this.prisma.user.update({
-      where: {
-        fortytwo_id: me.fortytwo_id,
-      },
-      data: {
-        friends: {
-          push: friend.fortytwo_id,
-        },
-      }
-    })
+  async isFriend(me: User, friendPseudo: string): Promise<backResInterface> {
+    const meFriends = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.fortytwo_id},
+      select: { friends: true}
+    })).friends;
+    const friendId = (await this.prisma.user.findFirst({
+      where: { pseudo: friendPseudo, },
+      select: { fortytwo_id: true}
+    })).fortytwo_id;
+    if (!meFriends?.find(meFriend => meFriend === friendId) && me.fortytwo_id != friendId)
+      return {isFriend: false};
+    return {isFriend: true};
   }
 
   profil(user: User) : backResInterface{
     return {
+        fortytwo_id: user.fortytwo_id,
         pseudo: user.pseudo,
         avatar: user.avatar,
         isF2Active: user.isF2Active,
@@ -186,11 +175,52 @@ export class UserService {
 
   async print() {
     try {
-      const users = await this.prisma.user.findMany();
+      const users = await this.prisma.user.findMany({
+        include: {
+          ownedChannels: true,
+        },
+      });
       console.log("****** PRINTING ALL USERS ******\n", users);
       return users;
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async cleanDb() {
+    try {
+      // Supprimer toutes les données de la table Message
+      await this.prisma.message.deleteMany({});
+      // Supprimer toutes les données de la table Channel
+      await this.prisma.channel.deleteMany({});
+      // Supprimer toutes les données de la table User
+      await this.prisma.user.deleteMany({});
+      console.log('successfully deleted all data from prisma.');
+      return "successfully deleted all data from prisma."
+    } catch (error) {
+      console.error('fail in cleanDb :', error);
+      return "fail in cleanDb"
+    }
+  }
+
+  async noFriendshipSpell() {
+    try {
+      const users = await this.prisma.user.findMany();
+
+      // go throught all user and delete friends
+      for (const user of users) {
+        await this.prisma.user.update({
+          where: { fortytwo_id: user.fortytwo_id },
+          data: { friends: { set: [] } },
+        });
+      }
+      await this.prisma.message.deleteMany({});
+      await this.prisma.channel.deleteMany({});
+      console.log('not a single friendship has escape');
+      return 'it s a friendless world'
+    } catch (error) {
+      console.error('something went wong in my spell :', error);
+      return 'something went wong in my spell :' + error
     }
   }
 }

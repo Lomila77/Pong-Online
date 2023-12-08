@@ -7,6 +7,9 @@ import {
 	Req,
 	UseGuards,
 	Res,
+	Body,
+	Post,
+	ParseIntPipe,
 } from "@nestjs/common";
 //import { ChatMessage, DirectMessage } from "@prisma/client";
 import { ChatService } from "src/chat/chat.service";
@@ -14,6 +17,7 @@ import { PrismaClient, User } from "@prisma/client";
 import { Response } from "express";
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
+import { backResInterface, frontReqInterface } from "src/shared";
 
 @UseGuards(JwtGuard)
 @Controller("chat")
@@ -33,17 +37,17 @@ export class ChatController {
 	}
 
 	@Get('/channels/')
-	async getUserChannels(@Req() req:Request)
+	async getUserChannels(@Req() req:Request, @GetUser() user: User)
 	{
-		const dms = await this.chat_service.get__DmUser(req.headers["authorization"]);
-		const channels = await this.chat_service.get__channelsUserIn(req.headers["authorization"]);
-		const channels_to_join = await this.chat_service.get__channelsUserCanJoin(req.headers["authorization"]);
+		const dms = await this.chat_service.get__DmUser(user.fortytwo_id);
+		const channels = await this.chat_service.get__channelsUserIn(user.fortytwo_id);
+		const channels_to_join = await this.chat_service.get__channelsUserCanJoin(user.fortytwo_id);
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
-			mydms.push({id:elem.id, name:elem.members[0].username})
+			mydms.push({id:elem.id, name:elem.name, members: elem.members, type: elem.type})
 		})
-		return {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
+		return {data: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
 
 	@Get('/channels/:id/name')
@@ -131,18 +135,54 @@ export class ChatController {
 		return (listUsers);
 	}
 
-	@Get('/friends/')
-	@UseGuards(JwtGuard)
-	async getUserFriends(@GetUser() user: User) {
+	@Get('/friends/') // Front do not use get friends anymore
+	async getUserFriends(@GetUser() user: User) : Promise<backResInterface>{
 		const friends = await this.chat_service.getUserFriends(user.pseudo);
-		return friends;
+		const goodFormat = friends.map(friend => ({
+			// id: friend.fortytwo_id,	//todo : id has been removed because it could be used as a channel id (also in notifyNewFriendAdded)
+			name: friend.pseudo,
+			connected: friend.connected,
+			type: "MyDms",
+			members:[
+				{id : user.fortytwo_id, name: user.pseudo},
+				{id : friend.fortytwo_id, name: friend.pseudo}
+			]
+		}));
+		return {data: goodFormat};
 	}
 
-	@Get('/channels/:id/chatWindow')
+	@Post('addFriend')
+	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface) {
+		this.chat_service.addFriends(user, body.pseudo)
+		return {isOk: true}
+	}
+
+
+	// @Get('/del/:id')
+	// async deleteUser(@Param('id', ParseIntPipe) id: number) {
+	//   return this.userService.delId(id)
+	// }
+
+
+	@Get('/chatWindow/:id')
 	@UseGuards(JwtGuard)
-	async getChannelWindow(@Param("id") id: number, @GetUser() user: User)
+	async getChannelWindow(@Param("id", ParseIntPipe) id: number, @GetUser() user: User)
 	{
-		return {data : await this.chat_service.getChannelInfo(id, user) };
+		return {data : await this.chat_service.getChatWindow(id, user) };
+	}
+
+	@Get('/chatWindowHistory/:id')
+	@UseGuards(JwtGuard)
+	async getChatWindowHistory(@Param("id", ParseIntPipe) id: number, @GetUser() user: User)
+	{
+		return {data : await this.chat_service.getChatWindowHistory(id, user) };
+	}
+
+	//debug to delete before correction
+	@Get('print')
+	async printAllChannels(){
+		const channels = await this.chat_service.printAllChannels();
+		return channels.length!==0 ? channels : "no channels yet\n"
 	}
 }
 

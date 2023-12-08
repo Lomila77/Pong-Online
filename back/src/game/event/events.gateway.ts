@@ -1,6 +1,7 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { BallMoveEvent, GamePlayer, RoomStoreService } from '../store/room-store.service';
+import { GameService } from '../api/game-service';
 
 
 @WebSocketGateway({ namespace: '/events', cors: true })
@@ -13,14 +14,14 @@ export class EventsGateway {
   canvasWidth: number;
   ballRadius: number;
 
-  constructor(private roomStoreService: RoomStoreService) {
+  constructor(private roomStoreService: RoomStoreService, private gameService: GameService) {
     this.paddleWidth = 3;
     this.paddleHeight = 100;
     this.paddleGapWithWall = 30;
     this.canvasHeight = 400;
     this.canvasWidth = 800;
     this.ballRadius = 10;
-   }
+  }
 
   @WebSocketServer()
   server: Server;
@@ -28,28 +29,32 @@ export class EventsGateway {
   @SubscribeMessage('joinRoom')
   handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
     const mapPong = this.roomStoreService.getMapPong();
-    
+
     // si la room existe pas encore
     if (!mapPong.get(data.room)) {
-      mapPong.set(data.room, {
-        "map": new Map(), "players": [], "game": {
-          xBall: 200,
-          yBall: 200,
-          xSpeed: 3,
-          ySpeed: 3,
-          canvasWidth: this.canvasWidth,
-          canvasHeight: this.canvasHeight,
-          paddleWidth: 10,
-          paddleHeight: 100,
-          leftPaddlePositionY: 100,
-          rightPaddlePositionY: 100,
-          victoryPoints: 5,
-          ballRadius: 10
-        }
-      })
+      client.emit('gameDoesNotExist', { })
+      return
+      // mapPong.set(data.room, {
+      //   "map": new Map(), "players": [], "game": {
+      //     xBall: 200,
+      //     yBall: 200,
+      //     xSpeed: 3,
+      //     ySpeed: 3,
+      //     canvasWidth: this.canvasWidth,
+      //     canvasHeight: this.canvasHeight,
+      //     paddleWidth: 10,
+      //     paddleHeight: 100,
+      //     leftPaddlePositionY: 100,
+      //     rightPaddlePositionY: 100,
+      //     victoryPoints: 5,
+      //     ballRadius: 10,
+      //     intervalId: null
+      //   }
+      // })
     }
     // on associe le user au socket
     client.data.username = data.name;
+    client.data.room = data.room;
     // on add le user dans la room
     client.join(data.room);
     // si déjà deux joueurs dans les players
@@ -99,7 +104,29 @@ export class EventsGateway {
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(@MessageBody() data: { room: string }, @ConnectedSocket() client: Socket) {
     client.leave(data.room);
+
+    // TODO quand les deux se déconnecte on delete la room
     return { event: 'leftRoom', data: `Left room: ${data.room}` };
+  }
+
+  async handleDisconnect(@ConnectedSocket() client: Socket) {
+    if (!client.data.room) {
+      return
+    }
+    const room = client.data.room
+    const mapPong = this.roomStoreService.getMapPong();
+    if (!mapPong.get(room)){
+      return
+    } 
+    const sockets = await this.server.in(room).allSockets();
+    if (sockets.size == 0) {
+      clearInterval(mapPong.get(room).game.intervalId)
+      setTimeout(() => {
+        mapPong.delete(room)
+      }, 2000)
+      
+    }
+    console.log(`Client déconnecté: ${client.id}`);
   }
 
   @SubscribeMessage('sendMessage')
@@ -126,7 +153,7 @@ export class EventsGateway {
     console.log("canvaHeight = " + mapPlayer.get(data.room).game.canvasHeight)
     console.log("top: " + (paddlePositionY + this.paddleHeight))
     console.log("bottom: " + paddlePositionY)*/
-    if (data.direction === "UP" && !minHeight ) {
+    if (data.direction === "UP" && !minHeight) {
       paddlePositionY -= translation;
     } else if (data.direction === "DOWN" && !maxHeight) {
       paddlePositionY += translation;
@@ -150,6 +177,10 @@ export class EventsGateway {
         clearInterval(intervalId);
 
         // TODO: envoyer infos dans la DB
+        const winner = playerLeft.score > playerRight.score ? playerLeft : playerRight;
+        const looser = playerLeft.score > playerRight.score ? playerRight : playerLeft
+
+        this.gameService.Insert(winner.name, looser.name, winner.score, looser.score)
         // sendGameInfoToDB(player1, player2, time, )
         /* GAME
            end_timestamp
@@ -170,6 +201,9 @@ export class EventsGateway {
 
   notifyRoomWithBallStat(room: string) {
     const mapPlayer = this.roomStoreService.getMapPong();
+    if (!mapPlayer.get(room)) {
+      return
+    }
     let { xBall, yBall } = mapPlayer.get(room).game;
     const ballStat: BallMoveEvent = {
       x: xBall,
@@ -181,6 +215,9 @@ export class EventsGateway {
 
   handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
     const mapPong = this.roomStoreService.getMapPong();
+    if (!mapPong.get(room)) {
+      return
+    }
     let { ballRadius, xBall, xSpeed, yBall, ySpeed, canvasHeight, canvasWidth, victoryPoints } = mapPong.get(room).game;
     xBall += xSpeed;
     yBall += ySpeed;
@@ -194,7 +231,7 @@ export class EventsGateway {
     ySpeed = handledBouncingOnPaddle.ySpeed;
 
     const handledScore = this.handleScore(xBall, ballRadius, canvasWidth, leftPlayer, yBall, room, rightPlayer, this.paddleWidth, xSpeed, ySpeed, victoryPoints);
-    
+
     //end of the game
     if (handledScore.end_game) {
       let winner = rightPlayer;
@@ -204,16 +241,18 @@ export class EventsGateway {
         looser = rightPlayer
       }
       this.server.to(room).emit('endGame', {
-        leftPlayer: leftPlayer, 
+        leftPlayer: leftPlayer,
         rightPlayer: rightPlayer,
-        looser: looser, 
+        looser: looser,
         winner: winner,
-        left_score: leftPlayer.score, 
+        left_score: leftPlayer.score,
         right_score: rightPlayer.score
       })
+      clearInterval(mapPong.get(room).game.intervalId)
+      mapPong.delete(room)
       return 1;
     }
-    
+
     xBall = handledScore.xBall;
     yBall = handledScore.yBall;
     xSpeed = handledScore.xSpeed;
@@ -231,7 +270,7 @@ export class EventsGateway {
     const lowerBorderCollision: boolean = yBall - ballRadius == leftPlayer.y + paddleHeight && this.paddleGapWithWall <= xBall && xBall <= this.paddleGapWithWall + paddleWidth;
 
     return lowerBorderCollision || topBorderCollision || rightBoderCollision;
-            
+
   }
 
   private ballIsTouchingRightPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, rightPlayer: GamePlayer, paddleHeight: number, canvaWidth: number) {
@@ -292,9 +331,6 @@ export class EventsGateway {
         name_right: rightPlayer.name,
         score_right: rightPlayer.score,
       });
-      //console.log("point to the left")
-      //console.log(leftPlayer)
-      //console.log(rightPlayer)
     } else if (xBall < paddleWidth) {
       rightPlayer.score += 1;
       xBall = 400;
@@ -307,9 +343,6 @@ export class EventsGateway {
         name_right: rightPlayer.name,
         score_right: rightPlayer.score,
       });
-      //("point to the right")
-      //console.log(leftPlayer)
-      //console.log(rightPlayer)
     }
     const end_game = (leftPlayer.score >= victoryPoints || rightPlayer.score >= victoryPoints)
     return { xBall, yBall, xSpeed, ySpeed, end_game };

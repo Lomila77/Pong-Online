@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import TwoFA from "./components/TwoFA";
 import Game from './pages/game/Game';
 import CreateGame from './pages/game/CreateGame';
 
@@ -17,6 +18,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/twoFA" element={<TwoFA/>} />
         <Route
           path="/"
           element={
@@ -45,7 +47,7 @@ const App = () => {
           path="/settingslock"
           element={<Settings />}
         />
-          <Route
+        <Route
                 path='/game/create'
                 element={
                   <Layout>

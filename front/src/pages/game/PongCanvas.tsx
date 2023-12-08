@@ -78,18 +78,14 @@ function PongCanvas(
 
     return (
         <div className='flex justify-center'>
-            {
-                (
-                    <canvas
-                        ref={canvasRef}
-                        id='pong'
-                        width={boardWidth}
-                        height={boardHeight}
-                        // TODO - Make shadow more strict
-                        className='border border-black rounded-3xl bg-black shadow shadow-md'
-                    ></canvas>
-                )
-            }
+            <canvas
+                ref={canvasRef}
+                id='pong'
+                width={boardWidth}
+                height={boardHeight}
+                // TODO - Make shadow more strict
+                className='border border-black rounded-3xl bg-black shadow shadow-md max-w-full'
+            ></canvas>
         </div>
     );
 }

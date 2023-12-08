@@ -5,7 +5,7 @@ import {
   Get,
   UseGuards,
   Req,
-  Res,
+  Res, Put,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, Fortytwo_dto } from './dto';
@@ -15,13 +15,14 @@ import { JwtGuard } from './guard';
 import { User } from '@prisma/client';
 import { SessionAuthGuard } from './guard/session.guard';
 import { Request, Response } from 'express';
-import { frontReqInterface } from 'src/shared';
+import {backResInterface, frontReqInterface} from 'src/shared';
+import * as process from "process";
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  
+
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
   async redirect(
@@ -29,12 +30,14 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const ret: boolean = await this.authService.handleIncommingUser(
+      const ret: {firstConnection: boolean, isF2Active: boolean} = await this.authService.handleIncommingUser(
         req.user,
         res,
       );
-      if (ret) {
+      if (ret.firstConnection) {
         res.redirect(process.env.FRONT_HOME + '/settingslock');
+      } else if (ret.isF2Active) {
+        res.redirect(process.env.FRONT_HOME + '/twoFA');
       } else {
         res.redirect(process.env.FRONT_HOME + '/');
       }
@@ -84,13 +87,19 @@ export class AuthController {
 
   @Get('/twoFA')
   @UseGuards(JwtGuard)
-  twoFA(@GetUser() user: User) {
-    return this.authService.twoFA(user);
+  async twoFA(@GetUser() user: User): Promise<backResInterface> {
+    return await this.authService.twoFA(user);
   }
 
   @UseGuards(JwtGuard)
-  @Get('/verify')
-  verify(@GetUser() user: User, code: string) {
-    return this.authService.verify(user, code);
+  @Put('/verify')
+  verify(@GetUser() user: User, @Body() body: frontReqInterface): backResInterface {
+    return this.authService.verify(user, body.codeQRAuth);
+  }
+
+  @Get('/test')
+  async signinTest( @Res() res: Response,) {
+    await this.authService.testAnakin(res)
+    res.redirect(process.env.FRONT_HOME + '/');
   }
 }

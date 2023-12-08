@@ -59,7 +59,7 @@ up:
 
 down: 
 	@echo "$(ON_GREEN)- Putting down ft_transcendence... -$(EOC)"
-	@docker compose -f $(YAML) down
+	@docker compose -f $(YAML) down -t 2
 	@echo "$(BCYAN)---> Putting ft_transcendence down: [OK]$(EOC)"
 
 rm:
@@ -86,7 +86,7 @@ fclean: clean
 	@docker system prune -a --volumes -f
 	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
 
-re: fclean all
+re: clean all
 
 # ---------------------------------
 
