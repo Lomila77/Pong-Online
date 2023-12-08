@@ -32,8 +32,6 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
-    isAdmin: boolean;
-    isOwner: boolean;
   }
 
 export interface IChatHistory {
@@ -56,6 +54,8 @@ export interface IChannel {
   members: IChatMember[],
   isPrivate: boolean,
   isPassword: boolean,
+  owner: IChatMember,
+  admins: IChatMember[],
 }
 
 type ChannelType = keyof IChannels;
@@ -102,9 +102,7 @@ export const ChatProvider = ({ children }) => {
   const initChatCtx = () => {
     const currentUser: IChatMember = {name : user?.pseudo || "",
                                       id: user?.fortytwo_id || 0,
-                                      connected: user?.isAuthenticated,
-                                      isAdmin: false,
-                                      isOwner: false,
+                                      connected: user?.isAuthenticated
     };
     const token = Cookies.get('jwtToken');
     if (!token)
@@ -182,12 +180,28 @@ export const ChatProvider = ({ children }) => {
       });
 
       /* *********************************************************
-          * Channel Quited :
+          * Quited :
 
             - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
       ***********************************************************/
       newSocket?.on('quited', (chatId: number) => {
         console.log("Channel quited: \n\n\n", chatId);
+        console.log("\n\n", channels);
+
+      });
+
+      /* *********************************************************
+          * Invited:
+
+            - invite a friend in channel
+      ***********************************************************/
+      newSocket?.on('invited', (channel: IChannel) => {
+        setChannels((prev) => ({
+          ...prev!,
+          MyChannels: addChannel(prev.MyChannels, channel),
+          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
+        }))
+        console.log("Channel quited: \n\n\n", channel.id);
         console.log("\n\n", channels);
 
       });
