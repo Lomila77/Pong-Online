@@ -17,7 +17,7 @@ EOC = \033[m
 YAML = docker-compose.yml
 # ------------------------
 
-all: up
+all: build
 
 # ----- DEBUG RULES -----
 
@@ -52,7 +52,7 @@ volumes:
 
 # ----- MANDATORY PART RULES -----
 
-up:
+build:
 	@echo "$(ON_GREEN)- Running ft_transcendence ... -$(EOC)"
 	@docker compose -f $(YAML) up --build
 	@echo "$(BCYAN)---> ft_transcendence running: [DONE]$(EOC)"
