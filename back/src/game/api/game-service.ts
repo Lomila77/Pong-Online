@@ -152,7 +152,7 @@ export class GameService {
                     utcDate: game.end_timestamp.toISOString(),
                     win: game.winner_id === id,
                     opponentId: opponentId,
-                    opponentUsername: user.fortytwo_userName,
+                    opponentUsername: user.pseudo,
                     score_winner: game.score_winner,
                     score_looser: game.score_looser
                 }
@@ -167,9 +167,9 @@ export class GameService {
 
     private async findUserIdByUsername(username: string): Promise<number | null> {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = await this.prisma.user.findFirst({
                 where: {
-                    fortytwo_userName: username
+                    pseudo: username
                 },
                 select: {
                     fortytwo_id: true

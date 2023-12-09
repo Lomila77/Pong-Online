@@ -7,12 +7,16 @@ import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
 import Messagerie from "../images/chat.svg";
-import Play from "../images/play.svg"
-import Channel from "../images/channel.svg"
-import NewChannel from "../images/newChan.svg"
-import Cross from "../images/cross.svg"
-import Check from "../images/check.svg"
+import Play from "../images/play.svg";
+import Channel from "../images/channel.svg";
+import NewChannel from "../images/newChan.svg";
+import Cross from "../images/cross.svg";
+import Check from "../images/check.svg";
 import {backRequest} from "../api/queries";
+import { useNavigate } from 'react-router-dom';
+import { GameService } from '../api/game.service';
+import { send } from 'vite';
+import createChannel from './CreateChannel';
 
 function Chat() {
     const {channels, openedWindows, openWindow, closeWindow, leaveChannel } = useChat();
@@ -20,6 +24,9 @@ function Chat() {
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
     const [leaveChanId, setLeaveChanID] = useState(-1);
+    const navigate = useNavigate();
+    const { sendMessage } = useChat();
+
     useEffect(() => {
         if (leaveChanId != -1) {
             leaveChannel(leaveChanId);
@@ -100,6 +107,26 @@ function Chat() {
         setSelectedTargetToDestroy(null);
     }, [selectedTargetToDestroy]);
 
+    const newPrivateGame = (channel: IChannel) => {
+        const ballSpeedY = 2;
+        const ballSpeedX = 2;
+        const ballSize = 2;
+        const victoryPoints = 5;
+        const paddleHeight = 2;
+        const paddleWidth = 2;
+
+        GameService.createPrivateGame(ballSpeedY, ballSpeedX, ballSize, victoryPoints, paddleHeight, paddleWidth)
+            .then((game) => {
+                const url = window.location.href + "game/" + game.id;
+                const message = `I just created a game, join me ! ${url}`;
+                sendMessage(message, channel.id);
+                navigate(`/game/${game.id}`);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
+
     return (
         <div className={"drawer drawer-end flex flex-col-reverse h-full items-end static"}>
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" onClick={toggleDrawerOpen}/>
@@ -143,7 +170,8 @@ function Chat() {
                             )}
 
                             {!displayChannelDrawer && (
-                                <button className="btn btn-square btn-ghost btn-sm">
+                                <button className="btn btn-square btn-ghost btn-sm"
+                                        onClick={() => {newPrivateGame(target)}}>
                                     <img src={Play} alt={"play"} className={""}/>
                                 </button>
                             )}

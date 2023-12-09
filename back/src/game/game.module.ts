@@ -5,10 +5,11 @@ import { RoomStoreService } from './store/room-store.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { GameService } from './api/game-service';
 import { RankingService } from './api/ranking-service';
+import { ChatModule } from 'src/chat/chat.module';
 
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ChatModule],
   controllers: [GameController],
   providers: [
     /*{

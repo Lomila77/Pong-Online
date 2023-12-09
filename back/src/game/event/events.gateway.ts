@@ -2,6 +2,8 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from 'socket.io';
 import { BallMoveEvent, GamePlayer, RoomStoreService } from '../store/room-store.service';
 import { GameService } from '../api/game-service';
+import { ChatGateway } from '../../chat/chat.gateway';
+import { Inject, forwardRef } from '@nestjs/common';
 
 
 @WebSocketGateway({ namespace: '/events', cors: true })
@@ -14,7 +16,11 @@ export class EventsGateway {
   canvasWidth: number;
   ballRadius: number;
 
-  constructor(private roomStoreService: RoomStoreService, private gameService: GameService) {
+  constructor(
+      private roomStoreService: RoomStoreService,
+      private gameService: GameService,
+      @Inject(forwardRef(() => ChatGateway))
+      private chatGateway: ChatGateway) {
     this.paddleWidth = 3;
     this.paddleHeight = 100;
     this.paddleGapWithWall = 30;
@@ -32,7 +38,7 @@ export class EventsGateway {
 
     // si la room existe pas encore
     if (!mapPong.get(data.room)) {
-      client.emit('gameDoesNotExist', { })
+      client.emit('gameDoesNotExist', {})
       return
       // mapPong.set(data.room, {
       //   "map": new Map(), "players": [], "game": {
@@ -63,12 +69,22 @@ export class EventsGateway {
         // déjà 2 joueurs dans la partie mais pas le joueur qui join
         return
       }
+      this.chatGateway.emitSignal(1, {
+        username: client.data.username,
+        inGame: true
+      }, "userGameState")
+
       // le joueur qui join était déjà dans la partie
       const players = this.getPlayerRightAndPlayerLeft(data.room);
       client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
       client.emit('yourPosition', { y: mapPong.get(data.room).map.get(data.name).y, side: mapPong.get(data.room).map.get(data.name).side })
       return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
     }
+
+    this.chatGateway.emitSignal(1, {
+      username: client.data.username,
+      inGame: true
+    }, "userGameState")
 
 
     // le joueur arrive dans la partie et c'est le premier
@@ -88,7 +104,7 @@ export class EventsGateway {
       mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
       const players = this.getPlayerRightAndPlayerLeft(data.room);
       this.server.to(data.room).emit('startGame',
-        { eventName: "start", playerRight: players.right, playerLeft: players.left, gameData: mapPong.get(data.room).game }
+          { eventName: "start", playerRight: players.right, playerLeft: players.left, gameData: mapPong.get(data.room).game }
       );
       client.emit('yourPosition', { y: mapPong.get(data.room).game.rightPaddlePositionY, side: "RIGHT" })
       this.launchGame(data.room, client);
@@ -113,18 +129,22 @@ export class EventsGateway {
     if (!client.data.room) {
       return
     }
+    this.chatGateway.emitSignal(1, {
+      username: client.data.username,
+      inGame: false
+    }, "userGameState")
     const room = client.data.room
     const mapPong = this.roomStoreService.getMapPong();
-    if (!mapPong.get(room)){
+    if (!mapPong.get(room)) {
       return
-    } 
+    }
     const sockets = await this.server.in(room).allSockets();
     if (sockets.size == 0) {
       clearInterval(mapPong.get(room).game.intervalId)
       setTimeout(() => {
         mapPong.delete(room)
       }, 2000)
-      
+
     }
     console.log(`Client déconnecté: ${client.id}`);
   }
@@ -138,8 +158,8 @@ export class EventsGateway {
 
   @SubscribeMessage('movePaddleClient')
   async handlePlay(
-    @MessageBody() data: { room: string; direction: 'UP' | 'DOWN' },
-    @ConnectedSocket() client: Socket
+      @MessageBody() data: { room: string; direction: 'UP' | 'DOWN' },
+      @ConnectedSocket() client: Socket
   ) {
     const mapPlayer = this.roomStoreService.getMapPong();
     const sockets = await this.server.in(data.room).allSockets();
@@ -182,7 +202,7 @@ export class EventsGateway {
 
           const winner = playerLeft.score > playerRight.score ? playerLeft : playerRight;
           const looser = playerLeft.score > playerRight.score ? playerRight : playerLeft
-  
+
           this.gameService.Insert(winner.name, looser.name, winner.score, looser.score)
         }
         // sendGameInfoToDB(player1, player2, time, )
@@ -244,6 +264,10 @@ export class EventsGateway {
         winner = leftPlayer;
         looser = rightPlayer
       }
+      this.chatGateway.emitSignal(1, {
+        username: client.data.username,
+        inGame: false
+      }, "userGameState")
       this.server.to(room).emit('endGame', {
         leftPlayer: leftPlayer,
         rightPlayer: rightPlayer,

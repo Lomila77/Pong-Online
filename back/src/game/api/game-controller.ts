@@ -9,6 +9,8 @@ import { GameRankingResponse } from './ranking-dto';
 import { RankingService } from './ranking-service';
 import { GameService, StatsByUser, UserHistoric } from './game-service';
 import { JwtGuard } from 'src/auth/guard';
+import { GetUser } from 'src/auth/decorator';
+import { User } from '@prisma/client';
 
 @Controller('game')
 export class GameController {
@@ -41,20 +43,20 @@ export class GameController {
         return { leaderbord: leaderBoard.leaderbord };
     }
 
-    @Get('users/:id')
-    @UsePipes(new ValidationPipe())
-    async getStatByUser(@Param('id') userId: string): Promise<StatsByUser> {
-        const id = Number(userId)
-        const stats = await this.gameService.GetStatByUserId(id);
-        return stats;
-    }
+    // @Get('users/:id')
+    // @UsePipes(new ValidationPipe())
+    // async getStatByUser(@Param('id') userId: string): Promise<StatsByUser> {
+    //     const id = Number(userId)
+    //     const stats = await this.gameService.GetStatByUserId(id);
+    //     return stats;
+    // }
 
-    @Get('users/me/:id')
-    //@UseGuards(JwtGuard)
+    @Get('users/me')
+    @UseGuards(JwtGuard)
     @UsePipes(new ValidationPipe())
-    async getUserHistoric(@Param('id') userId: string): Promise<UserHistoric[]> {
-        const id = Number(userId)
-        const historic = await this.gameService.GetUserHistoric(id);
+    async getUserHistoric(@Param('id') userId: string, @GetUser() user: User): Promise<UserHistoric[]> {
+        // const id = Number(userId)
+        const historic = await this.gameService.GetUserHistoric(user.fortytwo_id);
         return historic;
     }
 

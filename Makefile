@@ -64,7 +64,7 @@ down:
 
 rm:
 	@echo "$(ON_PURPLE)- Removing all containers... -$(EOC)"
-	@docker rm $$(docker ps -aq) 2> /dev/null || true
+	@docker rm -f $$(docker ps -aq) 2> /dev/null || true
 	@echo "$(BCYAN)---> ft_transcendence containers removing: [DONE]$(EOC)"
  
 rmi:
@@ -86,7 +86,7 @@ fclean: clean
 	@docker system prune -a --volumes -f
 	@echo "$(BCYAN)No more ft_transcendence: [DONE]$(EOC)"
 
-re: clean all
+re: clean rm rmi all
 
 # ---------------------------------
 
