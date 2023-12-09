@@ -9,6 +9,7 @@ import { JoinChanDto, EditChannelCreateDto } from 'src/chat/dto/edit-chat.dto';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { ChatGateway } from './chat.gateway';
+import {backResInterface} from "../shared";
 
 @Injectable()
 export class ChatService {
@@ -982,8 +983,15 @@ export class ChatService {
     return users;
   }
 
-  private pwdCheck(channel: Channel, pwd: string) {
-    channel.password == pwd ? true : false;
+  async checkPassword(id: number, password: string): Promise<backResInterface> {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id: id,
+      }
+    });
+    let result: boolean, error: boolean;
+    const result = bcrypt.compare(password, channel.password);
+    return {passwordOk: result};
   }
 
   private membershipCheck(chanMembers: {pseudo: string}[], userName: string){

@@ -122,6 +122,7 @@ export interface frontReqInterface {
   token?: string;
   win?: number;
   codeQRAuth?: string;
+  password?: string;
 }
 
 // export interface IChannel {
@@ -161,7 +162,8 @@ export interface frontReqInterface {
     data?: any;
     qrCodeUrl?: string;
     verifyQrCode?: boolean;
-    }
+    passwordOk?: boolean;
+  }
 
 
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{

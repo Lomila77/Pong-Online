@@ -12,6 +12,7 @@ export interface frontReqInterface {
 	isF2Active?: boolean;
 	fortytwo_id?: string;
 	codeQRAuth?: string;
+	password?: string;
 }
 
 export interface IChannel {
@@ -50,4 +51,5 @@ export interface IChannels{
 	data?: any;
 	qrCodeUrl?: string;
 	verifyQrCode?: boolean;
+	passwordOk?: boolean;
   }

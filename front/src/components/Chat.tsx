@@ -11,6 +11,8 @@ import Play from "../images/play.svg"
 import Channel from "../images/channel.svg"
 import NewChannel from "../images/newChan.svg"
 import Cross from "../images/cross.svg"
+import Check from "../images/check.svg"
+import {backRequest} from "../api/queries";
 
 function Chat() {
     const {channels, openedWindows, openWindow, closeWindow, leaveChannel } = useChat();
@@ -43,6 +45,10 @@ function Chat() {
             setDrawerContent(channels.MyDms);
     }, []);
 
+    const [displayInputPassword, setDisplayInputPassword] = useState(false);
+    const [displayBadPassword, setDisplayBadPassword] = useState(false);
+    const [password, setPassword] = useState('');
+
     /* Gere le basculement DM/Channel */
     const toggleDisplayChannel = () => {
         setDisplayChannelDrawer(displayChannelDrawer !== true);
@@ -61,10 +67,30 @@ function Chat() {
     useEffect(() => {
         if (!selectedTarget)
             return;
-        if (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id))
-            openWindow(selectedTarget);
-        setSelectedTarget(null);
+        if (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)) {
+            if (selectedTarget.isPassword)
+                setDisplayInputPassword(true);
+            else {
+                openWindow(selectedTarget);
+                setSelectedTarget(null);
+            }
+        }
     }, [selectedTarget]);
+
+    const handlePassword = () => {
+        if (password) {
+            backRequest('chat/channels/' + selectedTarget.id + '/checkPassword', 'POST', {password: password}).then(data => {
+                if (data.passwordOk) {
+                    openWindow(selectedTarget);
+                    setDisplayInputPassword(false);
+                    setDisplayBadPassword(false);
+                } else {
+                    setDisplayBadPassword(true);
+                }
+            })
+        }
+        setSelectedTarget(null);
+    }
 
     // Efface une fenetre pour ne plus l'afficher, apres qu'il ete fermee via la croix
     useEffect(() => {
@@ -89,8 +115,26 @@ function Chat() {
                         <li key={index} className="flex flex-row justify-between items-center">
                             <button className={"overflow-auto btn btn-ghost font-display " +  colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
-                                <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
+                                {target.type == 'MyDms' && (
+                                    <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
+                                )}
                             </button>
+                            {displayInputPassword && selectedTarget && selectedTarget.id == target.id && (
+                                <div className={"absolute text-black bg-orangeNG flex flex-row justify-between items-center px-2 my-1"}>
+                                    <input type="password"
+                                           placeholder="Password"
+                                           className="input input-sm w-full max-w-xs"
+                                           value={password}
+                                           onChange={e => {
+                                               setPassword(e.target.value);
+                                           }}
+                                    />
+                                    <button onClick={handlePassword} className={"btn btn-sm w-10"}>
+                                        <img src={Check} alt={"Check"}/>
+                                    </button>
+                                </div>
+                            )}
+
                             {displayChannelDrawer && target.type != "ChannelsToJoin" && (
                                 <button className="btn btn-square btn-ghost btn-sm p-2" onClick={() => setLeaveChanID(target.id)}>
                                     <img src={Cross} alt={"LeaveChat"} className={""}/>

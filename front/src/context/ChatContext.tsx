@@ -196,6 +196,7 @@ export const ChatProvider = ({ children }) => {
             - invite a friend in channel
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
+        console.log("CHANNEL: ", channel);
         setChannels((prev) => ({
           ...prev!,
           MyChannels: addChannel(prev.MyChannels, channel),
@@ -203,8 +204,17 @@ export const ChatProvider = ({ children }) => {
         }))
         console.log("Channel quited: \n\n\n", channel.id);
         console.log("\n\n", channels);
+      });
+
+      /* *********************************************************
+          * Wrong password:
+
+            -
+      ***********************************************************/
+      newSocket?.on('Wrong password', (chatId: number) => {
 
       });
+
 
       socketRef.current = newSocket;
     })
@@ -460,6 +470,7 @@ export const ChatProvider = ({ children }) => {
       closeWindow(channelToQuit.id);
     }
   }
+
 
   /*********** return ctx ************/
   return (

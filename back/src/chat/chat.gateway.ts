@@ -333,10 +333,10 @@ export class ChatGateway implements OnGatewayConnection {
         await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
           this.server.to(key).emit("invited", objToEmit);
         });
+        console.log("user invited");
         return;
       }
     }
-    // console.log("user invited");
   }
 
   @SubscribeMessage('ban')

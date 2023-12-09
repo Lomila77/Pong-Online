@@ -184,5 +184,11 @@ export class ChatController {
 		const channels = await this.chat_service.printAllChannels();
 		return channels.length!==0 ? channels : "no channels yet\n"
 	}
+
+	@Post('/channels/:id/checkPassword')
+	@UseGuards(JwtGuard)
+	checkPassword(@Param("id")id: number, @Body() body: frontReqInterface) {
+		return this.chat_service.checkPassword(id, body.password);
+	}
 }
 
