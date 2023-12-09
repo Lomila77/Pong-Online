@@ -5,6 +5,13 @@ import Cookies from 'js-cookie';
 import { ChatProvider } from './ChatContext';
 
 
+// interface currentUser {
+//   id: string,
+//   name: string,
+//   avatar: string,
+//   connected: boolean,
+// }
+
 const UserContext = createContext<{
   user: backResInterface | null;
   setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
@@ -67,11 +74,23 @@ export const UserProvider = ({ children }) => {
     mutation.mutate({ fistConnection, params: newData });
   };
 
+  // const handleDisconnectUser = () => {
+  //   Cookies.remove("jwtToken");
+  //   setUser((prevUser) => ({...prevUser, isAuthenticated:false
+  //   })
+  //   )
+  //   console.log("\n\n\nhandout logout user : ", user);
+  // }
+
   const handleDisconnectUser = () => {
     Cookies.remove("jwtToken");
-    setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
+    setUser((prevUser) => ({
+      ...prevUser,
+      isAuthenticated: false,
+    }));
     console.log("\n\n\nhandout logout user : ", user);
-  }
+  };
+
 
   useEffect(() => {
     return () => {

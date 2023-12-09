@@ -28,7 +28,7 @@ function NavBar() {
       // Cookies.remove("jwtToken");
       // setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
       // console.log("\n\n\nhandout logout user : ", user);
-      navigate('/login');
+      // navigate('/login');
     } else {
       console.log('error in navBar: ', ret.message);
     }

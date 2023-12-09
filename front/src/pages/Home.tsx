@@ -10,9 +10,10 @@ function Home() {
   const navigate = useNavigate();
 
   // useEffect(() => {
-  //   if (!user)
+  //   if (!user?.isAuthenticated)
+  //     console.log("\n\n\n\nuser.isAuthenticated", user?.isAuthenticated);
   //     navigate("/login");
-  // }, [user]);
+  // }, [user?.isAuthenticated]);
 
   const renderFire = (
     <>
