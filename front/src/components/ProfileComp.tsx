@@ -23,7 +23,7 @@ const ProfileComp: React.FC = ({user}) => {
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
       <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
-        <img src={MGameWatch} alt={'Hi!'}/>
+        <img src={user.avatar} alt="avatar" className="rounded-full" />
       </div>
       <div className="text-center">
         <span className="font-display text-2xl text-bleuPseudo pseudoProfil">

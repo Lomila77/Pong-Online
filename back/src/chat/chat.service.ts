@@ -367,15 +367,6 @@ export class ChatService {
       else if (isban)
         return (2);
     }
-    else if (chan.password !== '' && chan.password !== null && chan.password !== undefined) {
-      // console.log("chan pass : ", chan.password, "data pass : ", data.Password);
-      const isMatch = await bcrypt.compare(data.Password, chan.password);
-
-      // console.log("is mathc ? " + isMatch);
-
-      if (!isMatch)
-        return (3);
-    }
     await this.prisma.user.update(
       {
         where: {
@@ -402,7 +393,6 @@ export class ChatService {
               },
             },
           },
-          //isPrivate : info.Private,
         }
       )
     return (0);
