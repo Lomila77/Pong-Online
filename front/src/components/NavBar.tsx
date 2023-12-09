@@ -1,4 +1,5 @@
 import MGameWatch from '../images/MGameWatch.png';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { backRequest, getUser } from '../api/queries';
 import { useQuery } from '@tanstack/react-query';
