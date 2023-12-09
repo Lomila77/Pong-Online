@@ -6,7 +6,7 @@ import {useUser} from "../context/UserContext";
 
 function NewChannel({close}) {
     const { openWindow } = useChat();
-    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+    const {user} = useUser();                                                                      // Recuperation de la session de l'utilisateur
 
     const [formData, setFormData] = useState<IFormData>({
         name: '',

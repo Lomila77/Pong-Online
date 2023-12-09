@@ -12,7 +12,7 @@ import ChatMemberList from "./ChatMemberList";
 import SettingsChat from "./SettingsChat";
 
 function WindowChannel({chat, destroyChannel}) {
-    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+    const {user} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const { sendMessage, sendAdminForm, addFriendToChannel } = useChat();
     const [displayChat, setDisplayChat] = useState(chat.isPassword !== true);
     const [message, setMessage] = useState('');

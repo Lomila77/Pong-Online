@@ -4,7 +4,7 @@ import {useUser} from "../context/UserContext";
 
 
 function Message({message, index}) {
-    const {user, setUser} = useUser()
+    const {user} = useUser()
     let classNameMessage = "chat chat-start";
     if (message.owner.id == user.fortytwo_id)
         classNameMessage= "chat chat-end"

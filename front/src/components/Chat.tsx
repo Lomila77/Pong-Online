@@ -14,7 +14,7 @@ import Cross from "../images/cross.svg"
 
 function Chat() {
     const {channels, openedWindows, openWindow, closeWindow, leaveChannel } = useChat();
-    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+    const {user} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
     const [leaveChanId, setLeaveChanID] = useState(-1);

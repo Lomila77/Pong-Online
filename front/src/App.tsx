@@ -29,7 +29,7 @@ const App = () => {
           <Route path="/settings" element={ <ProtectedRoute> <Layout> <Settings /></Layout>  </ProtectedRoute>} />
           <Route path="/leaderboard" element={ <ProtectedRoute> <Layout> <Leaderboard /> </Layout> </ProtectedRoute>} />
         {/* </PrivateRoutes> */}
-      </Routes> 
+      </Routes>
     </Router>
   );
 };

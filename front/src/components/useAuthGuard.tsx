@@ -7,31 +7,18 @@ const ProtectedRoute = ({ children }) => {
   const { user } = useUser();
 
   if (!user?.isAuthenticated) {
-    console.log("redirect user.ProtectedRoute")
-    console.log(user)
+    // console.log("redirect user.ProtectedRoute")
+    console.log("rediret home ------> login")
     return <Navigate to="/login" replace />;
   }
   return children;
 };
 
-// const AuthRedirectRoutes = ({ children }) => {
-//   const { user } = useUser();
-//   const [redirected, setRedirected] = useState(false);
-
-//   if (user?.isAuthenticated && !redirected) {
-//     setRedirected(true);
-//     return <Navigate to="/" replace />;
-//   }
-
-//   return children;
-// };
-
 const AuthRedirectRoutes = ({ children }) => {
   const { user } = useUser();
 
   if (user?.isAuthenticated) {
-    console.log("redirect user.AuthRedirectRoutes")
-    console.log(user)
+    console.log("redirect login ------> home")
     return <Navigate to="/" replace />;
   }
   return children;
@@ -40,3 +27,25 @@ const AuthRedirectRoutes = ({ children }) => {
 export { ProtectedRoute, AuthRedirectRoutes };
 
 
+
+
+// import React from 'react';
+// import { Navigate } from 'react-router-dom';
+
+// const ProtectedRoute = ({ children, user }) => {
+//   if (!user?.isAuthenticated) {
+//     console.log("redirect home ------> login");
+//     return <Navigate to="/login" replace />;
+//   }
+//   return children;
+// };
+
+// const AuthRedirectRoutes = ({ children, user }) => {
+//   if (user?.isAuthenticated) {
+//     console.log("redirect login ------> home");
+//     return <Navigate to="/" replace />;
+//   }
+//   return children;
+// };
+
+// export { ProtectedRoute, AuthRedirectRoutes };

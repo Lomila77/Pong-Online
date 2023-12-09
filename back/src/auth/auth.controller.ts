@@ -70,7 +70,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtGuard)
   logout(@Req() req:Request, @Res() res:Response, @GetUser() user: User): any {
-    this.authService.logout(req, res, user);
+    return this.authService.logout(req, res, user);
   }
 
   // element here for debug need to delete in before correction

@@ -369,6 +369,9 @@ export const ChatProvider = ({ children }) => {
   useEffect (() => {if (channels?.MyDms.length) console.log("new newChannels set in MyDms: ", channels?.MyDms)}, [channels?.MyDms])
 /********************************************************** */
 
+  /* *********************************************************
+      * update pseudo change
+  ***********************************************************/
 
 
   /* *********************************************************

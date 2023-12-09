@@ -16,7 +16,7 @@ const ModalSetting = () => {
   const hiddenFileInput = useRef(null);
   const [file, setFile] = useState(MGameWatch);
   const navigate = useNavigate();
-  const {user, setUser} = useUser();
+  const {user} = useUser();
 
   const uploadFile = (e: React.MouseEvent<HTMLButtonElement>) => {
     hiddenFileInput.current.click();

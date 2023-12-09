@@ -124,25 +124,6 @@ export interface frontReqInterface {
   codeQRAuth?: string;
 }
 
-// export interface IChannel {
-// 	id: number,
-// 	name: string,
-// 	type: string,
-// 	members: IChatMember[],
-// 	connected?: boolean
-//   }
-//   export interface IChatMember {
-//     id: number;
-//     name: string;
-//   }
-
-
-// export interface IChannels{
-// 	MyDms: IChannel[];
-// 	MyChannels: IChannel[];
-// 	ChannelsToJoin : IChannel[];
-//   }
-
   export interface backResInterface {
     pseudo?: string;
     isOk?: boolean;
@@ -164,8 +145,10 @@ export interface frontReqInterface {
     }
 
 
+
 export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
   try {
+
     const reqOptions: RequestInit = {
       method,
       credentials: 'include',
@@ -179,7 +162,7 @@ export async function backRequest(url: string, method: string, params?: frontReq
     return response.ok ? await response.json() : {isOk:false, message:response.status}
   }
   catch (error) {
-    console.log(error);
+    console.log("backRequest error : ", error);
     return {isOk: false, message: error}
   }
 }

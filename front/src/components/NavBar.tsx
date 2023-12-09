@@ -9,7 +9,7 @@ import Cookies from 'js-cookie';
 
 function NavBar() {
   const navigate = useNavigate();
-  const { user, setUser, disconnectUser } = useUser();
+  const { user, disconnectUser } = useUser();
 
   const goToPage = async (path: string) => {
     const elem = document.activeElement as HTMLElement;
@@ -21,17 +21,7 @@ function NavBar() {
   };
 
   const handlelogout = async () => {
-    const ret = await backRequest('auth/logout', 'POST');
-
-    if (ret.isOk) {
-      disconnectUser()
-      // Cookies.remove("jwtToken");
-      // setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
-      // console.log("\n\n\nhandout logout user : ", user);
-      // navigate('/login');
-    } else {
-      console.log('error in navBar: ', ret.message);
-    }
+      disconnectUser();
   }
 
   return (
