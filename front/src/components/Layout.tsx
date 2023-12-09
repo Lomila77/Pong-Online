@@ -8,9 +8,9 @@ type LayoutProps = {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div id="mainContainer">
+    <div id="mainContainer" className="flex flex-col h-full min-h-screen ">
       <NavBar />
-      <div id="pageContent">
+      <div id="pageContent" className="h-full py-4 px-4 flex-auto flex justify-center items-center">
         {children}
       </div>
       <Footer />

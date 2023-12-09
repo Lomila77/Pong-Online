@@ -10,6 +10,8 @@ import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
 import TwoFA from "./components/TwoFA";
+import Game from './pages/game/Game';
+import CreateGame from './pages/game/CreateGame';
 
 const App = () => {
   return (
@@ -45,6 +47,22 @@ const App = () => {
           path="/settingslock"
           element={<Settings />}
         />
+        <Route
+                path='/game/create'
+                element={
+                  <Layout>
+                    <CreateGame/>
+                  </Layout>
+                }
+              />
+                <Route
+                    path='/game/:gameId'
+                    element={
+                        <Layout>
+                            <Game />
+                        </Layout>
+                    }
+                />
       </Routes>
     </Router>
   );

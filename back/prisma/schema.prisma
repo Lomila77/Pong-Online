@@ -80,3 +80,12 @@ model Channel {
 
   @@unique([id])
 }
+
+model Game {
+  id           String   @id @default(uuid())
+  winner_id     Int
+  looser_id      Int
+  end_timestamp DateTime
+  score_winner Int
+  score_looser  Int
+}
