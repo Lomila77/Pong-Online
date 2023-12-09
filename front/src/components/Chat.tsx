@@ -80,6 +80,7 @@ function Chat() {
     const handlePassword = () => {
         if (password) {
             backRequest('chat/channels/' + selectedTarget.id + '/checkPassword', 'POST', {password: password}).then(data => {
+                console.log(data.passwordOk);
                 if (data.passwordOk) {
                     openWindow(selectedTarget);
                     setDisplayInputPassword(false);

@@ -989,9 +989,13 @@ export class ChatService {
         id: id,
       }
     });
-    let result: boolean, error: boolean;
-    const result = bcrypt.compare(password, channel.password);
-    return {passwordOk: result};
+    try {
+      const result = bcrypt.compare(password, channel.password);
+      return {passwordOk: result};
+    } catch (error) {
+      console.log(error);
+      return {passwordOk: false};
+    }
   }
 
   private membershipCheck(chanMembers: {pseudo: string}[], userName: string){
