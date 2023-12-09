@@ -16,19 +16,16 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* <AuthRedirectRoutes> */}
         {/* route that should redirect towards "/" us user is authenticated */}
           <Route path="/login" element={ <AuthRedirectRoutes> <Login/> </AuthRedirectRoutes>} />
           <Route path="/twoFA" element={ <AuthRedirectRoutes>  <TwoFA/> </AuthRedirectRoutes>} />
           <Route path="/settingslock" element={<AuthRedirectRoutes> <Settings /> </AuthRedirectRoutes>} />
-        {/* </AuthRedirectRoutes> */}
+
 
         {/* route that should redirect towards "/login" us user is not authenticated */}
-        {/* <PrivateRoutes> */}
           <Route path="/" element={ <ProtectedRoute> <Layout> <Home/> </Layout>  </ProtectedRoute>} />
           <Route path="/settings" element={ <ProtectedRoute> <Layout> <Settings /></Layout>  </ProtectedRoute>} />
           <Route path="/leaderboard" element={ <ProtectedRoute> <Layout> <Leaderboard /> </Layout> </ProtectedRoute>} />
-        {/* </PrivateRoutes> */}
       </Routes>
     </Router>
   );

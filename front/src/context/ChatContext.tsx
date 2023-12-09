@@ -179,6 +179,7 @@ export const ChatProvider = ({ children }) => {
         }
       });
 
+      
       /* *********************************************************
           * Quited :
 
@@ -372,7 +373,15 @@ export const ChatProvider = ({ children }) => {
   /* *********************************************************
       * update pseudo change
   ***********************************************************/
+  useEffect (() => {
+    //todo update my user name inside all channels and send info to socket for back
 
+    // just emit a signal to back so he can send all info to everyone. (but me)
+    // update pseudo
+
+    // at reception of signal (update IchatMember) use generic updatefunction
+    // updateMemberById
+    }, [user?.pseudo])
 
   /* *********************************************************
       * fonctions to export

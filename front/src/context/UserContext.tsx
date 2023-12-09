@@ -89,7 +89,8 @@ export const UserProvider = ({ children }) => {
     updateUser: handleUpdateUser,
     disconnectUser,
     }}>
-      <ChatProvider>{children}</ChatProvider>
+      {children}
+      {/* <ChatProvider>{children}</ChatProvider> */}
     </UserContext.Provider>
   );
 };

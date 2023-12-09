@@ -22,7 +22,6 @@ import * as process from "process";
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-
   @Get('/callback')
   @UseGuards(ApiAuthGuard)
   async redirect(
@@ -65,7 +64,6 @@ export class AuthController {
   async checkJwt() {
     return true;
   }
-
 
   @Post('logout')
   @UseGuards(JwtGuard)
