@@ -70,7 +70,7 @@ function Game() {
       return //TODO: redirect vers login ?
 
     useEffect(() => {
-        socketRef.current = io('http://localhost:3333/chat', {
+        socketRef.current = io('http://localhost:3333/events', {
             auth: {
                 token: token
             }
