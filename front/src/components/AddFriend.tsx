@@ -1,14 +1,19 @@
 import React, {useState} from "react";
 import Addfriend from "../images/addFriend.svg"
-import {useChat} from "../context/ChatContext";
+import {IChatWindow, useChat} from "../context/ChatContext";
 
-function AddFriend({chat, unBlockDisplayFunc}) {
+interface AddFriendProps {
+    chat: IChatWindow;
+    unblockDisplayFunc: (props: boolean) => void;
+}
+
+const AddFriend: React.FC<AddFriendProps> = ({chat, unblockDisplayFunc}) => {
     const { addFriendToChannel } = useChat();
     const [addFriendPseudo, setAddFriendPseudo] = useState('');
     const handleAddFriend = () => {
         if (addFriendPseudo)
             addFriendToChannel(addFriendPseudo, chat.id);
-        unBlockDisplayFunc(false);
+        unblockDisplayFunc(false);
     }
 
     return (

@@ -4,14 +4,18 @@ import Send from "../images/send.svg"
 import Cross from "../images/cross.svg"
 import Setting from "../images/setting.svg"
 import Addfriend from "../images/addFriend.svg"
-import {useChat} from "../context/ChatContext";
+import {IChatWindow, IChatHistory, IChatMember, useChat} from "../context/ChatContext";
 import {useUser} from "../context/UserContext";
-import InputPassword from "./InputPassword";
 import AddFriend from "./AddFriend";
 import ChatMemberList from "./ChatMemberList";
 import SettingsChat from "./SettingsChat";
 
-function WindowChannel({chat, destroyChannel}) {
+interface WindowChannelProps {
+    chat: IChatWindow;
+    destroyChannel: () => void;
+}
+
+const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => {
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const { sendMessage, sendAdminForm, addFriendToChannel } = useChat();
     const [displayChat, setDisplayChat] = useState(chat.isPassword !== true);
@@ -89,8 +93,8 @@ function WindowChannel({chat, destroyChannel}) {
                             {displaySettings && (
                                 <ul className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52 text-orangeNG font-display">
                                     <li><button onClick={openMemberList}>Members</button></li>
-                                    {(chat.owner.id == user.fortytwo_id ||
-                                        chat.admins.find(admin => admin.id == user.fortytwo_id)) && (
+                                    {(chat.owner.id == user?.fortytwo_id ||
+                                        chat.admins.find((admin: IChatMember) => admin.id == user?.fortytwo_id)) && (
                                         <li><button onClick={openParam}>Settings</button></li>
                                     )}
                                 </ul>
@@ -102,7 +106,7 @@ function WindowChannel({chat, destroyChannel}) {
                                     <img src={Addfriend} alt={"addFriend"} className={"p-1"}/>
                                 </button>
                                 {displayAddFriend && (
-                                    <AddFriend chat={chat} unBlockDisplayFunc={trueDisplayAddFriend}/>
+                                    <AddFriend chat={chat} unblockDisplayFunc={trueDisplayAddFriend}/>
                                 )}
                             </div>
                         )}
@@ -115,7 +119,7 @@ function WindowChannel({chat, destroyChannel}) {
                     <SettingsChat chat={chat} closeSettings={closeParam} />
                 )}
                 <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
-                    {chat?.history && chat.history.map((msg, index) => ( //TODO changer message par la bonne strategie
+                    {chat?.history && chat.history.map((msg: IChatHistory, index: number) => ( //TODO changer message par la bonne strategie
                         <Message message={msg} key={index}/>
                         ))}
                 </div>

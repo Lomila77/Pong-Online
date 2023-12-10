@@ -4,16 +4,22 @@ import {Socket} from "socket.io-client";
 import {IChannels} from "../context/ChatContext";
 import {useUser} from "../context/UserContext";
 
-function NewChannel({close}) {
+interface NewChannelProps {
+    close: () => void;
+}
+
+const NewChannel: React.FC<NewChannelProps> = ({close}) => {
     const { openWindow } = useChat();
-    const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
+    const {user, setUser} = useUser();   
+    if (!user)
+        return;                                                                   // Recuperation de la session de l'utilisateur
 
     const [formData, setFormData] = useState<IFormData>({
         name: '',
         isPrivate: false,
         isPassword: false,
         password: '',
-        members: [{name: user.pseudo, id: user.fortytwo_id, connected: true}],
+        members: [{name: user.pseudo!, id: user.fortytwo_id!, connected: true}],
         type: 'MyChannels'
     })
 

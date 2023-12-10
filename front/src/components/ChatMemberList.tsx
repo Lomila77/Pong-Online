@@ -1,6 +1,12 @@
 import React from "react";
+import { IChannel } from "../context/ChatContext";
 
-function ChatMemberList({chat, closeList}) {
+interface ChatMemberListProps {
+    chat: IChannel;
+    closeList: () => void;
+}
+
+const ChatMemberList: React.FC<ChatMemberListProps> = ({chat, closeList}) => {
     return (
         <div className={"absolute left-0 top-0 card h-full w-full bg-orangeNG shadow-xl"}>
             <div className="card-body flex flex-col overflow-auto">

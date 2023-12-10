@@ -1,14 +1,22 @@
 // @ts-ignore
 import React, { useEffect, useState } from "react";
-import { backRequest } from "../api/queries";
+import { backRequest, backResInterface } from "../api/queries";
 import ProfileComp from "./ProfileComp";
 import Message from "./Message";
 import Send from "../images/send.svg"
 import Profil from "../images/profil.svg"
 import Cross from "../images/cross.svg"
-import {useChat} from "../context/ChatContext";
+import {IChatHistory, useChat} from "../context/ChatContext";
 
-function WindowChat({user, me, destroyChat, history, chatId}) {
+interface WindowChatProps {
+    user: string;
+    me: string;
+    destroyChat: () => void;
+    history: IChatHistory[];
+    chatId: number;
+}
+
+const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, chatId}) => {
     if (!user)
         return null;
 
@@ -18,7 +26,7 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
     const [isChecked, setIsChecked] = useState(false);
 
     const [displayUserProfil, setDisplayUserProfil] = useState(false);
-    const [userProfil, setUserProfil] = useState(null);
+    const [userProfil, setUserProfil] = useState<backResInterface | null>(null);
     useEffect(() => {
         backRequest('users/user', 'PUT', {pseudo: user}).then(data => {
             setUserProfil(data);
@@ -68,7 +76,7 @@ function WindowChat({user, me, destroyChat, history, chatId}) {
             </div>
             <div className={""}>
                 {displayUserProfil && (
-                    <ProfileComp user={userProfil}/>
+                    <ProfileComp user={userProfil!}/>
                 )}
                 {!displayUserProfil && (
                     <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">

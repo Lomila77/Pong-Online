@@ -1,8 +1,14 @@
 import React from 'react';
 import ProfileModal from './ProfileComp';
 
+interface CardLeaderProps {
+  name: string;
+  rank: number;
+  numberOfWin: number;
+  onClickUser: () => void;
+}
 
-const CardLeader: React.FC = ({name, rank, numberOfWin, onClickUser}) => {
+const CardLeader: React.FC<CardLeaderProps> = ({name, rank, numberOfWin, onClickUser}) => {
   return (
       <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3.5rem] overflow-hidden">
         <div className="bg-orangeNG font-display text-white text-center basis-1/6 pt-3 skew-x-[40deg] scale-150 -translate-x-6">

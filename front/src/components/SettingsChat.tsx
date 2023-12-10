@@ -1,6 +1,12 @@
 import React, {useEffect, useState} from "react";
 import {IChatMember, IChatWindow, useChat} from "../context/ChatContext";
-function SettingsChat({chat, closeSettings}) {
+
+interface SettingsChatPros {
+    chat: IChatWindow;
+    closeSettings: () => void;
+}
+
+const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     const { sendAdminForm } = useChat();
     const [errorAdminData, setErrorAdminData] = useState(false);
     const [selectedMuteOption, setSelectedMuteOption] = useState('unMute');
@@ -34,7 +40,7 @@ function SettingsChat({chat, closeSettings}) {
         selectedBanOption == "ban" ?
             setAdminData((prevState: any) => ({...prevState, ban: true})) :
             setAdminData((prevState: any) => ({...prevState, unBan: true}));
-        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
+        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)!.id,
             adminData.mute, adminData.unMute,
             adminData.ban, adminData.unBan,
             adminData.kick, adminData.admin,
@@ -64,7 +70,7 @@ function SettingsChat({chat, closeSettings}) {
                                minLength={1}
                                onChange={(e) => (
                                    setAdminData(prevState => ({
-                                       ...prevState,
+                                       ...prevState!,
                                        target: (e.target.value),
                                    })) &&
                                    setErrorAdminData(false)

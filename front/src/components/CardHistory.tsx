@@ -1,6 +1,13 @@
 import React from "react";
 
-function CardHistory({me, rival, meScore, rivalScore}) {
+interface CardHistoryProps {
+    me: string;
+    rival: string;
+    meScore: number;
+    rivalScore: number;
+}
+
+const CardHistory: React.FC<CardHistoryProps> = ({me, rival, meScore, rivalScore}) => {
     return (
         <div className="card card-side card-bordered bg-navbar border-white border-4 shadow-xl flex flex-row h-[3.5rem] overflow-hidden">
             <div className="bg-orangeNG font-display text-white text-center basis-1/6 pt-3 skew-x-[40deg] scale-150 -translate-x-6">

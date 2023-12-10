@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useUser } from "../context/UserContext";
 import {IChatWindow, IChannel, IChannels, IFormData, useChat} from "../context/ChatContext";
-import { Socket } from "socket.io-client";
 import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
@@ -14,16 +13,12 @@ import NewChannel from "../images/newChan.svg";
 import Cross from "../images/cross.svg";
 import Check from "../images/check.svg";
 import {backRequest} from "../api/queries";
-import { useNavigate } from 'react-router-dom';
-import { GameService } from '../api/game.service';
-import { send } from 'vite';
-import createChannel from './CreateChannel';
 
-function Chat() {
+const Chat: React.FC = () => {
     const {channels, openedWindows, openWindow, closeWindow, leaveChannel, sendMessage } = useChat();
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
-    const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
-    const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
+    const [selectedTarget, setSelectedTarget] = useState<IChannel | null>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
+    const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel | null>(null);             // Permet de detruire la fenetre selectionner
     const [leaveChanId, setLeaveChanID] = useState(-1);
     const [loadPrivateGame, setLoadPrivateGame] = useState(-1);
 
@@ -87,7 +82,7 @@ function Chat() {
     }, [selectedTarget]);
 
     const handlePassword = () => {
-        if (password) {
+        if (password && selectedTarget) {
             backRequest('chat/channels/' + selectedTarget.id + '/checkPassword', 'POST', {password: password}).then(data => {
                 if (data.passwordOk) {
                     openWindow(selectedTarget);
@@ -181,7 +176,7 @@ function Chat() {
                     </div>
                 </ul>
                 <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse overflow-hidden">
-                    {drawerOpen && openedWindows.map((channel: IChatWindow, index: number) =>
+                    {drawerOpen && openedWindows && openedWindows.map((channel: IChatWindow, index: number) =>
                         channel.type == 'MyDms' && (
                             <div key={index} className="px-5">
                                 <WindowChat user={channel.members[1].name}
@@ -193,7 +188,7 @@ function Chat() {
                             </div>
                         )
                     )}
-                    {drawerOpen && openedWindows.map((channel: IChatWindow, index: number) =>
+                    {drawerOpen && openedWindows && openedWindows.map((channel: IChatWindow, index: number) =>
                         channel.type == 'MyChannels' && (
                         <div key={index} className="px-5">
                             <WindowChannel chat={channel}

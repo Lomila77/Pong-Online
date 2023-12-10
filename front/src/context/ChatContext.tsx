@@ -126,7 +126,7 @@ export const ChatProvider = ({ children }) => {
 
       newSocket?.on('Message Created', (message: IChatHistory, channelId: number) => {
         console.log(message);
-        setOpenedWindows((prevWindow: IChatWindow[]) => {
+          setOpenedWindows((prevWindow: IChatWindow[]) => {
           return prevWindow.map((window) => {
             if (window.id === channelId) {
               return {
@@ -448,9 +448,9 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('kick', {chatId: chatId, userId: targetId});
     if (admin)
       socket?.emit('set-admin', {chatId: chatId, userId: targetId});
-    if (isPassword && !channel.isPassword) // TODO add change pwd
+    if (isPassword && channel?.isPassword) // TODO add change pwd
       socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword, Password: password});
-    else if (!isPassword && channel.isPassword) {
+    else if (!isPassword && channel?.isPassword) {
       socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword});
     }
   }

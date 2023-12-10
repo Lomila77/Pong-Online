@@ -1,15 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import MGameWatch from '../images/MGameWatch.png';
-import {backRequest} from "../api/queries";
+import {backRequest, backResInterface} from "../api/queries";
 import {useUser} from "../context/UserContext";
 
-const ProfileComp: React.FC = ({user}) => {
+interface ProfilCompProps {
+  user: backResInterface;
+}
+
+const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
     if (!user)
         return;
     const [friendAdded, setFriendAdded] = useState<boolean>(false);
     useEffect(() => {
         backRequest('users/isFriend/' + user.pseudo, 'GET').then(data => {
-            setFriendAdded(data.isFriend);
+            setFriendAdded(data.isFriend!);
         })
     }, []);
 

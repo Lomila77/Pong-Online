@@ -4,7 +4,7 @@ import React from 'react';
 import QRCode from 'react-qr-code';
 import {useNavigate} from "react-router-dom";
 
-function TwoFA() {
+const TwoFA: React.FC = () => {
     const [urlPath, setUrlPath] = useState<string>('');
     const [code, setCode] = useState('');
     const [inputStyle, setInputStyle] = useState('');
@@ -12,7 +12,7 @@ function TwoFA() {
     const navigate = useNavigate();
     useEffect(() => {
         backRequest('auth/twoFA', 'GET').then((data) => {
-            setUrlPath(data.qrCodeUrl);
+            setUrlPath(data.qrCodeUrl!);
         })
     }, []);
 

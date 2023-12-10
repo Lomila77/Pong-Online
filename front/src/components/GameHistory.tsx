@@ -3,8 +3,10 @@ import {User} from "../api/queries";
 import React from "react";
 import CardHistory from "./CardHistory";
 
-function GameHistory() {
+const GameHistory: React.FC = () => {
     const {user, setUser} = useUser();
+    if (!user)
+        return;
     return (
         <div className="card-side card-bordered border-4 border-white bg-[#fbfaf3] shadow-xl p-12">
         <span className="font-display text-orangeNG text-3xl">
