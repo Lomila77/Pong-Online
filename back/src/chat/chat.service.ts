@@ -153,6 +153,11 @@ export class ChatService {
             fortytwo_id: user.fortytwo_id,
           },
         },
+        members: {
+          connect: {
+            fortytwo_id: user.fortytwo_id,
+          },
+        },
       },
     });
   }
