@@ -221,11 +221,11 @@ export const ChatProvider = ({ children }) => {
         console.log("Friend disconnected recieved", updatedUser)
         updateChatMember(updatedUser);
       });
+
       /* *********************************************************
           * pseudo Update:
             - update member with updatedUser
       ***********************************************************/
-     // todo : ajouter la fonction qui va update les users
       newSocket?.on('pseudo Update', (updatedUser: IChatMember) => {
         console.log("pseudo update recieved", updatedUser)
         updateChatMember(updatedUser);
@@ -360,7 +360,6 @@ export const ChatProvider = ({ children }) => {
     }
   }
 
-
     /* *********************************************************
       * updateMemberById
         - usage : called after recieving event 'Friend connected/disconnected && pseudo Update'
@@ -457,17 +456,6 @@ export const ChatProvider = ({ children }) => {
     }
     return channelList;
   }
-
-
-  // function removeChannelById(channels: IChannels, channelId: number): IChannels {
-  //   const updatedChannels = {
-  //     MyDms: removeChannel(channels.MyDms, channelId),
-  //     MyChannels: removeChannel(channels.MyChannels, channelId),
-  //     ChannelsToJoin: removeChannel(channels.ChannelsToJoin, channelId),
-  //   };
-
-  //   return updatedChannels;
-  // }
 
   /* *********************************************************
       * handleOpenWindow
