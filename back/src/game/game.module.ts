@@ -6,6 +6,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { GameService } from './api/game-service';
 import { RankingService } from './api/ranking-service';
 import { ChatModule } from 'src/chat/chat.module';
+import { PrismaClient } from '@prisma/client';
 
 
 @Module({
@@ -17,6 +18,6 @@ import { ChatModule } from 'src/chat/chat.module';
       useValue: new EventsGateway(new RoomStoreService(), 10, 60)
     },*/
     EventsGateway,
-    RoomStoreService, GameService, RankingService],
+    RoomStoreService, GameService, PrismaClient, RankingService],
 })
 export class GameModule { }
