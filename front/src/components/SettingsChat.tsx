@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {useChat} from "../context/ChatContext";
+import {IChatMember, IChatWindow, useChat} from "../context/ChatContext";
 function SettingsChat({chat, closeSettings}) {
     const { sendAdminForm } = useChat();
     const [errorAdminData, setErrorAdminData] = useState(false);
@@ -19,7 +19,7 @@ function SettingsChat({chat, closeSettings}) {
 
     useEffect(() => {
         if (adminData?.target) {
-            if (!chat.members.find(member => member.name == adminData.target))
+            if (!chat.members.find((member: IChatMember) => member.name == adminData.target))
                 setErrorAdminData(true);
             else
                 setErrorAdminData(false);
@@ -29,17 +29,17 @@ function SettingsChat({chat, closeSettings}) {
 
     const sendAdminData = () => {
         selectedMuteOption == "mute" ?
-            setAdminData(prevState => ({...prevState, mute: true})) :
-            setAdminData(prevState => ({...prevState, unMute: true}));
+            setAdminData((prevState: any) => ({...prevState, mute: true})) :
+            setAdminData((prevState: any) => ({...prevState, unMute: true}));
         selectedBanOption == "ban" ?
-            setAdminData(prevState => ({...prevState, ban: true})) :
-            setAdminData(prevState => ({...prevState, unBan: true}));
-        sendAdminForm(chat.id, chat.members.find(member => member.name == adminData.target).id,
+            setAdminData((prevState: any) => ({...prevState, ban: true})) :
+            setAdminData((prevState: any) => ({...prevState, unBan: true}));
+        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
             adminData.mute, adminData.unMute,
             adminData.ban, adminData.unBan,
             adminData.kick, adminData.admin,
             adminData.isPassword, adminData.password);
-        setAdminData(prevState => ({
+        setAdminData((prevState: any) => ({
             ...prevState,
             target: '',
             mute: false, unMute: false,
