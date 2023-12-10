@@ -486,10 +486,8 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     const res: number = await this.chatService.update_chan(data);
-    if (res == 1)
-      client.broadcast.emit('Password is empty but chan need password', data);
-    else if (res == 2)
-      client.broadcast.emit('not an admin', data);
+    if (res == 2)
+      client.broadcast.emit('not an owner', data);
     else
       client.broadcast.emit('chan updated', data);
   }

@@ -795,38 +795,22 @@ export class ChatService {
   }
 
   async update_chan(info: EditChannelCreateDto) {
-
     const idchat = info.channelid;
-    let hash = "";
-    if (info.Password != undefined && info.Password != null && info.Password != "") {
-      const salt = await bcrypt.genSalt();
-      hash = await bcrypt.hash(info.Password, salt);
-      info.isPassword = true;
-    }
-    else {
-      info.isPassword = false;
-    }
+
     if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
-      if (info.isPassword)
-        if (!info.Password)
-          return (1);
-      if (hash == "")
-        hash = null;
-      await this.prisma.channel.update(
-        {
-          where: {
-            id: idchat,
-          },
-          data: {
-            password: hash,
-            isPassword: info.isPassword,
-          }
-        }
-      )
-      return (0);
+      await this.prisma.channel.update({
+        where: {
+          id: idchat,
+        },
+        data: {
+          isPassword: false, // Remove the password requirement
+        },
+      });
+
+      return 0;
+    } else {
+      return 2;
     }
-    else
-      return (2);
   }
 
   async userIsInChan(fortytwo_id: number, id_channel: number): Promise<boolean> {
