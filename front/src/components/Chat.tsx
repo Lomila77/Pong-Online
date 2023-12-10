@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import CreateChannel from "./CreateChannel";
 import WindowChannel from "./WindowChannel";
 import WindowChat from "./WindowChat";
+import CreateGame from "../pages/game/CreateGame"
 import Messagerie from "../images/chat.svg";
 import Play from "../images/play.svg";
 import Channel from "../images/channel.svg";
@@ -19,13 +20,14 @@ import { send } from 'vite';
 import createChannel from './CreateChannel';
 
 function Chat() {
-    const {channels, openedWindows, openWindow, closeWindow, leaveChannel } = useChat();
+    const {channels, openedWindows, openWindow, closeWindow, leaveChannel, sendMessage } = useChat();
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
     const [selectedTarget, setSelectedTarget] = useState<IChannel>(null);                                // Permet de selectionner le user pour afficher le dm avec celui-ci
     const [selectedTargetToDestroy, setSelectedTargetToDestroy] = useState<IChannel>(null);             // Permet de detruire la fenetre selectionner
     const [leaveChanId, setLeaveChanID] = useState(-1);
-    const navigate = useNavigate();
-    const { sendMessage } = useChat();
+    const [loadPrivateGame, setLoadPrivateGame] = useState(-1);
+
+
 
     useEffect(() => {
         if (leaveChanId != -1) {
@@ -72,7 +74,7 @@ function Chat() {
 
     // Ajoute au dm ouvert le dm concerner par selectedUser afin de gerer son affichage en bas de page
     useEffect(() => {
-        if (!selectedTarget)
+        if (!selectedTarget || !openedWindows)
             return;
         if (selectedTarget.id && !openedWindows.find(content => content.id === selectedTarget.id)) {
             if (selectedTarget.isPassword)
@@ -107,28 +109,14 @@ function Chat() {
         setSelectedTargetToDestroy(null);
     }, [selectedTargetToDestroy]);
 
-    const newPrivateGame = (channel: IChannel) => {
-        const ballSpeedY = 2;
-        const ballSpeedX = 2;
-        const ballSize = 2;
-        const victoryPoints = 5;
-        const paddleHeight = 2;
-        const paddleWidth = 2;
-
-        GameService.createPrivateGame(ballSpeedY, ballSpeedX, ballSize, victoryPoints, paddleHeight, paddleWidth)
-            .then((game) => {
-                const url = window.location.href + "game/" + game.id;
-                const message = `I just created a game, join me ! ${url}`;
-                sendMessage(message, channel.id);
-                navigate(`/game/${game.id}`);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    };
 
     return (
         <div className={"drawer drawer-end flex flex-col-reverse h-full items-end static"}>
+            {loadPrivateGame != -1 && (
+                <div className={"absolute z-10 left-1/3  bg-orangeNG"}>
+                    <CreateGame channelId={loadPrivateGame}/>
+                </div>
+            )}
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" onClick={toggleDrawerOpen}/>
             <div className="drawer-content">
                 <label htmlFor="my-drawer-4"
@@ -171,7 +159,7 @@ function Chat() {
 
                             {!displayChannelDrawer && (
                                 <button className="btn btn-square btn-ghost btn-sm"
-                                        onClick={() => {newPrivateGame(target)}}>
+                                        onClick={() => setLoadPrivateGame(target.id)}>
                                     <img src={Play} alt={"play"} className={""}/>
                                 </button>
                             )}

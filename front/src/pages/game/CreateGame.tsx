@@ -1,6 +1,8 @@
 import React, {  useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameService } from '../../api/game.service';
+import {useUser} from "../../context/UserContext";
+import {useChat} from "../../context/ChatContext";
 
 // to do
 // test api =>
@@ -9,8 +11,8 @@ import { GameService } from '../../api/game.service';
 // then : user is redirected to the game page
 // route doesn't exist in api => remy must create it
 
-function CreateGame() {
-
+function CreateGame({channelId}) {
+  const { sendMessage } = useChat();                                                                     // Recuperation de la session de l'utilisateur
   const [ballSpeedY, setBallSpeedY] = useState<number>(2);
   const [ballSpeedX, setBallSpeedX] = useState<number>(2);
   const [ballSize, setBallSize] = useState<number>(2);
@@ -44,6 +46,11 @@ function CreateGame() {
 
   const newPrivateGame = () => {
     GameService.createPrivateGame(ballSpeedY, ballSpeedX, ballSize, victoryPoints, paddleHeight, paddleWidth).then((game) => {
+      if (channelId) {
+        const url = window.location.href + "game/" + game.id;
+        const message = `I just created a game, join me ! ${url}`;
+        sendMessage(message, channelId);
+      }
       navigate(`/game/${game.id}`);
     }).catch((err) => {
       console.log(err);
