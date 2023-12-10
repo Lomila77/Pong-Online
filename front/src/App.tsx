@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import History from './pages/History';
 import TwoFA from "./components/TwoFA";
 import Game from './pages/game/Game';
 import CreateGame from './pages/game/CreateGame';
@@ -40,6 +41,14 @@ const App = () => {
           element={
             <Layout>
               <Leaderboard />
+            </Layout>
+          }
+        />
+                <Route
+          path="/history"
+          element={
+            <Layout>
+              <History />
             </Layout>
           }
         />

@@ -16,11 +16,20 @@ function Home() {
 //    }, [user]);
 
     const renderFireAndBuilding = (
-        <div className="relative">
-            <img src={Buildings} alt="Building" className="w-full" />
-            <FireGif />
+        <div className="relative FireBuilding">
+            <img src={Buildings} alt="Building" className="" />
+            {/* <FireGif className="Fire"/> */}
         </div>
     );
+
+    // const renderFire = (
+    //     <>
+    //       <img className="Buildings" src={Buildings} />
+    //       <div className="Fire">
+    //         <FireGif />
+    //       </div>
+    //     </>
+    //   )
 
     const newGame = () => {
         GameService.createOrJoinGame().then((game) => {
@@ -38,7 +47,7 @@ function Home() {
     return (
         <div className='flex relative flex-col-reverse md:flex-row lg:flex-row xl:flex-row 2xl:flex-row h-full'>
             <div className='flex flex-col flex-1 items-center justify-center py-2 px-5 bg-red'>
-                <div className=''>
+                <div className='renderFireBuilding'>
                     {renderFireAndBuilding}
                 </div>
             </div>
@@ -61,5 +70,23 @@ function Home() {
         </div>
     );
 }
+
+// return (
+//     <div className="flex items-stretch Parent relative flex-col-reverse md:flex-row ">
+//       <div className="sm:block md:hidden">{renderFire}</div>
+//       <div className="hidden md:block flex flex-1 items-end relative">
+//         {renderFire}
+//       </div>
+//       <div className="flex flex-1 items-center justify-center sm:py-2 sm:px-5">
+//         <button className="text-6xl font-display text-orangeNG hover:text-7xl ease-i-out duration-300 NewGame mb-32">
+//           NEW GAME
+//         </button>
+//       </div>
+//       <div>
+//           <Chat />
+//       </div>
+//     </div>
+//   )
+// }
 
 export default Home;

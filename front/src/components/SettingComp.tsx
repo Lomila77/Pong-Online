@@ -190,11 +190,11 @@ const SettingComp: React.FC = () => {
           </div>
         </form>
         <Gallery setFile={setFile}/>
-        {!settingsLock && (
+        {/* {!settingsLock && (
           <div className={"mt-5"}>
             <GameHistory />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

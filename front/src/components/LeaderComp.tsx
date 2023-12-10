@@ -44,7 +44,8 @@ const LeaderComp: React.FC = () => {
           ))}
         </div>
       </div>
-      {selectedUser && (
+      
+      {/* {selectedUser && (
           <div className={"flex justify-center items-center"}>
             <div className="modal-box shrink w-64 card card-bordered border-white border-4 ">
               <button className="btn btn-sm btn-circle text-bleuPseudo btn-ghost absolute right-2 top-2"
@@ -56,7 +57,20 @@ const LeaderComp: React.FC = () => {
               </div>
             </div>
           </div>
-      )}
+      )} */}
+
+      <dialog id="my_modal_3" className="modal">
+        <div className="modal-box shrink w-64 card card-bordered border-white border-4">
+          <form method="dialog">
+            <button className="btn btn-sm btn-circle text-bleuPseudo btn-ghost absolute right-2 top-2">
+              ✕
+            </button>
+          </form>
+          <div>
+            <ProfileModal user={selectedUser}/>
+          </div>
+        </div>
+      </dialog>
     </>
   );
 };
