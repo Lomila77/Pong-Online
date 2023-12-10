@@ -432,6 +432,72 @@ export class ChatService {
       return (false)
   }
 
+  async removeAdmin(userId: number, chatId: number) {
+    await this.prisma.channel.update({
+      where: {
+        id: chatId,
+      },
+      data: {
+        admins: {
+          disconnect: {
+            fortytwo_id: userId,
+          },
+        },
+      },
+    });
+  }
+
+  async isOwner_Chan(userId: number, id: number) {
+    const chan = await this.prisma.channel.findFirst({
+      where: {
+        id: id,
+        ownerId: userId,
+      },
+    });
+
+    return chan !== null;
+  }
+
+  async findNewOwner(chatId: number): Promise<User | null> {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id: chatId,
+      },
+      include: {
+        members: true,
+        messages: true,
+      },
+    });
+
+    if (!channel) {
+      return null;
+    }
+
+    const currentOwnerId = channel.ownerId;
+    const messages = channel.messages;
+
+    for (const member of channel.members) {
+      if (member.fortytwo_id !== currentOwnerId) {
+        const userHasSentMessage = messages.some(message => message.userId === member.fortytwo_id);
+        if (userHasSentMessage) {
+          return member;
+        }
+      }
+    }
+    return null;
+  }
+
+  async updateOwner(chatId: number, newOwnerId: number): Promise<void> {
+    await this.prisma.channel.update({
+      where: {
+        id: chatId,
+      },
+      data: {
+        ownerId: newOwnerId,
+      },
+    });
+  }
+
   async newMsg(info: ChannelMessageSendDto, pseudo: string) {
     const channelid = info.channelId;
     const user = await this.getUserByPseudo(pseudo);
