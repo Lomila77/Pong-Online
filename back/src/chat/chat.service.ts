@@ -432,6 +432,72 @@ export class ChatService {
       return (false)
   }
 
+  async removeAdmin(userId: number, chatId: number) {
+    await this.prisma.channel.update({
+      where: {
+        id: chatId,
+      },
+      data: {
+        admins: {
+          disconnect: {
+            fortytwo_id: userId,
+          },
+        },
+      },
+    });
+  }
+
+  async isOwner_Chan(userId: number, id: number) {
+    const chan = await this.prisma.channel.findFirst({
+      where: {
+        id: id,
+        ownerId: userId,
+      },
+    });
+
+    return chan !== null;
+  }
+
+  async findNewOwner(chatId: number): Promise<User | null> {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id: chatId,
+      },
+      include: {
+        members: true,
+        messages: true,
+      },
+    });
+
+    if (!channel) {
+      return null;
+    }
+
+    const currentOwnerId = channel.ownerId;
+    const messages = channel.messages;
+
+    for (const member of channel.members) {
+      if (member.fortytwo_id !== currentOwnerId) {
+        const userHasSentMessage = messages.some(message => message.userId === member.fortytwo_id);
+        if (userHasSentMessage) {
+          return member;
+        }
+      }
+    }
+    return null;
+  }
+
+  async updateOwner(chatId: number, newOwnerId: number): Promise<void> {
+    await this.prisma.channel.update({
+      where: {
+        id: chatId,
+      },
+      data: {
+        ownerId: newOwnerId,
+      },
+    });
+  }
+
   async newMsg(info: ChannelMessageSendDto, pseudo: string) {
     const channelid = info.channelId;
     const user = await this.getUserByPseudo(pseudo);
@@ -729,38 +795,22 @@ export class ChatService {
   }
 
   async update_chan(info: EditChannelCreateDto) {
-
     const idchat = info.channelid;
-    let hash = "";
-    if (info.Password != undefined && info.Password != null && info.Password != "") {
-      const salt = await bcrypt.genSalt();
-      hash = await bcrypt.hash(info.Password, salt);
-      info.isPassword = true;
+
+    if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
+      await this.prisma.channel.update({
+        where: {
+          id: idchat,
+        },
+        data: {
+          isPassword: false, // Remove the password requirement
+        },
+      });
+
+      return 0;
+    } else {
+      return 2;
     }
-    else {
-      info.isPassword = false;
-    }
-    if (await this.isAdmin_Chan(info.userId, info.channelid) == true) {
-      if (info.isPassword)
-        if (!info.Password)
-          return (1);
-      if (hash == "")
-        hash = null;
-      await this.prisma.channel.update(
-        {
-          where: {
-            id: idchat,
-          },
-          data: {
-            password: hash,
-            isPassword: info.isPassword,
-          }
-        }
-      )
-      return (0);
-    }
-    else
-      return (2);
   }
 
   async userIsInChan(fortytwo_id: number, id_channel: number): Promise<boolean> {

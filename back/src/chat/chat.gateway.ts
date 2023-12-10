@@ -287,16 +287,38 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     if (this.clients[client.id] === undefined)
       return;
-    const chatInfo = await this.chatService.isDM(data.chatId);
-    if (chatInfo) {
-      this.server.to(client.id).emit("DM:quit");
-      return;
+
+    const userId = this.clients[client.id].fortytwo_id;
+    const chatId = data.chatId;
+
+    // const chatInfo = await this.chatService.isDM(chatId);
+    // if (chatInfo) {
+    //   this.server.to(client.id).emit("DM:quit");
+    //   return;
+    // }
+
+    const isOwner = await this.chatService.isOwner_Chan(userId, chatId);
+    const isAdmin = await this.chatService.isAdmin_Chan(userId, chatId);
+
+    if (isOwner) {
+      const newOwner = await this.chatService.findNewOwner(chatId);
+      if (newOwner) {
+        await this.chatService.updateOwner(chatId, newOwner.fortytwo_id);
+      } else {
+        await this.chatService.delChanById(chatId);
+        this.server.to(client.id).emit("chan deleted", { chatId: chatId });
+        return;
+      }
     }
-    const quit = await this.chatService.quit_Chan(this.clients[client.id].fortytwo_id, data.chatId);
-    client.leave(data.chatId.toString());
-    this.server.to(client.id).emit("quited", { chatId: data.chatId });
-    this.server.to(data.chatId.toString()).emit("quit", { username: this.clients[client.id].fortytwo_userName })
-    // console.log("user quit: " + this.clients[client.id].username);
+
+    if (isAdmin) {
+      await this.chatService.removeAdmin(userId, chatId);
+    }
+
+    await this.chatService.quit_Chan(userId, chatId);
+    client.leave(chatId.toString());
+    this.server.to(client.id).emit("quited", { chatId: chatId });
+    this.server.to(chatId.toString()).emit("quit", { pseudo: this.clients[client.id].pseudo });
   }
 
   @SubscribeMessage('is-admin')
@@ -464,10 +486,8 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     const res: number = await this.chatService.update_chan(data);
-    if (res == 1)
-      client.broadcast.emit('Password is empty but chan need password', data);
-    else if (res == 2)
-      client.broadcast.emit('not an admin', data);
+    if (res == 2)
+      client.broadcast.emit('not an owner', data);
     else
       client.broadcast.emit('chan updated', data);
   }
