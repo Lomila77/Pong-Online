@@ -187,7 +187,7 @@ export class ChatController {
 
 	@Post('/channels/:id/checkPassword')
 	@UseGuards(JwtGuard)
-	async checkPassword(@Param("id", ParseIntPipe)id: number, @Body() body: frontReqInterface): Promise<backResInterface> {
+	async checkPassword(@Param("id", ParseIntPipe) id: number, @Body() body: frontReqInterface): Promise<backResInterface> {
 		return this.chat_service.checkPassword(id, body.password);
 	}
 }

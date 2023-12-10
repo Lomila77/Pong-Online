@@ -54,7 +54,6 @@ function Home() {
                     PRIVATE GAME
                 </button>
             </div>
-
             <div>
                 <Chat />
             </div>

@@ -980,7 +980,8 @@ export class ChatService {
       }
     });
     try {
-      const result = bcrypt.compare(password, channel.password);
+      const result: boolean = await bcrypt.compare(password, channel.password);
+      console.log("RESUUUUUUUULT: ", result);
       return {passwordOk: result};
     } catch (error) {
       console.log(error);

@@ -89,17 +89,16 @@ function Chat() {
     const handlePassword = () => {
         if (password) {
             backRequest('chat/channels/' + selectedTarget.id + '/checkPassword', 'POST', {password: password}).then(data => {
-                console.log(data.passwordOk);
                 if (data.passwordOk) {
                     openWindow(selectedTarget);
                     setDisplayInputPassword(false);
                     setDisplayBadPassword(false);
+                    setSelectedTarget(null);
                 } else {
                     setDisplayBadPassword(true);
                 }
             })
         }
-        setSelectedTarget(null);
     }
 
     // Efface une fenetre pour ne plus l'afficher, apres qu'il ete fermee via la croix
@@ -139,7 +138,7 @@ function Chat() {
                                 <div className={"absolute text-black bg-orangeNG flex flex-row justify-between items-center px-2 my-1"}>
                                     <input type="password"
                                            placeholder="Password"
-                                           className="input input-sm w-full max-w-xs"
+                                           className={"input input-sm w-full max-w-xs " + (displayBadPassword? "border-rose-500" : "")}
                                            value={password}
                                            onChange={e => {
                                                setPassword(e.target.value);
