@@ -96,14 +96,12 @@ export const ChatProvider = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
+  const [prevPseudo, setPrevPseudo] = useState<string>('');
 
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
   const initChatCtx = () => {
-    const currentUser: IChatMember = {name : user?.pseudo || "",
-                                      id: user?.fortytwo_id || 0,
-                                      connected: user?.isAuthenticated
-    };
+
     const token = Cookies.get('jwtToken');
     if (!token)
       return
@@ -112,6 +110,7 @@ export const ChatProvider = ({ children }) => {
         token: token
       }
     });
+    setPrevPseudo(user?.pseudo || '');
     newSocket.on('connect', () => {
       setSocket(newSocket);
 
@@ -124,6 +123,9 @@ export const ChatProvider = ({ children }) => {
         allChannels && setChannels(allChannels);
       })
 
+      /* *********************************************************
+          * Message Created:
+      ***********************************************************/
       newSocket?.on('Message Created', (message: IChatHistory, channelId: number) => {
         console.log(message);
         setOpenedWindows(prevWindow => {
@@ -163,7 +165,6 @@ export const ChatProvider = ({ children }) => {
 
       /* *********************************************************
           * Channel Joined :
-
             - if new channel joined, open channel window //todo not accurate anymore
       ***********************************************************/
       newSocket?.on('Channel Joined', (newChannel: IChannel) => {
@@ -179,21 +180,18 @@ export const ChatProvider = ({ children }) => {
         }
       });
 
-      
+
       /* *********************************************************
           * Quited :
-
             - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
       ***********************************************************/
       newSocket?.on('quited', (chatId: number) => {
         console.log("Channel quited: \n\n\n", chatId);
         console.log("\n\n", channels);
-
       });
 
       /* *********************************************************
           * Invited:
-
             - invite a friend in channel
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
@@ -205,6 +203,32 @@ export const ChatProvider = ({ children }) => {
         console.log("Channel quited: \n\n\n", channel.id);
         console.log("\n\n", channels);
 
+      });
+
+      /* *********************************************************
+          * Friend connected:
+            - invite a friend in channel
+      ***********************************************************/
+
+
+      /* *********************************************************
+          * Friend disconnected:
+            - invite a friend in channel
+      ***********************************************************/
+
+      /* *********************************************************
+          * pseudo Update:
+            - invite a friend in channel
+      ***********************************************************/
+     // todo : ajouter la fonction qui va update les users
+      newSocket?.on('pseudo Update', (channel: IChannel) => {
+        // setChannels((prev) => ({
+        //   ...prev!,
+        //   MyChannels: addChannel(prev.MyChannels, channel),
+        //   ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
+        // }))
+        // console.log("Channel quited: \n\n\n", channel.id);
+        console.log("pseudo Update recieved");
       });
 
       socketRef.current = newSocket;
@@ -220,6 +244,11 @@ export const ChatProvider = ({ children }) => {
     });
   }
 
+  /* *********************************************************
+      * pseudo Update:
+        - invite a friend in channel
+  ***********************************************************/
+
   useEffect(() => {
     if (user?.isAuthenticated && !socket?.connected) {
       initChatCtx();
@@ -231,15 +260,25 @@ export const ChatProvider = ({ children }) => {
     }
   }, [user])
 
+  /* *********************************************************
+      * update pseudo change
+          - on change of user state change pseudo
+          - the horrible ifs conditions is due to the fact that for some reason
+            on update of user via settings user goes from partially "undefined" user
+            to fully "defined pseudo" state which triggers the useEffect
+            otherwise it would have been simpler to listen to user.pseudo only
+  ***********************************************************/
+  useEffect (() => {
+    if (!socket || prevPseudo == '' || !user || !user?.fortytwo_id || !user.pseudo)
+      return;
+    if ( user.fortytwo_id && user.pseudo && prevPseudo != user.pseudo) {
+      console.log('sending psudo Update signal', user.fortytwo_id)
+      socket?.emit("pseudo Update")
+    }
+    }, [user, prevPseudo])
+
 
   /*********** chat window states ************/
-
-  // const updateChannels = (newChat : IChannel) => {
-  //   if (isChannelKnown(newChat.id, newChat.type))
-  //   {
-
-  //   }
-  // }
 
   /* *********************************************************
       * moveMemberToFirst && moveMemberToFirstInIChannels:
@@ -320,14 +359,14 @@ export const ChatProvider = ({ children }) => {
   }
 
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
-    console.log("removeChannel : initial channel list ", channelList);
-    const filteredlist = channelList.filter((channel) => channel.id !== channelId);
-    console.log("removeChannel : filtered channel list ", filteredlist);
+    // console.log("removeChannel : initial channel list ", channelList);
+    // const filteredlist = channelList.filter((channel) => channel.id !== channelId);
+    // console.log("removeChannel : filtered channel list ", filteredlist);
     return channelList.filter((channel) => channel.id !== channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
-    console.log("addChannel : initial channel list ", channelList);
+    // console.log("addChannel : initial channel list ", channelList);
 
     const channelExists = channelList.find((channel) => channel.id === newChannel.id);
     if (!channelExists) {
@@ -369,19 +408,6 @@ export const ChatProvider = ({ children }) => {
   useEffect (() => {console.log("new newChannels set : ", channels)}, [channels])
   useEffect (() => {if (channels?.MyDms.length) console.log("new newChannels set in MyDms: ", channels?.MyDms)}, [channels?.MyDms])
 /********************************************************** */
-
-  /* *********************************************************
-      * update pseudo change
-  ***********************************************************/
-  useEffect (() => {
-    //todo update my user name inside all channels and send info to socket for back
-
-    // just emit a signal to back so he can send all info to everyone. (but me)
-    // update pseudo
-
-    // at reception of signal (update IchatMember) use generic updatefunction
-    // updateMemberById
-    }, [user?.pseudo])
 
   /* *********************************************************
       * fonctions to export
@@ -456,6 +482,7 @@ export const ChatProvider = ({ children }) => {
   }
 
   const leaveChannel = (chatId: number) => {
+    console.log('emit leave channel\n\n\n\n\n')
     socket?.emit('quit', {chatId: chatId});
     const channelToQuit = channels.MyChannels.find(channel => channel.id == chatId);
     if (channelToQuit) {

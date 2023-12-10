@@ -21,7 +21,6 @@ const App = () => {
           <Route path="/twoFA" element={ <AuthRedirectRoutes>  <TwoFA/> </AuthRedirectRoutes>} />
           <Route path="/settingslock" element={<AuthRedirectRoutes> <Settings /> </AuthRedirectRoutes>} />
 
-
         {/* route that should redirect towards "/login" us user is not authenticated */}
           <Route path="/" element={ <ProtectedRoute> <Layout> <Home/> </Layout>  </ProtectedRoute>} />
           <Route path="/settings" element={ <ProtectedRoute> <Layout> <Settings /></Layout>  </ProtectedRoute>} />
