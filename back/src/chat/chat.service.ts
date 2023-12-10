@@ -441,11 +441,11 @@ export class ChatService {
       return (false)
   }
 
-  async newMsg(info: ChannelMessageSendDto, pseudo: string) {
+  async newMsg(info: ChannelMessageSendDto, userId: number) {
     const channelid = info.channelId;
-    const user = await this.getUserByPseudo(pseudo);
+    const user =  await this.prisma.user.findUnique({ where: {fortytwo_id: userId,}})
     if (!user) {
-      throw new Error(`User with pseudo ${pseudo} not found`);
+      throw new Error(`User with pseudo ${userId} not found`);
     }
     const isInChan = await this.userIsInChan(user.fortytwo_id, channelid);
     const isMuted = await this.userIsChanMuted(user.fortytwo_id, channelid);

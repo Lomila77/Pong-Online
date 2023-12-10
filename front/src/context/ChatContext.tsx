@@ -127,7 +127,7 @@ export const ChatProvider = ({ children }) => {
           * Message Created:
       ***********************************************************/
       newSocket?.on('Message Created', (message: IChatHistory, channelId: number) => {
-        console.log(message);
+        console.log("Message Created recieved", message);
         setOpenedWindows(prevWindow => {
           return prevWindow.map((window) => {
             if (window.id === channelId) {
@@ -180,7 +180,6 @@ export const ChatProvider = ({ children }) => {
         }
       });
 
-
       /* *********************************************************
           * Quited :
             - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
@@ -207,30 +206,31 @@ export const ChatProvider = ({ children }) => {
 
       /* *********************************************************
           * Friend connected:
-            - invite a friend in channel
+            - update member with updatedUser
       ***********************************************************/
-
+      newSocket?.on('Friend connected', (updatedUser: IChatMember) => {
+        console.log("Friend connected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
 
       /* *********************************************************
           * Friend disconnected:
-            - invite a friend in channel
+            - update member with updatedUser
       ***********************************************************/
-
+      newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+        console.log("Friend disconnected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
       /* *********************************************************
           * pseudo Update:
-            - invite a friend in channel
+            - update member with updatedUser
       ***********************************************************/
      // todo : ajouter la fonction qui va update les users
-      newSocket?.on('pseudo Update', (channel: IChannel) => {
-        // setChannels((prev) => ({
-        //   ...prev!,
-        //   MyChannels: addChannel(prev.MyChannels, channel),
-        //   ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
-        // }))
-        // console.log("Channel quited: \n\n\n", channel.id);
-        console.log("pseudo Update recieved");
+      newSocket?.on('pseudo Update', (updatedUser: IChatMember) => {
+        console.log("pseudo update recieved", updatedUser)
+        updateChatMember(updatedUser);
       });
-
+1
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -261,7 +261,7 @@ export const ChatProvider = ({ children }) => {
   }, [user])
 
   /* *********************************************************
-      * update pseudo change
+      * useEffect{}[user, prevPseudo]
           - on change of user state change pseudo
           - the horrible ifs conditions is due to the fact that for some reason
             on update of user via settings user goes from partially "undefined" user
@@ -274,6 +274,7 @@ export const ChatProvider = ({ children }) => {
     if ( user.fortytwo_id && user.pseudo && prevPseudo != user.pseudo) {
       console.log('sending psudo Update signal', user.fortytwo_id)
       socket?.emit("pseudo Update")
+      setPrevPseudo(user.pseudo);
     }
     }, [user, prevPseudo])
 
@@ -346,6 +347,7 @@ export const ChatProvider = ({ children }) => {
     addChannelToChannelsByType(channels, newChannel)
   }
 
+  //todo : check if I can use a prev earlier
   const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
 
     if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
@@ -358,6 +360,87 @@ export const ChatProvider = ({ children }) => {
     }
   }
 
+
+    /* *********************************************************
+      * updateMemberById
+        - usage : called after recieving event 'Friend connected/disconnected && pseudo Update'
+        --> update user in Ichannels && openedWindow
+    ***********************************************************/
+  const updateChatMember = (updatedUser: IChatMember) => {
+    setChannels((prev) => {
+      return getUpdatedMembersIChannels(prev, updatedUser);
+    });
+    setOpenedWindows((prevWindow) => {
+      return getUpdatedMembersIChatWindows(prevWindow, updatedUser)
+    });
+  }
+
+  const getUpdatedMembersIChannels = (channels: IChannels, updatedUser: IChatMember) => {
+    const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
+    const updatedMyChannel = channels.MyChannels.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
+    const updatedMyDmsList = channels.ChannelsToJoin.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
+    return {
+      MyDms: updatedMyDms,
+      MyChannels: updatedMyChannel,
+      ChannelsToJoin: updatedMyDmsList,
+    }
+  }
+
+  const getUpdatedMembersIChannel: (channel: IChannel, updatedUser: IChatMember) => IChannel = (channel, updatedUser) => {
+    if (!channel)
+      return channel;
+
+    const updatedMembers = channel.members.map((member) =>
+      member.id === updatedUser.id ? { ...member, ...updatedUser } : member
+    );
+    const updatedAdmins = channel.admins ? channel.admins.map((admin) =>
+      admin.id === updatedUser.id ? { ...admin, ...updatedUser } : admin
+    )
+    : [] ;
+
+    const updatedOwner = channel.owner ?
+      channel.owner.id === updatedUser.id ? { ...channel.owner, ...updatedUser } : channel.owner
+      : channel.owner;
+
+    return {
+      ...channel,
+      members: updatedMembers,
+      admins: updatedAdmins,
+      owner: updatedOwner,
+    };
+  };
+
+
+  const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
+    // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
+    return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
+  }
+
+  const getUpdatedMembersIChatWindow: (window: IChatWindow, updatedUser: IChatMember) => IChatWindow = (window, updatedUser) => {
+    if (!window)
+      return window;
+
+    const updatedMembers = window.members.map((member) =>
+      member.id === updatedUser.id ? { ...member, ...updatedUser } : member
+    );
+    const updatedAdmins = window.admins ? window.admins.map((admin) =>
+      admin.id === updatedUser.id ? { ...admin, ...updatedUser } : admin
+    )
+    : [] ;
+
+    const updatedOwner = window.owner ?
+      window.owner.id === updatedUser.id ? { ...window.owner, ...updatedUser } : window.owner
+      : window.owner;
+
+    return {
+      ...window,
+      members: updatedMembers,
+      admins: updatedAdmins,
+      owner: updatedOwner,
+    };
+  };
+
+  //todo : change function by const =>
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
     // console.log("removeChannel : initial channel list ", channelList);
     // const filteredlist = channelList.filter((channel) => channel.id !== channelId);
@@ -374,6 +457,7 @@ export const ChatProvider = ({ children }) => {
     }
     return channelList;
   }
+
 
   // function removeChannelById(channels: IChannels, channelId: number): IChannels {
   //   const updatedChannels = {
