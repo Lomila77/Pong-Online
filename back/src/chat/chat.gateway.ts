@@ -306,6 +306,7 @@ export class ChatGateway implements OnGatewayConnection {
         await this.chatService.updateOwner(chatId, newOwner.fortytwo_id);
       } else {
         await this.chatService.delChanById(chatId);
+        this.server.to(client.id).emit("chan deleted", { chatId: chatId });
         return;
       }
     }
