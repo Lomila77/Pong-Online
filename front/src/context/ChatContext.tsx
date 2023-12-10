@@ -126,7 +126,7 @@ export const ChatProvider = ({ children }) => {
 
       newSocket?.on('Message Created', (message: IChatHistory, channelId: number) => {
         console.log(message);
-        setOpenedWindows(prevWindow => {
+        setOpenedWindows((prevWindow: IChatWindow[]) => {
           return prevWindow.map((window) => {
             if (window.id === channelId) {
               return {
@@ -170,7 +170,7 @@ export const ChatProvider = ({ children }) => {
         console.log("channel Joined signal received\n", newChannel);
         if (newChannel.type != "MyDms"){
           newChannel.type = "MyChannels"
-          setChannels((prev) => ({
+          setChannels((prev: IChannels) => ({
             ...prev!,
             MyChannels: addChannel(prev.MyChannels, newChannel),
             ChannelsToJoin: removeChannel(prev.ChannelsToJoin, newChannel.id),
@@ -197,22 +197,34 @@ export const ChatProvider = ({ children }) => {
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
         console.log("CHANNEL: ", channel);
-        setChannels((prev) => ({
+        setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: addChannel(prev.MyChannels, channel),
           ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
-        }))
+        }));
         console.log("Channel quited: \n\n\n", channel.id);
         console.log("\n\n", channels);
       });
 
       /* *********************************************************
-          * Wrong password:
+          * Chan updated:
 
             -
       ***********************************************************/
-      newSocket?.on('Wrong password', (chatId: number) => {
-
+      newSocket?.on('chan updated', (channelid: number, isPassword: boolean, Password: string) => {
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: prev.MyChannels.map((channel, index) => {
+            if (index === channelid) {
+              return {
+                ...channel,
+                isPassword: isPassword,
+                Password: (isPassword? Password : ''),
+              };
+            }
+            return channel;
+          }),
+        }));
       });
 
 
@@ -321,7 +333,7 @@ export const ChatProvider = ({ children }) => {
     if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
       newChannel.type = "ChannelsToJoin";
     if(!isChannelKnown(newChannel.type, newChannel.id)) {
-      setChannels((prev) => ({
+      setChannels((prev: IChannels) => ({
         ...prev!,
         [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
       }))
@@ -367,7 +379,7 @@ export const ChatProvider = ({ children }) => {
                   ...chatData,
                   history: ret?.data || []
                 }
-                setOpenedWindows(current => {return([...current || [], newWindow])})
+                setOpenedWindows((current: IChatWindow[]) => {return([...current || [], newWindow])})
               }
               )
             }
@@ -386,7 +398,7 @@ export const ChatProvider = ({ children }) => {
   ***********************************************************/
   const closeWindow = (id : number) => {
     console.log("closeWindow called \n", id);
-    setOpenedWindows((prev) => prev ? prev.filter((f) => f.id !== id) : []);
+    setOpenedWindows((prev: IChatWindow[]) => prev ? prev.filter((f) => f.id !== id) : []);
   }
 
   const openWindow = async (chatData? : IChannel, form?: IFormData, password?: string) => {
@@ -423,6 +435,7 @@ export const ChatProvider = ({ children }) => {
                          ban: boolean, unBan: boolean,
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
+    const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (mute)
       socket?.emit('mute', {chatId: chatId, userId: targetId});
     else if (unMute)
@@ -435,17 +448,20 @@ export const ChatProvider = ({ children }) => {
       socket?.emit('kick', {chatId: chatId, userId: targetId});
     if (admin)
       socket?.emit('set-admin', {chatId: chatId, userId: targetId});
-    if (isPassword) // TODO add change pwd
-      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+    if (isPassword && !channel.isPassword) // TODO add change pwd
+      socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword, Password: password});
+    else if (!isPassword && channel.isPassword) {
+      socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword});
+    }
   }
 
   const addFriendToChannel = (nameToAdd: string, chatId: number) => {
     //check if name is in channels.MyDms (is friend)
-    const foundChannel = channels.MyDms.find((channel) =>
+    const foundChannel = channels.MyDms.find((channel: IChannel) =>
       channel.members.some((member) => member.name === nameToAdd)
     );
     //get friend profile via pseudo
-    const friend = foundChannel ? foundChannel.members.find((member) => member.name === nameToAdd) : undefined;
+    const friend = foundChannel ? foundChannel.members.find((member: IChatMember) => member.name === nameToAdd) : undefined;
     console.log(friend);
     if (friend) {
       console.log('emit : invit chatid: ', chatId, "/", friend.id);
@@ -455,14 +471,14 @@ export const ChatProvider = ({ children }) => {
 
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
-    const channelToQuit = channels.MyChannels.find(channel => channel.id == chatId);
+    const channelToQuit = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (channelToQuit) {
       channelToQuit?.isPrivate ?
-          setChannels((prev) => ({
+          setChannels((prev: IChannels) => ({
             ...prev!,
             MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
           })) :
-          setChannels((prev) => ({
+          setChannels((prev: IChannels) => ({
             ...prev!,
             MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
             ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
