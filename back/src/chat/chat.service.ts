@@ -806,7 +806,7 @@ export class ChatService {
     else {
       info.isPassword = false;
     }
-    if (await this.isAdmin_Chan(info.userId, info.channelid) == true) {
+    if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
       if (info.isPassword)
         if (!info.Password)
           return (1);
