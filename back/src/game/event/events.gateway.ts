@@ -33,13 +33,13 @@ export class EventsGateway {
   server: Server;
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
+  async handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
     const mapPong = this.roomStoreService.getMapPong();
 
     // si la room existe pas encore
     if (!mapPong.get(data.room)) {
       client.emit('gameDoesNotExist', {})
-      return
+      return;
       // mapPong.set(data.room, {
       //   "map": new Map(), "players": [], "game": {
       //     xBall: 200,
@@ -67,12 +67,13 @@ export class EventsGateway {
     if (mapPong.get(data.room).players.length === 2) {
       if (!mapPong.get(data.room).map.get(data.name)) {
         // déjà 2 joueurs dans la partie mais pas le joueur qui join
-        return
+        return;
       }
-      this.chatGateway.emitSignal(1, {
-        username: client.data.username,
-        inGame: true
-      }, "userGameState")
+
+      const userId = await this.gameService.findUserIdByUsername(client.data.username);
+      console.log("USER ID IN GAME = ", userId);
+      await this.gameService.setUserInGame(userId, true);
+      await this.chatGateway.emitSignal(userId, {userId: userId}, "userGameState");
 
       // le joueur qui join était déjà dans la partie
       const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -81,10 +82,15 @@ export class EventsGateway {
       return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
     }
 
-    this.chatGateway.emitSignal(1, {
-      username: client.data.username,
-      inGame: true
-    }, "userGameState")
+    const userId = await this.gameService.findUserIdByUsername(client.data.username);
+    console.log("USER ID IN GAME = ", userId);
+    await this.gameService.setUserInGame(userId, true);
+    await this.chatGateway.emitSignal(userId, {userId: userId}, "userGameState");
+    // Pourquoi le faire une deuxieme fois ?
+    //this.chatGateway.emitSignal(1, {
+    //  username: client.data.username,
+    //  inGame: true
+    //}, "userGameState")
 
 
     // le joueur arrive dans la partie et c'est le premier
