@@ -81,9 +81,9 @@ const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, 
                 {!displayUserProfil && (
                     <div id={"message-container" + user} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
                         {history && history.map((msg, index) => (
-                            <Message message={msg}
-                                     key={index}
-                            />
+                            <div key={index}>
+                                <Message message={msg}/>
+                            </div>
                         ))}
                     </div>
                 )}
