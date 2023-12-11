@@ -321,10 +321,17 @@ export const ChatProvider = ({ children }) => {
       ************************************************************/
       newSocket?.on('NewUserJoin', (channel: IChannel) => {
         console.log("new user join event received", channel)
+        channel.type = "MyChannels";
         setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
         }));
+
+        if (openedWindows.find(openedWindow => {openedWindow.id === channel.id})) {
+          setOpenedWindows(prevState => {
+            getUpdatedMembersIChatWindows(prevState, )
+          })
+        }
       });
 
       /* *********************************************************
@@ -517,7 +524,11 @@ export const ChatProvider = ({ children }) => {
     };
   };
 
-
+  const getUpdatedIChatWindows = (windows: IChatWindow[], windoToUpdate: IChatWindow) => {
+    const updatedIChatWindows = windows.filter(window => window.id != windoToUpdate)
+    // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
+    return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
+  }
   const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
     // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
     return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
@@ -557,8 +568,9 @@ export const ChatProvider = ({ children }) => {
 
   function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
     const updatedChannel = removeChannel(channelList, channelToAdd.id);
+    console.log("updated channel: ", updatedChannel);
     return addChannel(updatedChannel, channelToAdd);
-    // return channelList.filter((channel) => channel.id == channelId);
+    // return channelList.filter((channel) => channel.id != channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
@@ -614,12 +626,11 @@ export const ChatProvider = ({ children }) => {
       password:    form?.password?    form.password    :  "",
     }
     // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if ((data.type && !isChannelKnown(data.type, data.id))
-      || data.type === 'ChannelsToJoin') {
+    if ((data.type && !isChannelKnown(data.type, data.id)) || data.type == 'ChannelsToJoin') {
       console.log("Join Channel called from openWindow")
       // console.log("openWindoc called : data = ", data);
       // console.log("socket = ", socket);
-      socket?.emit('Join Channel', data)
+      socket?.emit('Join Channel', data);
     }
     else if (chatData) {
       console.log("inside openWindow before calling handleOpenWindow: ", chatData);
