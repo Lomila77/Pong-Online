@@ -25,20 +25,21 @@ model User {
   createdAt         DateTime @default(now())
   updateAt          DateTime @updatedAt
   connected         Boolean  @default(false)
+  in_game           Boolean  @default(false)
   win               Int      @default(0)
 
   messages      Message[]
   ownerId       Int?
-  owner         User?         @relation("Ownership", fields: [ownerId], references: [fortytwo_id])
-  ownedUsers    User[]        @relation("Ownership")
-  admins        Channel[]     @relation("admins")
-  members       Channel[]     @relation("members")
-  muted         Channel[]     @relation("muted")
-  banned        Channel[]     @relation("banned")
-  invited       Channel[]     @relation("invited")
+  owner         User?     @relation("Ownership", fields: [ownerId], references: [fortytwo_id])
+  ownedUsers    User[]    @relation("Ownership")
+  admins        Channel[] @relation("admins")
+  members       Channel[] @relation("members")
+  muted         Channel[] @relation("muted")
+  banned        Channel[] @relation("banned")
+  invited       Channel[] @relation("invited")
   friends       Int[]
   blocked       Int[]
-  ownedChannels Channel[]     @relation("OwnedChannels")
+  ownedChannels Channel[] @relation("OwnedChannels")
   userChannels  Int[]
 
   @@map("users")
@@ -70,22 +71,22 @@ model Channel {
 
   messages Message[]
 
-  ownerId      Int
-  owner        User          @relation("OwnedChannels", fields: [ownerId], references: [fortytwo_id])
-  admins       User[]        @relation("admins")
-  members      User[]        @relation("members")
-  banned       User[]        @relation("banned")
-  muted        User[]        @relation("muted")
-  invited      User[]        @relation("invited")
+  ownerId Int
+  owner   User   @relation("OwnedChannels", fields: [ownerId], references: [fortytwo_id])
+  admins  User[] @relation("admins")
+  members User[] @relation("members")
+  banned  User[] @relation("banned")
+  muted   User[] @relation("muted")
+  invited User[] @relation("invited")
 
   @@unique([id])
 }
 
 model Game {
-  id           String   @id @default(uuid())
+  id            String   @id @default(uuid())
   winner_id     Int
-  looser_id      Int
+  looser_id     Int
   end_timestamp DateTime
-  score_winner Int
+  score_winner  Int
   score_looser  Int
 }

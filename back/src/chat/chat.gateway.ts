@@ -18,6 +18,7 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
+import {GetResult} from "@prisma/client/runtime/library";
 // import * as redisAdapter from 'socket.io-redis';
 
 // import { backResInterface } from './../shared/shared.interface';
@@ -519,16 +520,32 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     const currentUserId = this.clients[client.id].fortytwo_id;
-    const currrentUser = await this.prisma.user.findUnique({
+    const currentUser = await this.prisma.user.findUnique({
       where: {fortytwo_id: currentUserId},
-      select: {pseudo: true, connected: true}
+      select: {pseudo: true, connected: true, in_game: true}
     })
-    if (currrentUser) {
+    if (currentUser) {
       const idSet = await this.collectChannelMembersIdsSet(currentUserId);
       idSet.forEach(id => {
-        this.emitSignal(id, {id: currentUserId, name: currrentUser.pseudo, connected:currrentUser.connected }, 'pseudo Update');
+        this.emitSignal(id, {id: currentUserId, name: currentUser.pseudo, connected:currentUser.connected, in_game: currentUser.in_game }, 'pseudo Update');
       })
     }
+  }
+
+  @SubscribeMessage('ingame Update')
+  async ingame_update(
+      @ConnectedSocket() client: Socket,
+  ) {
+    console.log("INGAME UPDATE...\n\n\n")
+    const currentUserId = this.clients[client.id].fortytwo_id;
+    this.prisma.user.findUnique({
+      where: {fortytwo_id: currentUserId},
+      select: {pseudo: true, connected: true, in_game: true, friends: true}
+    }).then((user) => {
+      user.friends.forEach(id => {
+        this.emitSignal(id, {id: currentUserId, name: user.pseudo, connected:user.connected, in_game:user.in_game }, 'ingame Update');
+      })
+    })
   }
 
   /** get a set of userId that has a least a channel in commun with userId */
@@ -560,6 +577,8 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(userSocketId).emit(signal,  obj);
     }
   }
+
+
 
   // async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
   //   const meFriends = (await this.prisma.user.findUnique({

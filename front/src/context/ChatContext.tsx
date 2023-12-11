@@ -32,6 +32,7 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
+    in_game?: boolean;
   }
 
 export interface IChatHistory {
@@ -240,6 +241,30 @@ export const ChatProvider = ({ children }) => {
       ***********************************************************/
       newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
         console.log("Friend disconnected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
+          * Friend disconnected:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+        console.log("Friend disconnected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
+          * UserGameState:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('userGameState', (userId: number) => {
+        // emit chat gateway iam in game and tell to my friend i am in game
+        newSocket?.emit('ingame Update');
+        console.log("user gamestate received");
+      });
+
+      newSocket?.on('ingame Update', (updatedUser: IChatMember) => {
+        console.log("ingame Update", updatedUser)
         updateChatMember(updatedUser);
       });
 

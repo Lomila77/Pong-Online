@@ -32,22 +32,7 @@ export class ChannelCreateDto {
   type: string;
 }
 
-export class sendMsgDto {
-  @IsEmail()
-  @IsOptional()
-  email: string
-
-  @IsNumber()
-  @IsNotEmpty()
-  chatId: number
-
-  @IsString()
-  @IsNotEmpty()
-  msg: string
-
-}
-
-export class DmDto {
+export class InGameDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;

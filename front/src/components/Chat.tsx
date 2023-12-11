@@ -126,7 +126,14 @@ const Chat: React.FC = () => {
                             <button className={"overflow-auto btn btn-ghost font-display " +  colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                                 {target.type == 'MyDms' && (
-                                    <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
+                                    <div className={"badge badge-xs " + (target.type == 'MyDms' &&
+                                        target.members[1].in_game ?
+                                        " badge-info " :
+                                        target.members[1].connected ?
+                                            " badge-success " :
+                                            " badge-neutral ") }>
+
+                                    </div>
                                 )}
                             </button>
                             {displayInputPassword && selectedTarget && selectedTarget.id == target.id && (
