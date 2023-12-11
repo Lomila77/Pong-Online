@@ -327,11 +327,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
         }));
-        if (openedWindows.find(openedWindow => {openedWindow.id === channel.id})) {
-          setOpenedWindows((prevState) => ({
-            getUpdatedIChatWindows(prevState, channel)
-          }))
-        }
+        setOpenedWindows((prevState) => getUpdatedIChatWindows(prevState, channel));
       });
 
       /* *********************************************************
@@ -526,14 +522,20 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
     const key = windows.findIndex(window => window.id === updatedChannel.id)
+    console.log("inside getUpdatedIChatWindows", key);
     if (key != -1) {
-      windows[key] = {
+      const updatedWindow = windows;
+      updatedWindow[key] = {
         ... updatedChannel,
         history: windows[key].history,
       }
+      console.log("inside getUpdatedIChatWindows, updatedWindow", updatedWindow);
+
+      return updatedWindow;
     }
     return windows;
   }
+
   const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
     // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
     return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
