@@ -148,24 +148,26 @@ export interface frontReqInterface {
 
 
 
-export async function backRequest(url: string, method: string, params?: frontReqInterface) : Promise<backResInterface>{
+export async function backRequest(url: string, method: string, params?: frontReqInterface | FormData): Promise<backResInterface> {
   try {
-
     const reqOptions: RequestInit = {
       method,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: params ? JSON.stringify(params) : undefined
+      body: params instanceof FormData ? params : JSON.stringify(params)
     };
+
+    if (!(params instanceof FormData)) {
+      reqOptions.headers = {
+        'Content-Type': 'application/json',
+      };
+    }
+
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
-    // console.log("response of url ", url ," : ", response);
-    return response.ok ? await response.json() : {isOk:false, message:response.status}
+    return response.ok ? await response.json() : { isOk: false, message: response.status }
   }
   catch (error) {
     console.log("backRequest error : ", error);
-    return {isOk: false, message: error}
+    return { isOk: false, message: error }
   }
 }
 

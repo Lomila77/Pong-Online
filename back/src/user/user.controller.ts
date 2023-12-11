@@ -1,12 +1,14 @@
 
 import {backResInterface, frontReqInterface} from './../shared/shared.interface';
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 import { User } from '@prisma/client';
 import { UserService } from './user.service';
-
-
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { join } from 'path';
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {
@@ -81,5 +83,29 @@ export class UserController {
   async killAllFriendShip() {
     const ret = await this.userService.noFriendshipSpell();
     return ret
+  }
+
+  @Post('/avatar')
+  @UseGuards(JwtGuard)
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: join(__dirname, '..', '..', 'uploads'),
+      filename: (req, file, callback) => {
+        callback(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+  }))
+  async uploadAvatar(@Body() body: frontReqInterface, @GetUser() user: User, @UploadedFile() file) {
+    const update: frontReqInterface = {
+      ...body,
+      avatar: file.filename,
+    };
+    return await this.userService.updateUser(user.fortytwo_id, update);
+  }
+
+  @Get('/avatar/:id')
+  async getAvatar(@Param('id') id: string) {
+    const avatar = await this.userService.getAvatar(Number(id));
+    return this.userService.getAvatar(Number(id));
   }
 }

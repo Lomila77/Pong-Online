@@ -10,12 +10,17 @@ interface ProfilCompProps {
 const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
     if (!user)
         return;
-    const [friendAdded, setFriendAdded] = useState<boolean>(false);
-    useEffect(() => {
-        backRequest('users/isFriend/' + user.pseudo, 'GET').then(data => {
-            setFriendAdded(data.isFriend!);
-        })
-    }, []);
+  const [friendAdded, setFriendAdded] = useState<boolean>(false);
+  const [avatar, setAvatar] = useState<string>('');
+  useEffect(() => {
+    setAvatar('');
+    backRequest('users/isFriend/' + user.pseudo, 'GET').then(data => {
+      setFriendAdded(data.isFriend!);
+    });
+    backRequest('users/avatar/' + user.fortytwo_id, 'GET').then(data => {
+      setAvatar(data.avatar);
+    });
+  }, [user]);
 
     const toggleAddFriend = () => {
         if (friendAdded)
@@ -26,8 +31,8 @@ const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
 
   return (
     <div className="flex flex-col grid gap-6 justify-items-center">
-      <div className="w-36 rounded-full avatar online ring ring-white ring-8 drop-shadow-md shrink">
-        <img src={user.avatar} alt="avatar" className="rounded-full" />
+      <div className="w-36 h-36 rounded-full overflow-hidden">
+        <img src={avatar} alt="User avatar" className="w-full h-full object-cover" />
       </div>
       <div className="text-center">
         <span className="font-display text-2xl text-bleuPseudo pseudoProfil">
