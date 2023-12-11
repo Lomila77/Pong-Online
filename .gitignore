@@ -12,5 +12,4 @@ node_modules
 /back/prisma/migrations/
 
 gitignore
-back/prisma/migrations/migration_lock.toml
-back/prisma/migrations/20231201114112_to_deploy/migration.sql
+back/prisma/migrations/
