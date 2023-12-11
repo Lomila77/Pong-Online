@@ -142,7 +142,6 @@ export class ChatService {
     if (!user) {
       throw new Error('User not found');
     }
-
     await this.prisma.channel.update({
       where: {
         id: id,

@@ -116,7 +116,7 @@ export class ChatGateway implements OnGatewayConnection {
         });
       }
     }
-    console.log("disconnecting : ", user.pseudo, " ", client.id);
+    //console.log("disconnecting : ", user.pseudo, " ", client.id);
     delete this.clients[client.id];
     client.disconnect();
   }
@@ -159,6 +159,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5) {
+        console.log("checkpoint");
         if (data.id) {
           await this.prisma.channel.update({
             where: { id: channel.id },
@@ -169,10 +170,10 @@ export class ChatGateway implements OnGatewayConnection {
             },
             select : {members : true, id: true, name: true, }
           }).then(async () => {
-            await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+            await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(channel => {
+              console.log("Members: ", channel.members, "\n\n\n");
               channel.members.forEach(member => {
-                console.log("MEMBER", member);
-                this.server.to(member.fortytwo_id).emit("NewUserJoin", objToEmit);
+                this.emitSignal(member.id, channel, "NewUserJoin");
               })
             });
           });
@@ -317,12 +318,13 @@ export class ChatGateway implements OnGatewayConnection {
       if (newOwner) {
         const channel = await this.chatService.getUpdatedChannelForFront(chatId, "MyChannels");
         channel.members.forEach(member => {
-          this.emitSignal(member.id, channel, 'new owner');
+          if (member.id != userId)
+            this.emitSignal(member.id, channel, 'new owner');
         })
 
       } else {
         await this.chatService.delChanById(chatId);
-        this.server.to(client.id).emit("chan deleted", { chatId: chatId });
+        this.server.to(client.id).emit("chan deleted", chatId);
         return;
       }
     }
@@ -334,9 +336,9 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
     await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
-      this.server.to(client.id).emit("quited", { channel: channel });
+      this.server.to(client.id).emit("quited", channel);
+      this.server.to(chatId.toString()).emit("user leave", channel);
     })
-    this.server.to(chatId.toString()).emit("quit", { pseudo: this.clients[client.id].pseudo });
     // TODO: mettre a jour la liste des membre en local front quand il part
   }
 
