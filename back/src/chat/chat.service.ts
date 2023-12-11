@@ -475,27 +475,19 @@ export class ChatService {
       },
       include: {
         members: true,
-        messages: true,
       },
     });
-
     if (!channel) {
       return null;
     }
-
-    const currentOwnerId = channel.ownerId;
-    const messages = channel.messages;
-
     for (const member of channel.members) {
-      if (member.fortytwo_id !== currentOwnerId) {
-        const userHasSentMessage = messages.some(message => message.userId === member.fortytwo_id);
-        if (userHasSentMessage) {
+      if (member.fortytwo_id !== channel.ownerId) {
+          await this.updateOwner(chatId, member.fortytwo_id);
           return member;
         }
       }
-    }
     return null;
-  }
+    }
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<void> {
     await this.prisma.channel.update({

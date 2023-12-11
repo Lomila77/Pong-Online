@@ -159,7 +159,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5) {
-        this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
         if (data.id) {
           await this.prisma.channel.update({
             where: { id: channel.id },
@@ -169,6 +168,13 @@ export class ChatGateway implements OnGatewayConnection {
               },
             },
             select : {members : true, id: true, name: true, }
+          }).then(async () => {
+            await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(objToEmit => {
+              channel.members.forEach(member => {
+                console.log("MEMBER", member);
+                this.server.to(member.fortytwo_id).emit("NewUserJoin", objToEmit);
+              })
+            });
           });
         }
       }
@@ -309,12 +315,11 @@ export class ChatGateway implements OnGatewayConnection {
     if (isOwner) {
       const newOwner = await this.chatService.findNewOwner(chatId);
       if (newOwner) {
-        await this.chatService.updateOwner(chatId, newOwner.fortytwo_id);
         const channel = await this.chatService.getUpdatedChannelForFront(chatId, "MyChannels");
-        const idSet = await this.collectChannelMembersIdsSet(userId);
-        idSet.forEach(id => {
-          this.emitSignal(id, channel, 'new owner');
+        channel.members.forEach(member => {
+          this.emitSignal(member.id, channel, 'new owner');
         })
+
       } else {
         await this.chatService.delChanById(chatId);
         this.server.to(client.id).emit("chan deleted", { chatId: chatId });

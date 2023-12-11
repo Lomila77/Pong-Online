@@ -212,13 +212,12 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
             - invite a friend in channel
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
+        console.log("invited signal received", channel.id);
         setChannels((prev: IChannels) => ({
           ...prev!,
-          MyChannels: addChannel(prev.MyChannels, channel),
           ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
+          MyChannels: addChannel(prev.MyChannels, channel),
         }));
-        console.log("Channel quited: \n\n\n", channel.id);
-        console.log("\n\n", channels);
       });
 
       /* *********************************************************
@@ -300,6 +299,30 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       ***********************************************************/
       newSocket?.on('new owner', (channel: IChannel) => {
         console.log("new owner event received", channel)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+      });
+
+      /* *********************************************************
+          * NewUserJoin:
+            - update channel with new member
+      ************************************************************/
+      newSocket?.on('NewUserJoin', (channel: IChannel) => {
+        console.log("new user join event received", channel)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+      });
+
+      /* *********************************************************
+          * quit:
+            - A member has left channel
+      ***********************************************************/
+      newSocket?.on('quit', (channel: IChannel) => {
+        console.log("quit signal received", channel)
         setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
