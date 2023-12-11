@@ -123,7 +123,7 @@ const Chat: React.FC = () => {
                 <ul className={"menu p-4 w-60 min-h-full text-base-content relative "  + colorDrawer.drawer}>
                     {drawerContent && drawerContent.map((target: IChannel , index: number) => (
                         <li key={index} className="flex flex-row justify-between items-center">
-                            <button className={"overflow-auto btn btn-ghost font-display " +  colorDrawer.text}
+                            <button className={"p-4 overflow-auto btn btn-ghost font-display " +  colorDrawer.text}
                                     onClick={() => setSelectedTarget(target)}>{target.type == 'MyDms' ? target.members[1].name : target.name}
                                 {target.type == 'MyDms' && (
                                     <div className={"badge badge-xs " + (target.type == 'MyDms' && target.members[1].connected ? " badge-success " : " badge-neutral ") }></div>
