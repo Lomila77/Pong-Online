@@ -4,6 +4,8 @@ import { BallMoveEvent, GamePlayer, RoomStoreService } from '../store/room-store
 import { GameService } from '../api/game-service';
 import { ChatGateway } from '../../chat/chat.gateway';
 import { Inject, forwardRef } from '@nestjs/common';
+import * as jwt from "jsonwebtoken";
+import {PrismaClient} from "@prisma/client";
 
 
 @WebSocketGateway({ namespace: '/events', cors: true })
@@ -19,8 +21,10 @@ export class EventsGateway {
   constructor(
       private roomStoreService: RoomStoreService,
       private gameService: GameService,
+      private readonly prisma: PrismaClient,
       @Inject(forwardRef(() => ChatGateway))
-      private chatGateway: ChatGateway) {
+      private chatGateway: ChatGateway)
+  {
     this.paddleWidth = 3;
     this.paddleHeight = 100;
     this.paddleGapWithWall = 30;
@@ -33,88 +37,135 @@ export class EventsGateway {
   server: Server;
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(@MessageBody() data: { room: string, name: string }, @ConnectedSocket() client: Socket) {
-    const mapPong = this.roomStoreService.getMapPong();
-
-    // si la room existe pas encore
-    if (!mapPong.get(data.room)) {
-      client.emit('gameDoesNotExist', {})
-      return
-      // mapPong.set(data.room, {
-      //   "map": new Map(), "players": [], "game": {
-      //     xBall: 200,
-      //     yBall: 200,
-      //     xSpeed: 3,
-      //     ySpeed: 3,
-      //     canvasWidth: this.canvasWidth,
-      //     canvasHeight: this.canvasHeight,
-      //     paddleWidth: 10,
-      //     paddleHeight: 100,
-      //     leftPaddlePositionY: 100,
-      //     rightPaddlePositionY: 100,
-      //     victoryPoints: 5,
-      //     ballRadius: 10,
-      //     intervalId: null
-      //   }
-      // })
-    }
-    // on associe le user au socket
-    client.data.username = data.name;
-    client.data.room = data.room;
-    // on add le user dans la room
-    client.join(data.room);
-    // si déjà deux joueurs dans les players
-    if (mapPong.get(data.room).players.length === 2) {
-      if (!mapPong.get(data.room).map.get(data.name)) {
-        // déjà 2 joueurs dans la partie mais pas le joueur qui join
-        return
+  async handleJoinRoom(@MessageBody() data: { room: string }, @ConnectedSocket() client: Socket): Promise<any> {
+    console.log("we called joinRoom in back");
+    try {
+      const token = client.handshake.auth.token;
+      if (!token) {
+        console.log('Token is missing');
+        client.disconnect();
+        return;
       }
-      this.chatGateway.emitSignal(1, {
-        username: client.data.username,
-        inGame: true
-      }, "userGameState")
 
-      // le joueur qui join était déjà dans la partie
-      const players = this.getPlayerRightAndPlayerLeft(data.room);
-      client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
-      client.emit('yourPosition', { y: mapPong.get(data.room).map.get(data.name).y, side: mapPong.get(data.room).map.get(data.name).side })
-      return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
+      // Décoder le token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      if (typeof decoded === 'object' && 'sub' in decoded) {
+        const userId = decoded.sub;
+
+
+        const user = await this.prisma.user.findUnique({
+           where: {
+            fortytwo_id: Number(userId),
+          },
+          select: {
+            fortytwo_id: true,
+            pseudo: true,
+          }
+        })
+        console.log("client " + client + " is trying to join a room...");
+
+        // this.clients[client.id] = user;
+        const mapPong = this.roomStoreService.getMapPong();
+
+        // si la room existe pas encore
+        if (!mapPong.get(data.room)) {
+          client.emit('gameDoesNotExist', {})
+          return
+        }
+        // on associe le user au socket
+        client.data.username = user.pseudo;
+        client.data.fortytwo_id = user.fortytwo_id;
+        client.data.room = data.room; //TODO: enlever username de data envoyé du front
+        // on add le user dans la room
+        client.join(data.room);
+        console.log("client " + client + " has joined room " + data.room);
+        // si déjà deux joueurs dans les players
+        if (mapPong.get(data.room).players.length === 2) {
+          if (!mapPong.get(data.room).map.get(user.pseudo)) {
+            // déjà 2 joueurs dans la partie mais pas le joueur qui join
+            return
+          }
+
+        // le joueur qui join était déjà dans la partie
+          const players = this.getPlayerRightAndPlayerLeft(data.room);
+          client.emit('gameData', {
+            gameData: mapPong.get(data.room).game,
+            playerRight: players.right,
+            playerLeft: players.left
+          })
+          client.emit('yourPosition', {
+            y: mapPong.get(data.room).map.get(user.pseudo).y,
+            side: mapPong.get(data.room).map.get(user.pseudo).side
+          })
+          return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
+        }
+
+        //TODO: POUR JOHANNA
+        //const userId = await this.gameService.findUserIdByUsername(client.data.username);
+        // Pour utiliser findUserIdByUsername, il faut enlever le private dans game.service.ts
+        //console.log("USER ID IN GAME = ", userId);
+        //await this.gameService.setUserInGame(userId, true);
+        //await this.chatGateway.emitSignal(userId, {userId: userId}, "userGameState");
+
+
+        // le joueur arrive dans la partie et c'est le premier
+        if (!mapPong.get(data.room).map.get(user.pseudo) && mapPong.get(data.room).players.length === 0) {
+          mapPong.get(data.room).map.set(user.pseudo, {
+            name: user.pseudo,
+            x: this.paddleGapWithWall,
+            y: 100,
+            side: "LEFT",
+            score: 0
+          });
+          mapPong.get(data.room).players.push(user.pseudo)
+          mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
+          client.emit('startGame', {eventName: "waiting"})
+          client.emit('yourPosition', {y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT"})
+          return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
+        }
+
+        // le joueur arrive dans la partie et c'est le deuxième
+        if (!mapPong.get(data.room).map[user.pseudo] && mapPong.get(data.room).players.length === 1) {
+          mapPong.get(data.room).map.set(user.pseudo, {
+            name: user.pseudo,
+            x: this.canvasHeight - this.paddleGapWithWall,
+            y: 100,
+            side: "RIGHT",
+            score: 0
+          })
+          mapPong.get(data.room).players.push(user.pseudo)
+          mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
+          const players = this.getPlayerRightAndPlayerLeft(data.room);
+          this.server.to(data.room).emit('startGame',
+              {
+                eventName: "start",
+                playerRight: players.right,
+                playerLeft: players.left,
+                gameData: mapPong.get(data.room).game
+              }
+          );
+          client.emit('yourPosition', {y: mapPong.get(data.room).game.rightPaddlePositionY, side: "RIGHT"})
+          this.launchGame(data.room, client);
+          return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
+        }
+
+        // visiteur
+        //const players = this.getPlayerRightAndPlayerLeft(data.room);
+        //client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
+        return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
+      } else {
+        console.log('Invalid token');
+        client.disconnect();
+        return;
+      }
     }
-
-    this.chatGateway.emitSignal(1, {
-      username: client.data.username,
-      inGame: true
-    }, "userGameState")
-
-
-    // le joueur arrive dans la partie et c'est le premier
-    if (!mapPong.get(data.room).map.get(data.name) && mapPong.get(data.room).players.length === 0) {
-      mapPong.get(data.room).map.set(data.name, { name: data.name, x: this.paddleGapWithWall, y: 100, side: "LEFT", score: 0 });
-      mapPong.get(data.room).players.push(data.name)
-      mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
-      client.emit('startGame', { eventName: "waiting" })
-      client.emit('yourPosition', { y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT" })
-      return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
+    catch (e) {
+      console.log(e);
+      console.log('joinRoom back error'); //TODO: remove ?
+      client.disconnect();
+      return;
     }
-
-    // le joueur arrive dans la partie et c'est le deuxième
-    if (!mapPong.get(data.room).map[data.name] && mapPong.get(data.room).players.length === 1) {
-      mapPong.get(data.room).map.set(data.name, { name: data.name, x: this.canvasHeight - this.paddleGapWithWall, y: 100, side: "RIGHT", score: 0 })
-      mapPong.get(data.room).players.push(data.name)
-      mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
-      const players = this.getPlayerRightAndPlayerLeft(data.room);
-      this.server.to(data.room).emit('startGame',
-          { eventName: "start", playerRight: players.right, playerLeft: players.left, gameData: mapPong.get(data.room).game }
-      );
-      client.emit('yourPosition', { y: mapPong.get(data.room).game.rightPaddlePositionY, side: "RIGHT" })
-      this.launchGame(data.room, client);
-      return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
-    }
-
-    // visiteur
-    //const players = this.getPlayerRightAndPlayerLeft(data.room);
-    //client.emit('gameData', { gameData: mapPong.get(data.room).game, playerRight: players.right, playerLeft: players.left })
-    return { event: 'joinedRoom', data: `Joined room: ${data.room}` };
   }
 
   @SubscribeMessage('leaveRoom')

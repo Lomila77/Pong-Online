@@ -32,6 +32,7 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
+    in_game?: boolean;
   }
 
 export interface IChatHistory {
@@ -185,9 +186,25 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * Quited :
             - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
       ***********************************************************/
-      newSocket?.on('quited', (chatId: number) => {
-        console.log("Channel quited: \n\n\n", chatId);
+      newSocket?.on('quited', (channel: IChannel) => {
+        channel.type = "ChannelsToJoin";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: (channel.isPrivate ? prev.ChannelsToJoin : addChannel(prev.ChannelsToJoin, channel)),
+          MyChannels: removeChannel(prev.MyChannels, channel.id),
+        }));
+        console.log("Channel quited: \n\n\n", channel.id);
         console.log("\n\n", channels);
+      });
+
+
+      newSocket?.on('chan deleted', (chatId: number) => {
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
+          MyChannels: removeChannel(prev.MyChannels, chatId),
+        }));
+        console.log("Channel deleted: \n\n\n", chatId);
       });
 
       /* *********************************************************
@@ -245,6 +262,30 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       });
 
       /* *********************************************************
+          * Friend disconnected:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+        console.log("Friend disconnected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
+          * UserGameState:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('userGameState', (userId: number) => {
+        // emit chat gateway iam in game and tell to my friend i am in game
+        newSocket?.emit('ingame Update');
+        console.log("user gamestate received");
+      });
+
+      newSocket?.on('ingame Update', (updatedUser: IChatMember) => {
+        console.log("ingame Update", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
           * pseudo Update:
             - update member with updatedUser
       ***********************************************************/
@@ -252,7 +293,19 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log("pseudo update recieved", updatedUser)
         updateChatMember(updatedUser);
       });
-1
+
+      /* *********************************************************
+          * new owner:
+            - update channel with new owner
+      ***********************************************************/
+      newSocket?.on('new owner', (channel: IChannel) => {
+        console.log("new owner event received", channel)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+      });
+
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -464,9 +517,15 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   //todo : change function by const =>
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
     // console.log("removeChannel : initial channel list ", channelList);
-    // const filteredlist = channelList.filter((channel) => channel.id !== channelId);
+    // const filteredlist = channelList.filter((channel) => channel.id == channelId);
     // console.log("removeChannel : filtered channel list ", filteredlist);
-    return channelList.filter((channel) => channel.id !== channelId);
+    return channelList.filter((channel) => channel.id == channelId);
+  }
+
+  function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
+    const updatedChannel = removeChannel(channelList, channelToAdd.id);
+    return addChannel(updatedChannel, channelToAdd);
+    // return channelList.filter((channel) => channel.id == channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
@@ -581,20 +640,8 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
-    const channelToQuit = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
-    if (channelToQuit) {
-      channelToQuit?.isPrivate ?
-          setChannels((prev: IChannels) => ({
-            ...prev!,
-            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-          })) :
-          setChannels((prev: IChannels) => ({
-            ...prev!,
-            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-            ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
-          }));
-      closeWindow(channelToQuit.id);
-    }
+    console.log("EMIT QUIT\n\n\n");
+    closeWindow(chatId);
   }
 
 

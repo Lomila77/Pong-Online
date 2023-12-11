@@ -421,20 +421,25 @@ export class ChatService {
   }
 
   async isAdmin_Chan(userId: number, id: number) {
-    const chan = await this.prisma.channel.findFirst({
+    return this.prisma.channel.findUnique({
       where: {
         id: id,
-
       },
       select: {
         admins: true,
       }
+    }).then(chan => {
+      if (!chan) {
+        console.log("chan not found");
+        return false;
+      }
+      const isad: User = chan.admins.find(admins => admins.fortytwo_id == userId)
+      if (isad)
+        return (true)
+      else
+        return (false)
     })
-    const isad: User = chan.admins.find(admins => admins.fortytwo_id == userId)
-    if (isad)
-      return (true)
-    else
-      return (false)
+
   }
 
   async removeAdmin(userId: number, chatId: number) {
@@ -561,9 +566,9 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           isPrivate: true,
           isPassword: true,
         },
@@ -576,15 +581,17 @@ export class ChatService {
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
         })),
         type: 'ChannelsToJoin',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
         admins: source.admins.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
         })),
       }));
 
@@ -605,9 +612,9 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           isPrivate: true,
           isPassword: true,
         },
@@ -620,17 +627,19 @@ export class ChatService {
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
           isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
           isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
         })),
         type: 'MyChannels',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
         admins: source.admins.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
         })),
       }));
       return modifiedSources;
@@ -654,12 +663,13 @@ export class ChatService {
               fortytwo_id: true,
               pseudo: true,
               connected: true,
+              in_game: true,
             }
           },
           isPassword: true,
           isPrivate: true,
-          admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-          owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+          admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
         },
       });
       const modifiedSources = sources.map((source) => ({
@@ -668,17 +678,19 @@ export class ChatService {
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
           isAdmin: true,
           isOwner: true,
         })),
         type: 'MyDms',
         isPrivate: source.isPrivate,
         isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected},
+        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
         admins: source.admins.map((member) => ({
           id: member.fortytwo_id,
           name: member.pseudo,
           connected: member.connected,
+          in_game: member.in_game,
         })),
       }));
 
@@ -1248,9 +1260,9 @@ export class ChatService {
       select: {
         id: true,
         name: true,
-        members: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-        admins: {select: {fortytwo_id: true, pseudo: true, connected:true}},
-        owner: {select: {fortytwo_id: true, pseudo: true, connected:true}},
+        members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+        admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+        owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
         isPrivate: true,
         isPassword: true,
       },
@@ -1262,17 +1274,19 @@ export class ChatService {
         id: member.fortytwo_id,
         name: member.pseudo,
         connected: member.connected,
+        in_game: member.in_game,
         isAdmin: channel.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
         isOwner: channel.owner ? channel.owner.fortytwo_id === member.fortytwo_id : false,
       })),
       type: type,
       isPrivate: channel.isPrivate,
       isPassword: channel.isPassword,
-      owner: {id: channel.owner.fortytwo_id, name: channel.owner.pseudo, connected: channel.owner.connected},
+      owner: {id: channel.owner.fortytwo_id, name: channel.owner.pseudo, connected: channel.owner.connected, in_game: channel.owner.in_game},
       admins: channel.admins.map((member) => ({
         id: member.fortytwo_id,
         name: member.pseudo,
         connected: member.connected,
+        in_game: member.in_game,
       })),
     }
     return modifiedSources;
@@ -1307,7 +1321,7 @@ export class ChatService {
 
 
 
-  // to delete before correction
+  // TODO to delete before correction
   async printAllChannels() {
     try {
 		  const channels = await this.prisma.channel.findMany({
