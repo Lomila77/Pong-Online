@@ -326,11 +326,10 @@ export const ChatProvider = ({ children }) => {
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
         }));
-
         if (openedWindows.find(openedWindow => {openedWindow.id === channel.id})) {
-          setOpenedWindows(prevState => {
-            getUpdatedMembersIChatWindows(prevState, )
-          })
+          setOpenedWindows((prevState) => ({
+            getUpdatedIChatWindows(prevState, channel)
+          }))
         }
       });
 
@@ -524,10 +523,15 @@ export const ChatProvider = ({ children }) => {
     };
   };
 
-  const getUpdatedIChatWindows = (windows: IChatWindow[], windoToUpdate: IChatWindow) => {
-    const updatedIChatWindows = windows.filter(window => window.id != windoToUpdate)
-    // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
-    return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
+  const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
+    const key = windows.findIndex(window => window.id === updatedChannel.id)
+    if (key != -1) {
+      windows[key] = {
+        ... updatedChannel,
+        history: windows[key].history,
+      }
+    }
+    return windows;
   }
   const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
     // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
