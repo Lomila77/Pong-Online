@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import History from './pages/History';
 import TwoFA from "./components/TwoFA";
 import { AuthRedirectRoutes, ProtectedRoute } from "./components/useAuthGuard";
 import Game from './pages/game/Game';
@@ -27,6 +28,9 @@ const App = () => {
           <Route path="/" element={ <ProtectedRoute> <Layout> <Home/> </Layout>  </ProtectedRoute>} />
           <Route path="/settings" element={ <ProtectedRoute> <Layout> <Settings /></Layout>  </ProtectedRoute>} />
           <Route path="/leaderboard" element={ <ProtectedRoute> <Layout> <Leaderboard /> </Layout> </ProtectedRoute>} />
+          <Route path="/history" element={ <ProtectedRoute> <Layout> <History /> </Layout> </ProtectedRoute>}/>
+          <Route path='/game/create' element={ <ProtectedRoute> <Layout> <CreateGame/> </Layout> </ProtectedRoute>}/>
+          <Route path='/game/:gameId' element={<ProtectedRoute> <Layout> <Game /> </Layout> </ProtectedRoute>}/>
       </Routes>
     </Router>
   );

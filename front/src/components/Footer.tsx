@@ -1,11 +1,11 @@
 const Footer = () => {
-    return (
-      <>
-          <footer className="p-5 bg-black text-neutral-content">
-            @nemo.
-          </footer>
-      </>
-    );
-  };
+  return (
+    <>
+        <footer className="footer p-5 bg-black text-neutral-content Foot">
+          @nemo.
+        </footer>
+    </>
+  );
+};
 
-  export default Footer
+export default Footer

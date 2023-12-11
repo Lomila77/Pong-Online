@@ -8,14 +8,15 @@ type LayoutProps = {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div id="mainContainer" className="flex flex-col h-full min-h-screen ">
+    <div id="mainContainer">
       <NavBar />
-      <div id="pageContent" className="h-full py-4 px-4 flex-auto flex justify-center items-center">
+      <div id="pageContent">
         {children}
       </div>
       <Footer />
     </div>
   );
 };
+
 
 export default Layout;
