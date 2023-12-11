@@ -1,3 +1,4 @@
+import { map } from 'rxjs';
 import {
   ConnectedSocket,
   MessageBody,
@@ -17,7 +18,9 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
-import { backResInterface } from './../shared/shared.interface';
+// import * as redisAdapter from 'socket.io-redis';
+
+// import { backResInterface } from './../shared/shared.interface';
 
 // export interface User {
 //   id: number;
@@ -75,7 +78,8 @@ export class ChatGateway implements OnGatewayConnection {
         });
 
         user.friends.forEach(friendId => {
-          client.to(friendId.toString()).emit('Friend connected', user.fortytwo_id);
+          this.emitSignal(friendId,{id: user.fortytwo_id, pseudo: user.pseudo, connected: true}, 'Friend connected' )
+          //client.to(friendId.toString()).emit('Friend connected', {id: user.fortytwo_id, pseudo: user.pseudo, connected: true});
         });
         console.log("newSocketConnected : ", user.pseudo, " ", client.id);
       } else {
@@ -106,7 +110,8 @@ export class ChatGateway implements OnGatewayConnection {
 
       if (prismaUser) {
         prismaUser.friends.forEach(friendId => {
-          client.to(friendId.toString()).emit('Friend disconnected', user.fortytwo_id);
+          this.emitSignal(friendId,{id: user.fortytwo_id, pseudo: user.pseudo, connected: false}, 'Friend disconnected' )
+          // client.to(friendId.toString()).emit('Friend disconnected', {id: user.fortytwo_id, pseudo: user.pseudo, connected: true});
         });
       }
     }
@@ -216,7 +221,7 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     console.log("channelId ",  data.channelId, " ", this.clients[client.id].pseudo, " : ", data.message);
-    const chat = await this.chatService.newMsg(data, this.clients[client.id].pseudo);
+    const chat = await this.chatService.newMsg(data, this.clients[client.id].fortytwo_id);
     const except_user = await this.chatService.getExceptUser(data.channelId, this.clients[client.id].fortytwo_id);
     console.log("except_user : ", except_user);
     let except = await this.server.in(data.channelId.toString()).fetchSockets().then((sockets) => {
@@ -501,6 +506,48 @@ export class ChatGateway implements OnGatewayConnection {
   //     this.server.to(data.chatId.toString()).emit("NewMessage", msg);
   //   }, 2000);
   // }
+
+
+  /* *********************************************************
+      * pseudo Update
+          - if currentUser exist
+            - set a list of unique ids that are in a least in one channel in common with current user
+            - send update to all set;
+  ***********************************************************/
+  @SubscribeMessage('pseudo Update')
+  async pseudo_update(
+    @ConnectedSocket() client: Socket,
+  ) {
+    const currentUserId = this.clients[client.id].fortytwo_id;
+    const currrentUser = await this.prisma.user.findUnique({
+      where: {fortytwo_id: currentUserId},
+      select: {pseudo: true, connected: true}
+    })
+    if (currrentUser) {
+      const idSet = await this.collectChannelMembersIdsSet(currentUserId);
+      idSet.forEach(id => {
+        this.emitSignal(id, {id: currentUserId, name: currrentUser.pseudo, connected:currrentUser.connected }, 'pseudo Update');
+      })
+    }
+  }
+
+  /** get a set of userId that has a least a channel in commun with userId */
+  async collectChannelMembersIdsSet(userId: number) : Promise<Set<number>> {
+    const userGroups = await this.prisma.channel.findMany({
+      where: {members: { some: { fortytwo_id: userId } },},
+      select: {members: {select: {fortytwo_id: true, connected:true}},},
+    });
+    // declare a clean Set (container that only accept unique values) to store our list of Ids.
+    // const idsSet = new Set<number>;
+    const idsSet = new Set<number>();
+    // forEach: add only fortytwo_id into idsSet
+    userGroups.map(group => {
+      group.members
+        // .filter(member => member.fortytwo_id === userId && member.connected) (commented: userId should be part of emit group)
+        .forEach(member => idsSet.add(member.fortytwo_id))
+    })
+    return idsSet;
+  }
 
   private findSocketIdByUserId(userId: number): string | undefined {
     return Object.keys(this.clients).find((id) => this.clients[id]?.fortytwo_id === userId);

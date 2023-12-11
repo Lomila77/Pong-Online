@@ -70,23 +70,27 @@ export class AuthService {
   }
 
   async logout(req: Request, res: Response, user: User): Promise<void> {
-    if (user) {
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: {
-          fortytwo_id: user.fortytwo_id,
+          fortytwo_id: user?.fortytwo_id,
         },
         data: {
           connected: false,
         },
+        select: {
+          pseudo: true,
+          fortytwo_id: true,
+          avatar:true,
+          connected: true,
+        }
       });
-    }
     res.clearCookie(process.env.COOKIES_NAME);
     req.session.destroy((err) => {
       if (err) {
         return res.status(500).json({isOk: false, message: 'error during logout' });
       } else {
         console.log("user: ", user.pseudo, "successfully disconnected")
-        return res.status(200).json({ isOk: true, message: 'disconnected' });
+        return res.status(200).json({ ...updatedUser, isOk: true, message: 'disconnected' });
       }
     });
   }

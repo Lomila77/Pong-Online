@@ -4,10 +4,9 @@ import { backRequest, backResInterface} from '../api/queries';
 import Cookies from 'js-cookie';
 import { ChatProvider } from './ChatContext';
 
-
 const UserContext = createContext<{
   user: backResInterface | null;
-  setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
+  // setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
   updateUser: (fistConnection: boolean, newData: any) => void;
   disconnectUser: () => void
 } | null>(null);
@@ -21,7 +20,6 @@ export const UserProvider = ({ children }) => {
     /***************************** */
   const isJwtToken = () => {
     const jwtToken = Cookies.get("jwtToken")
-    // console.log("\n looking for coockies\n", jwtToken)
     return jwtToken ? true : false;
   }
 
@@ -32,7 +30,12 @@ export const UserProvider = ({ children }) => {
   });
 
   const handleQuerySuccess = (updatedData : backResInterface) => {
-    setUser(updatedData);
+    if (updatedData.isOk) {
+      // console.log(updatedData)
+      setUser(updatedData);
+    }
+    else // means that user 's token is either expired or user is not considered as connected by server
+      disconnectUser();
     console.log("🚀 ~ file: UserContext.tsx:41 ~ afteruser :", user)
   }
 
@@ -41,7 +44,7 @@ export const UserProvider = ({ children }) => {
       handleQuerySuccess(userData);
     }
     // else if (status === 'error'){}
-  }, [status, userData, isJwtToken])
+  }, [status, userData])
 
       /******************************** */
      /* useMutation is for post request*/
@@ -67,31 +70,27 @@ export const UserProvider = ({ children }) => {
     mutation.mutate({ fistConnection, params: newData });
   };
 
-  const handleDisconnectUser = () => {
-    Cookies.remove("jwtToken");
-    setUser((prevUser) => ({...prevUser, isAuthenticated:false}))
-    console.log("\n\n\nhandout logout user : ", user);
-  }
-
-  useEffect(() => {
-    return () => {
-      //todo : gerer le demontage
-      console.log("UserProvider component is unmounting");
-    };
-  }, []); // Le tableau de dépendances vide signifie que cela s'exécutera uniquement lors du démontage
-
-
+  const disconnectUser = async () => {
+    await backRequest('auth/logout', 'POST').then((ret) => {
+      console.log("\n\n\n\nusercontext disconnectUser is returning : ", ret )
+      Cookies.remove("jwtToken");
+      setUser((prevUser) => (
+        console.log("prevUser: ", prevUser), {
+        ...prevUser,
+        ret,
+        isAuthenticated: false,
+      }));
+    })
+  };
 
   return (
     <UserContext.Provider value={{
     user,
-    setUser,
     updateUser: handleUpdateUser,
-    disconnectUser: handleDisconnectUser
+    disconnectUser,
     }}>
-       {/* {status === 'pending' && <p>Loading...</p>} */}
-      {/* {children} */}
-      <ChatProvider>{children}</ChatProvider>
+      {children}
+      {/* <ChatProvider>{children}</ChatProvider> */}
     </UserContext.Provider>
   );
 };

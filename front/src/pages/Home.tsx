@@ -10,10 +10,11 @@ function Home() {
     const { user } = useUser();
     const navigate = useNavigate();
 
-//    useEffect(() => {
-//      if (!user)
-//        navigate("/login");
-//    }, [user]);
+// useEffect(() => {
+//   //   if (!user?.isAuthenticated)
+//   //     console.log("\n\n\n\nuser.isAuthenticated", user?.isAuthenticated);
+//   //     navigate("/login");
+//   // }, [user?.isAuthenticated]);
 
     const renderFireAndBuilding = (
         <div className="relative">
