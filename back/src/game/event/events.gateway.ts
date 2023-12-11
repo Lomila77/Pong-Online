@@ -101,15 +101,12 @@ export class EventsGateway {
           return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
         }
 
-    const userId = await this.gameService.findUserIdByUsername(client.data.username);
-    console.log("USER ID IN GAME = ", userId);
-    await this.gameService.setUserInGame(userId, true);
-    await this.chatGateway.emitSignal(userId, {userId: userId}, "userGameState");
-    // Pourquoi le faire une deuxieme fois ?
-    //this.chatGateway.emitSignal(1, {
-    //  username: client.data.username,
-    //  inGame: true
-    //}, "userGameState")
+        //TODO: POUR JOHANNA
+        //const userId = await this.gameService.findUserIdByUsername(client.data.username);
+        // Pour utiliser findUserIdByUsername, il faut enlever le private dans game.service.ts
+        //console.log("USER ID IN GAME = ", userId);
+        //await this.gameService.setUserInGame(userId, true);
+        //await this.chatGateway.emitSignal(userId, {userId: userId}, "userGameState");
 
 
         // le joueur arrive dans la partie et c'est le premier

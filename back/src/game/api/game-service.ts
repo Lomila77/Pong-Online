@@ -165,7 +165,7 @@ export class GameService {
         }
     }
 
-    async findUserIdByUsername(username: string): Promise<number | null> {
+    private async findUserIdByUsername(username: string): Promise<number | null> {
         try {
             const user = await this.prisma.user.findFirst({
                 where: {
@@ -199,21 +199,20 @@ export class GameService {
         return uuidv4();
     }
 
-   async setUserInGame(userId: number, status: boolean) {
-        try {
-            await this.prisma.user.update({
-                where: {
-                    fortytwo_id: userId,
-                },
-                data: {
-                    in_game: status,
-                },
-            });
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
-
+   //async setUserInGame(userId: number, status: boolean) {
+   //     try {
+   //         await this.prisma.user.update({
+   //             where: {
+   //                 fortytwo_id: userId,
+   //              },
+   //              data: {
+   //                  in_game: status,
+   //              },
+   //          });
+   //          return true;
+   //      } catch (error) {
+   //          console.log(error);
+   //          return false;
+   //      }
+   //  }
 }

@@ -310,6 +310,11 @@ export class ChatGateway implements OnGatewayConnection {
       const newOwner = await this.chatService.findNewOwner(chatId);
       if (newOwner) {
         await this.chatService.updateOwner(chatId, newOwner.fortytwo_id);
+        const channel = await this.chatService.getUpdatedChannelForFront(chatId, "MyChannels");
+        const idSet = await this.collectChannelMembersIdsSet(userId);
+        idSet.forEach(id => {
+          this.emitSignal(id, channel, 'new owner');
+        })
       } else {
         await this.chatService.delChanById(chatId);
         this.server.to(client.id).emit("chan deleted", { chatId: chatId });
@@ -323,8 +328,11 @@ export class ChatGateway implements OnGatewayConnection {
 
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
-    this.server.to(client.id).emit("quited", { chatId: chatId });
+    await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
+      this.server.to(client.id).emit("quited", { channel: channel });
+    })
     this.server.to(chatId.toString()).emit("quit", { pseudo: this.clients[client.id].pseudo });
+    // TODO: mettre a jour la liste des membre en local front quand il part
   }
 
   @SubscribeMessage('is-admin')
