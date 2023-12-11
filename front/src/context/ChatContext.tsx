@@ -197,6 +197,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log("\n\n", channels);
       });
 
+      /* *********************************************************
+          * user leave :
+            - update member
+      ***********************************************************/
+      newSocket?.on('user leave', (channel: IChannel) => {
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+        console.log("user leave receveid: ", channel);
+      });
 
       newSocket?.on('chan deleted', (chatId: number) => {
         setChannels((prev: IChannels) => ({
@@ -542,7 +553,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     // console.log("removeChannel : initial channel list ", channelList);
     // const filteredlist = channelList.filter((channel) => channel.id == channelId);
     // console.log("removeChannel : filtered channel list ", filteredlist);
-    return channelList.filter((channel) => channel.id == channelId);
+    return channelList.filter((channel) => channel.id != channelId);
   }
 
   function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
@@ -604,7 +615,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       password:    form?.password?    form.password    :  "",
     }
     // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if (data.type && !isChannelKnown(data.type, data.id)
+    if ((data.type && !isChannelKnown(data.type, data.id))
       || data.type === 'ChannelsToJoin') {
       console.log("Join Channel called from openWindow")
       // console.log("openWindoc called : data = ", data);
@@ -661,9 +672,10 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     }
   }
 
+
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
-    console.log("EMIT QUIT\n\n\n");
+    console.log("EMIT QUIT channel: ", chatId ,"\n\n\n");
     closeWindow(chatId);
   }
 
