@@ -370,7 +370,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatService.invit_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_id === data.userId) {
-        await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+        await (this.chatService.getUpdatedChannelForFront(data.chatId, "ChannelsToJoin")).then(objToEmit => {
           this.server.to(key).emit("invited", objToEmit);
         });
         console.log("user invited");
