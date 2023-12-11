@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, {ReactNode, createContext, useState, useContext, useEffect, useRef } from 'react';
 import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
@@ -63,6 +63,7 @@ export interface IChannels{
 	MyDms: IChannel[];
 	MyChannels: IChannel[];
 	ChannelsToJoin : IChannel[];
+  [key: string]: IChannel[];
   }
 
 export interface IFormData {
@@ -91,7 +92,7 @@ export const ChatContext = createContext<{
 } | null>(null);
 
 
-export const ChatProvider = ({ children }) => {
+export const ChatProvider = ({ children} : { children: ReactNode }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
