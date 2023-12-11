@@ -52,9 +52,18 @@ const SettingComp: React.FC = () => {
     hiddenFileInput.current.click();
   };
 
-  const handleChangeFile = (e: any) => {
-    setFile(URL.createObjectURL(e.target.files[0]));
+  const handleChangeFile = async (e: any) => {
     fileSize = e.target.files[0].size;
+
+    const formData = new FormData();
+    formData.append('file', e.target.files[0]);
+
+    const response = await backRequest('users/avatar', 'POST', formData);
+    if (!response.isOk) {
+      // handle error
+    } else {
+      setFile(`http://localhost:3333/uploads/${response.avatar}`);
+    }
 
     const dropdown = document.querySelector('.Download') as HTMLDetailsElement;
     if (dropdown) {

@@ -63,7 +63,6 @@ const ModalSetting = () => {
       ...data,
       avatar: file
     })
-    console.log("data: " + data);
     // createUser({...data, avatar: file});
     backRequest( 'auth/update', 'POST', {...data, avatar: file})
   };

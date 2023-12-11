@@ -30,6 +30,7 @@ COPY prisma ./prisma/
 
 RUN npm install
 RUN npm install -g prisma
+RUN mkdir /app/uploads
 # RUN prisma generate
 
 COPY . .
