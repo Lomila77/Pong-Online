@@ -86,7 +86,6 @@ export class UserController {
   }
 
   @Post('/avatar')
-  @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: join(__dirname, '..', '..', 'uploads'),
