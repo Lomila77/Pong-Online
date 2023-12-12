@@ -839,10 +839,12 @@ export class ChatService {
     if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
       let updateData = {};
 
-      if (info.isPassword === true && info.password) {
+      if (info.isPassword === true && info.Password) {
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hash = await bcrypt.hash(info.Password, 10);
         updateData = {
           isPassword: true,
-          password: info.password,
+          password: hash,
         };
       } else if (info.isPassword === false) {
         updateData = {
