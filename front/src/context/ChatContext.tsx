@@ -811,17 +811,18 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
                          ban: boolean, unBan: boolean,
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
-    console.log("Send Admin Form called");
-    console.log('chatId:', chatId);
-    console.log('targetId:', targetId);
-    console.log('mute:', mute);
-    console.log('unMute:', unMute);
+    // console.log("Send Admin Form called");
+    // console.log('chatId:', chatId);
+    // console.log('targetId:', targetId);
+    // console.log('mute:', mute);
+    // console.log('unMute:', unMute);
     console.log('ban:', ban);
     console.log('unBan:', unBan);
-    console.log('kick:', kick);
-    console.log('admin:', admin);
-    console.log('isPassword:', isPassword);
-    console.log('password:', password);
+    console.log('targetId:', targetId);
+    // console.log('kick:', kick);
+    // console.log('admin:', admin);
+    // console.log('isPassword:', isPassword);
+    // console.log('password:', password);
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (targetId) {
       if (mute)
@@ -832,8 +833,10 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log('ban event emited');
         socket?.emit('ban', {chatId: chatId, userId: targetId});
       }
-      else if (unBan)
+      else if (unBan) {
+        console.log('unBan event emited');
         socket?.emit('unban', {chatId: chatId, userId: targetId});
+      }
       if (kick)
         socket?.emit('kick', {chatId: chatId, userId: targetId});
       if (admin)
