@@ -327,9 +327,7 @@ export const ChatProvider = ({ children }) => {
           MyChannels: updateChannel(prev.MyChannels, channel),
         }));
         if (openedWindows.find(openedWindow => {openedWindow.id === channel.id})) {
-          setOpenedWindows((prevState) => ({
-            getUpdatedIChatWindows(prevState, channel)
-          }))
+          ;
         }
       });
 
