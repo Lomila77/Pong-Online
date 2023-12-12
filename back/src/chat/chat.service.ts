@@ -210,6 +210,16 @@ export class ChatService {
         },
       },
     });
+    const newUserChannels = user.userChannels.filter(channelId => channelId !== id);
+
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: newUserChannels,
+      },
+    });
   }
 
   async unban_Chan(userId: number, id: number) {
@@ -237,6 +247,16 @@ export class ChatService {
           connect: {
             fortytwo_id: user.fortytwo_id,
           },
+        },
+      },
+    });
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: {
+          set: [...user.userChannels, id],
         },
       },
     });
