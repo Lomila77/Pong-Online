@@ -183,42 +183,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       });
 
       /* *********************************************************
-          * Quited :
-            - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
-      ***********************************************************/
-      newSocket?.on('quited', (channel: IChannel) => {
-        channel.type = "ChannelsToJoin";
-        setChannels((prev: IChannels) => ({
-          ...prev!,
-          ChannelsToJoin: (channel.isPrivate ? prev.ChannelsToJoin : addChannel(prev.ChannelsToJoin, channel)),
-          MyChannels: removeChannel(prev.MyChannels, channel.id),
-        }));
-        console.log("Channel quited: \n\n\n", channel.id);
-        console.log("\n\n", channels);
-      });
-
-      /* *********************************************************
-          * user leave :
-            - update member
-      ***********************************************************/
-      newSocket?.on('user leave', (channel: IChannel) => {
-        setChannels((prev: IChannels) => ({
-          ...prev!,
-          MyChannels: updateChannel(prev.MyChannels, channel),
-        }));
-        console.log("user leave receveid: ", channel);
-      });
-
-      newSocket?.on('chan deleted', (chatId: number) => {
-        setChannels((prev: IChannels) => ({
-          ...prev!,
-          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
-          MyChannels: removeChannel(prev.MyChannels, chatId),
-        }));
-        console.log("Channel deleted: \n\n\n", chatId);
-      });
-
-      /* *********************************************************
           * Invited:
             - invite a friend in channel
       ***********************************************************/
@@ -233,8 +197,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       /* *********************************************************
           * Chan updated:
-
-            -
+            - update channel Password and password status
       ***********************************************************/
       newSocket?.on('chan updated', (channelid: number, isPassword: boolean, Password: string) => {
           setChannels((prev: IChannels) => ({
@@ -319,6 +282,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       /* *********************************************************
           * NewUserJoin:
             - update channel with new member
+            - update opened window with new channel update
       ************************************************************/
       newSocket?.on('NewUserJoin', (channel: IChannel) => {
         console.log("new user join event received", channel)
@@ -327,7 +291,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
         }));
-        setOpenedWindows((prevState) => getUpdatedIChatWindows(prevState, channel));
+        setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
       });
 
       /* *********************************************************
@@ -339,6 +303,47 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+      });
+
+      /* *********************************************************
+          * user leave :
+            - a member different than current user leaved
+      ***********************************************************/
+            newSocket?.on('user leave', (channel: IChannel) => {
+              console.log("user leave receveid: ", channel);
+              setChannels((prev: IChannels) => ({
+                ...prev!,
+                MyChannels: updateChannel(prev.MyChannels, channel),
+              }));
+              setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
+            });
+
+      /* *********************************************************
+          * Quited :
+            - current user left  channel
+      ***********************************************************/
+      newSocket?.on('quited', (channel: IChannel) => {
+        console.log("Channel quited: receveid: ", channel);
+
+        channel.type = "ChannelsToJoin";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: (channel.isPrivate ? prev.ChannelsToJoin : addChannel(prev.ChannelsToJoin, channel)),
+          MyChannels: removeChannel(prev.MyChannels, channel.id),
+        }));
+      });
+
+      /* *********************************************************
+          * chan deleted :
+            - a channel has been deleted
+      ***********************************************************/
+      newSocket?.on('chan deleted', (chatId: number) => {
+        console.log("chan deleted signal recieved:", chatId);
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
+          MyChannels: removeChannel(prev.MyChannels, chatId),
         }));
       });
 
@@ -522,22 +527,22 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
     const key = windows.findIndex(window => window.id === updatedChannel.id)
-    console.log("inside getUpdatedIChatWindows", key);
+    console.log("inside getUpdatedIChatWindows key: ", key);
+    console.log("inside getUpdatedIChatWindows: prev state ", windows);
+
     if (key != -1) {
-      const updatedWindow = windows;
+      const updatedWindow = [...windows]; // = [...windows] creates a copy / = windows created a reference
       updatedWindow[key] = {
         ... updatedChannel,
         history: windows[key].history,
       }
       console.log("inside getUpdatedIChatWindows, updatedWindow", updatedWindow);
-
       return updatedWindow;
     }
     return windows;
   }
 
   const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
-    // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
     return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
   }
 
@@ -567,21 +572,15 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   //todo : change function by const =>
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
-    // console.log("removeChannel : initial channel list ", channelList);
-    // const filteredlist = channelList.filter((channel) => channel.id == channelId);
-    // console.log("removeChannel : filtered channel list ", filteredlist);
     return channelList.filter((channel) => channel.id != channelId);
   }
 
   function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
     const updatedChannel = removeChannel(channelList, channelToAdd.id);
-    console.log("updated channel: ", updatedChannel);
     return addChannel(updatedChannel, channelToAdd);
-    // return channelList.filter((channel) => channel.id != channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
-    // console.log("addChannel : initial channel list ", channelList);
 
     const channelExists = channelList.find((channel) => channel.id === newChannel.id);
     if (!channelExists) {
@@ -606,6 +605,8 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
               }
               )
             }
+            else
+              console.log("window is already openned")
           }
 
   /*************************************** print functions */
@@ -692,6 +693,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
+
     console.log("EMIT QUIT channel: ", chatId ,"\n\n\n");
     closeWindow(chatId);
   }

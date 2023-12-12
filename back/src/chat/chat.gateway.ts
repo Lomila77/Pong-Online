@@ -312,6 +312,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     const isOwner = await this.chatService.isOwner_Chan(userId, chatId);
     const isAdmin = await this.chatService.isAdmin_Chan(userId, chatId);
+    const isPrivate = (await this.chatService.getChannelById(chatId)).isPrivate
 
     if (isOwner) {
       const newOwner = await this.chatService.findNewOwner(chatId);
@@ -321,10 +322,11 @@ export class ChatGateway implements OnGatewayConnection {
           if (member.id != userId)
             this.emitSignal(member.id, channel, 'new owner');
         })
-
       } else {
+        // no owner found --> delete channel. if != private send to all sockets
         await this.chatService.delChanById(chatId);
-        this.server.to(client.id).emit("chan deleted", chatId);
+        isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
+        this.server.emit("chan deleted", chatId);
         return;
       }
     }
@@ -332,10 +334,11 @@ export class ChatGateway implements OnGatewayConnection {
     if (isAdmin) {
       await this.chatService.removeAdmin(userId, chatId);
     }
-
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
     await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
+      console.log("getUpdatedChannelForFront", channel.members);
+
       this.server.to(client.id).emit("quited", channel);
       this.server.to(chatId.toString()).emit("user leave", channel);
     })

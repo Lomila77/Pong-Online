@@ -98,13 +98,18 @@ export class ChatService {
   }
 
   async delChanById(id: number) {
-    const chan = await this.prisma.channel.delete(
-      {
-        where: {
-          id: id,
-        },
-      }
-    )
+    // delete all messages that are linked to channel
+    await this.prisma.message.deleteMany({
+      where: {
+        channelId: id,
+      },
+    });
+    // delete channel
+    await this.prisma.channel.delete({
+      where: {
+        id: id,
+      },
+    });
   }
 
   async quit_Chan(userId: number, id: number) {
