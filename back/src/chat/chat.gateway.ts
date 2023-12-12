@@ -432,8 +432,10 @@ export class ChatGateway implements OnGatewayConnection {
     if (!isAdmin)
       return;
     await this.chatService.unban_Chan(data.userId, data.chatId);
+    // todo : send signal to concerned socket only if channel is public
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_id === data.userId) {
+        // if channel is public, informe user
         this.server.to(key).emit("unbanned", { chatId: data.chatId });
         break;
       }

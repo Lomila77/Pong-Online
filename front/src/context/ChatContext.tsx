@@ -396,15 +396,23 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * unbanned :
             - current user has been unbanned from channel
       ***********************************************************/
-
+      //todo current user has channel in channels to joined
+      
       /* *********************************************************
           * unban :
             -  a member has been unban from channel
       ***********************************************************/
-
+        newSocket?.on('unban', (channel: IChannel) => {
+          console.log("unban event received", channel)
+          channel.type= "MyChannels"
+          setChannels((prev: IChannels) => ({
+            ...prev!,
+            MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+          }));
+        });
       /* *********************************************************
           * kicked :
-            - current user has been banned from channel
+            - current user has been kicked from channel
       ***********************************************************/
 
       /* *********************************************************
@@ -414,7 +422,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       /* *********************************************************
           * mute :
-            - a channel has been deleted
+            -  current user has been kicked from channel
       ***********************************************************/
 
       /* *********************************************************
@@ -751,7 +759,16 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
     console.log("Send Admin Form called");
-    // console.log("", )
+    console.log('chatId:', chatId);
+    console.log('targetId:', targetId);
+    console.log('mute:', mute);
+    console.log('unMute:', unMute);
+    console.log('ban:', ban);
+    console.log('unBan:', unBan);
+    console.log('kick:', kick);
+    console.log('admin:', admin);
+    console.log('isPassword:', isPassword);
+    console.log('password:', password);
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (targetId) {
       if (mute)
