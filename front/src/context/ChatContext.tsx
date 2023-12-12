@@ -366,10 +366,14 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * password updated :
             - a channel has been deleted
       ***********************************************************/
-      newSocket?.on('password updated', (isPassword: boolean, chatId: number) => {
-        console.log("password updated signal recieved:", chatId);
-        // TODO updated channel
-
+      newSocket?.on('password updated', (channel: IChannel) => {
+        console.log("password updated signal recieved:", channel);
+        setChannels((prev: IChannels) => ({
+          ...prev,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows(prevState =>
+            getUpdatedIChatWindows(prevState, channel));
       });
 
       socketRef.current = newSocket;
