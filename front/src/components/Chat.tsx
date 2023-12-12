@@ -74,7 +74,7 @@ const Chat: React.FC = () => {
                         <DisplayChannels/>
                     )}
                     {displayChannelDrawer && (
-                        <li className="flex flex-row justify-between items-center border-b-2 font-display px-9 text-base-200 mb-5">INVITATION</li>
+                        <li className="flex flex-row justify-between items-center border-b-2 font-display px-16 text-base-200 mb-5">PUBLIC</li>
                     )}
                     {displayChannelDrawer && (
                         <DisplayChannelsToJoin/>

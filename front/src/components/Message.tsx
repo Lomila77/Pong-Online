@@ -9,7 +9,7 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({message, blockedUser}) => {
     const {user, setUser} = useUser();
-    if (!user || blockedUser.find(blockedUserId => blockedUserId == message.owner))
+    if (!user || (blockedUser && blockedUser.find(blockedUserId => blockedUserId == message.owner)))
         return;
     const classNameMessage = message.owner.id == user.fortytwo_id ? "chat chat-end" : "chat chat-start";
     return (

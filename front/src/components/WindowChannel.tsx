@@ -17,7 +17,7 @@ interface WindowChannelProps {
 
 const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => {
     const {user, setUser} = useUser();                                                                      // Recuperation de la session de l'utilisateur
-    const { sendMessage, sendAdminForm, addFriendToChannel } = useChat();
+    const { sendMessage } = useChat();
     const [displayChat, setDisplayChat] = useState(chat.isPassword !== true);
     const [message, setMessage] = useState('');
     const [isChecked, setIsChecked] = useState(false);
@@ -120,7 +120,7 @@ const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => 
                 )}
                 <div id={"message-container"} className="border hover:border-slate-400 rounded-lg h-80 flex flex-col overflow-auto">
                     {chat?.history && chat.history.map((msg: IChatHistory, index: number) => ( //TODO changer message par la bonne strategie
-                        <Message message={msg} key={index}/>
+                        <Message message={msg} key={index} blockedUser={user.blockedUser}/>
                         ))}
                 </div>
                 <div className="flex flex-row justify-between py-4">

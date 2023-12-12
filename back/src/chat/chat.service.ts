@@ -1224,6 +1224,30 @@ export class ChatService {
     return false;
   }
 
+  async unblockUser(me: User, userBlockId: number): Promise<backResInterface> {
+    if (me.fortytwo_id == userBlockId)
+      return {isOk: false};
+    const unblockUser = await this.prisma.user.findUnique({
+      where : {fortytwo_id: userBlockId},
+    });
+    if (!unblockUser)
+      return {isOk: false};
+    const updatedBlocked = me.blocked.filter(id => id !== userBlockId);
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: me.fortytwo_id,
+      },
+      data: {
+        blocked: {
+          set: updatedBlocked,
+        }
+      }
+    })
+    this.emitSignal(me.fortytwo_id, userBlockId, "unblock user");
+    return {isOk: true};
+      // signal will be send to  second user if he is connected. So front can send 'join channel'
+  }
+
   async addFriends(me: User, friendPseudo: string): Promise<void> {
     if (me.pseudo == friendPseudo)
       return;

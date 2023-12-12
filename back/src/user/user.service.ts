@@ -92,6 +92,16 @@ export class UserService {
     }
   }
 
+  async isBlock(me: User, userId: number): Promise<backResInterface> {
+    const meBlockList = (await this.prisma.user.findUnique({
+      where: { fortytwo_id: me.fortytwo_id},
+      select: { blocked: true}
+    })).blocked;
+    if (!meBlockList?.find(meFriend => meFriend === userId) && me.fortytwo_id != userId)
+      return {isBlock: false};
+    return {isBlock: true};
+  }
+
   async isFriend(me: User, friendPseudo: string): Promise<backResInterface> {
     const meFriends = (await this.prisma.user.findUnique({
       where: { fortytwo_id: me.fortytwo_id},

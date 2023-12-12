@@ -132,6 +132,7 @@ export interface frontReqInterface {
     avatar?: any;
     isF2Active?: boolean;
     fortytwo_id?: number;
+    isBlock?: boolean;
     isFriend?: boolean;
     friends?: number[];
     allUser?: User[];

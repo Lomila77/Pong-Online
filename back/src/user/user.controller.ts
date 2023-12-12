@@ -43,6 +43,12 @@ export class UserController {
     return this.userService.checkPseudo(body.pseudo)
   }
 
+  @Get('/isBlock/:id')
+  @UseGuards(JwtGuard)
+  async isBlock(@GetUser() me: User, @Param('id', ParseIntPipe) id: number): Promise<backResInterface> {
+    return await this.userService.isBlock(me, id);
+  }
+
   @Get('/isFriend/:pseudo')
   @UseGuards(JwtGuard)
   async isFriend(@GetUser() me: User, @Param('pseudo') pseudo: string): Promise<backResInterface> {
