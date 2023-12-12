@@ -199,20 +199,4 @@ export class GameService {
         return uuidv4();
     }
 
-   //async setUserInGame(userId: number, status: boolean) {
-   //     try {
-   //         await this.prisma.user.update({
-   //             where: {
-   //                 fortytwo_id: userId,
-   //              },
-   //              data: {
-   //                  in_game: status,
-   //              },
-   //          });
-   //          return true;
-   //      } catch (error) {
-   //          console.log(error);
-   //          return false;
-   //      }
-   //  }
 }

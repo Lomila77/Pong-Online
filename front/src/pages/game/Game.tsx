@@ -62,7 +62,7 @@ export interface GameParameters {
 function Game() {
 
     //const [user, setUser] = useState<User | null>(null);
-    const {user, setUser} = useUser(); // Recuperation de la session de l'utilisateur
+    const {user} = useUser(); // Recuperation de la session de l'utilisateur
     const socketRef = useRef<Socket | null>(null);
 
     const token = Cookies.get('jwtToken');
@@ -70,7 +70,7 @@ function Game() {
       return //TODO: redirect vers login ?
 
     useEffect(() => {
-        socketRef.current = io('http://localhost:3333/events', {
+        socketRef.current = io('http://localhost:3333/events', { //TODO: add variable environment
             auth: {
                 token: token
             }
@@ -253,7 +253,6 @@ function Game() {
         if (!user) return;
 
         socketRef.current?.on('movePaddleOpponent', function (data) {
-            console.log('movePaddleOpponent - playingSide', playingSide, 'data', data);
             if (playingSide === 'LEFT') {
                 setRightPaddlePositionY(data.y);
             } else if (playingSide === 'RIGHT') {
@@ -277,6 +276,7 @@ function Game() {
         });
 
         socketRef.current?.on('yourPosition', function (data) {
+            console.log("event Your Position: USER PSEUDO = " + user.pseudo);
             if (data.side === 'RIGHT') {
                 playingSide = 'RIGHT';
                 setRightPlayer({
@@ -371,7 +371,6 @@ function Game() {
             setGameStatus(GameStatus.FINISHED);
         });
         socketRef.current?.on('ballPositionEvent', function (data) {
-            console.log('received ballPositionEvent');
             updateGameStatus(GameStatus.IN_PROGRESS);
             setBallPositionX(data.x);
             setBallPositionY(data.y);

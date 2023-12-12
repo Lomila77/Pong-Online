@@ -54,7 +54,7 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
             isPassword: chat.isPassword, password: '',}))
     }
     return (
-        <div className="absolute top-0 left-0 card h-full w-full bg-orangeNG shadow-xl">
+        <div className="absolute z-10 top-0 left-0 card h-full w-full bg-orangeNG shadow-xl">
             <div className="card-body flex flex-col">
                 <h2 className="card-title font-display text-white">Settings:</h2>
                 <div className={"flex flex-col justify-between items-center"}>
