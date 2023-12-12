@@ -13,6 +13,8 @@ services:
       - "${FRONT_PORT}:5173"
     networks:
       - transcendance
+    env_file:
+      - .env
 
   dev_db:
     container_name: postgres
