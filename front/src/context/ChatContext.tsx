@@ -178,8 +178,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log("invited signal received", channel.id);
         setChannels((prev: IChannels) => ({
           ...prev!,
-          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
-          MyChannels: addChannel(prev.MyChannels, channel),
+          ChannelsToJoin: addChannel(prev.ChannelsToJoin, channel),
         }));
       });
 
@@ -719,6 +718,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
                          ban: boolean, unBan: boolean,
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
+    console.log("Send Admin Form called");
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (targetId) {
       if (mute)
@@ -734,10 +734,12 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       if (admin)
         socket?.emit('set-admin', {chatId: chatId, userId: targetId});
     }
-    if (isPassword && channel?.isPassword) // TODO add change pwd
-      socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword, Password: password});
-    else if (!isPassword && channel?.isPassword) {
-      socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword});
+    if (user) {
+      if (isPassword && channel?.isPassword && password) // TODO add change pwd
+        socket?.emit('update', {channelId: chatId, userId: user?.fortytwo_id, isPassword: isPassword, Password: password});
+      else if (!isPassword && channel?.isPassword) {
+        socket?.emit('update', {channelId: chatId, userId: user?.fortytwo_id, isPassword: isPassword});
+      }
     }
   }
 

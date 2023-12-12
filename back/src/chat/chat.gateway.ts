@@ -330,8 +330,9 @@ export class ChatGateway implements OnGatewayConnection {
       } else {
         // no owner found --> delete channel. if != private send to all sockets
         await this.chatService.delChanById(chatId);
-        isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
+        //isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
         this.server.emit("chan deleted", chatId);
+
         return;
       }
     }
