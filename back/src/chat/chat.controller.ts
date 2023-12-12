@@ -42,12 +42,13 @@ export class ChatController {
 		const dms = await this.chat_service.get__DmUser(user.fortytwo_id);
 		const channels = await this.chat_service.get__channelsUserIn(user.fortytwo_id);
 		const channels_to_join = await this.chat_service.get__channelsUserCanJoin(user.fortytwo_id);
+		const blocked = await this.chat_service.getUserBlocked(user.fortytwo_id);
 		// Check if throw error
 		let mydms = [];
 		dms.forEach((elem:any) => {
 			mydms.push({id:elem.id, name:elem.name, members: elem.members, type: elem.type})
 		})
-		return {data: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
+		return {data: {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}}, blockedUser: blocked};
 	}
 
 	@Get('/channels/:id/name')
