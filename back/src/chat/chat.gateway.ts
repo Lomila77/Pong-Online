@@ -67,15 +67,20 @@ export class ChatGateway implements OnGatewayConnection {
             fortytwo_id: true,
             fortytwo_userName: true,
             pseudo: true,
-
             userChannels: true,
+            ownedChannels: true,
             friends: true,
           }
         })
         this.clients[client.id] = user;
         console.log("client channel list : ", user.userChannels);
+
         user.userChannels.forEach(channelId => {
           client.join(channelId.toString());
+        });
+
+        user.ownedChannels.forEach(channel => {
+          client.join(channel.id.toString());
         });
 
         user.friends.forEach(friendId => {
@@ -515,6 +520,18 @@ export class ChatGateway implements OnGatewayConnection {
       client.broadcast.emit('not an owner', data);
     else
       client.broadcast.emit('chan updated', data);
+  }
+
+  @SubscribeMessage('block')
+  async blockUser(
+    @MessageBody() data: { id: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = await this.userService.getUserbyId(data.id);
+    if (user) {
+      await this.chatService.blockUser(this.clients[client.id].fortytwo_id, user.fortytwo_id);
+      this.server.to(client.id).emit("user blocked", { id: data.id });
+    }
   }
 
   // @SubscribeMessage('play')
