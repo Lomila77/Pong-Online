@@ -67,15 +67,20 @@ export class ChatGateway implements OnGatewayConnection {
             fortytwo_id: true,
             fortytwo_userName: true,
             pseudo: true,
-
             userChannels: true,
+            ownedChannels: true,
             friends: true,
           }
         })
         this.clients[client.id] = user;
         console.log("client channel list : ", user.userChannels);
+
         user.userChannels.forEach(channelId => {
           client.join(channelId.toString());
+        });
+
+        user.ownedChannels.forEach(channel => {
+          client.join(channel.id.toString());
         });
 
         user.friends.forEach(friendId => {
