@@ -53,14 +53,20 @@ const SettingComp: React.FC = () => {
   };
 
   const handleChangeFile = async (e: any) => {
-    fileSize = e.target.files[0].size;
+    const file = e.target.files[0];
+    fileSize = file.size;
+
+    if (fileSize > MAX_FILE_SIZE) {
+      alert("La taille du fichier dépasse la limite de 4Mo");
+      return;
+    }
 
     const formData = new FormData();
-    formData.append('file', e.target.files[0]);
+    formData.append('file', file);
 
     const response = await backRequest('users/avatar', 'POST', formData);
     if (!response.isOk) {
-      // handle error
+      alert(response.message);
     } else {
       setFile(`http://localhost:3333/uploads/${response.avatar}`);
     }
