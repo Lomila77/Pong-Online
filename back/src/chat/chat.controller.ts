@@ -49,6 +49,7 @@ export class ChatController {
 			mydms.push({id:elem.id, name:elem.name, members: elem.members, type: elem.type})
 		})
 		return {data: {channels: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}}, blockedUser: blocked};
+		// return {data: {MyDms:mydms, MyChannels:channels, ChannelsToJoin:channels_to_join}};
 	}
 
 	@Get('/channels/:id/name')

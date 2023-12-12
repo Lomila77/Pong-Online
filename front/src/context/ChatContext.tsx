@@ -5,10 +5,14 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 
-
 // Todo : update channels (change password, name new admin ....)
-
 // Todo : need to handle error event with case : NotInvited, Banned, Wrong password, This channel does not exist!!!
+
+// ban --> a user has been banned
+// kicked, banned --> I ve been banned from a channel --> need to close all windows and update channels
+// unbanned --> I ve been unbanned from channel //todo put back channel in channels to join ?
+// unban // a user has been unbanned  (update channel and windows)
+// kicked
 
   export interface IChatMember {
     name: string;
@@ -34,11 +38,13 @@ export interface IChannel {
   id: number,
   name: string,
   type: string,
-  members: IChatMember[],
   isPrivate: boolean,
   isPassword: boolean,
   owner: IChatMember,
+  members: IChatMember[],
   admins: IChatMember[],
+  banned: IChatMember[],
+  mute: IChatMember[],
 }
 
 type ChannelType = keyof IChannels;
@@ -81,7 +87,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
   const [prevPseudo, setPrevPseudo] = useState<string>('');
-  const [blockedUser, setblockedUser] = useState<number[]>([]);
+  const [blockedUsers, setblockedUsers] = useState<number[]>([]);
 
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
@@ -99,15 +105,15 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     newSocket.on('connect', () => {
       setSocket(newSocket);
 
-      backRequest('chat/channels', 'GET').then((data) => {
-        console.log("chat/channels route is giving : ", data, "\n");
-        let allChannels : IChannels = data.data.channels as IChannels
-        let blockedId : number[] = data.data.blockedUser as number[]
+      backRequest('chat/channels', 'GET').then((ret) => {
+        console.log("chat/channels route is giving : ", ret, "\n");
+        let allChannels : IChannels = ret.data.channels as IChannels
+        let blockedId : number[] = ret.data.blockedUser as number[]
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyChannels", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "ChannelsToJoin", user?.fortytwo_id || 0)
         allChannels && setChannels(allChannels);
-        blockedId && setblockedUser(blockedId);
+        blockedId && setblockedUsers(blockedId);
       })
 
       /* *********************************************************
@@ -706,7 +712,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       if (admin)
         socket?.emit('set-admin', {chatId: chatId, userId: targetId});
     }
-    if (isPassword && channel?.isPassword) // TODO add change pwd
+    if (isPassword && channel?.isPassword)
       socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword, Password: password});
     else if (!isPassword && channel?.isPassword) {
       socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword});

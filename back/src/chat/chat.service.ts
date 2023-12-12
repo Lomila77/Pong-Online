@@ -571,34 +571,14 @@ export class ChatService {
           members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          muted: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          banned: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           isPrivate: true,
           isPassword: true,
         },
       });
-      const modifiedSources = sources.map((source) => ({
-        // ...source,
-        id: source.id,
-        name: source.name,
-        members: source.members.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-        })),
-        type: 'ChannelsToJoin',
-        isPrivate: source.isPrivate,
-        isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
-        admins: source.admins.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-        })),
-      }));
-
+      const modifiedSources = this.get__modifiedSource(sources, "ChannelsToJoin")
       return modifiedSources;
-      // return source;
     } catch (error) {
       console.log('get__channels error:', error);
     }
@@ -617,33 +597,13 @@ export class ChatService {
           members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          muted: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          banned: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           isPrivate: true,
           isPassword: true,
         },
       });
-      const modifiedSources = sources.map((source) => ({
-        // ...source,
-        id: source.id,
-        name: source.name,
-        members: source.members.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-          isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
-          isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
-        })),
-        type: 'MyChannels',
-        isPrivate: source.isPrivate,
-        isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
-        admins: source.admins.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-        })),
-      }));
+      const modifiedSources = this.get__modifiedSource(sources, "MyChannels")
       return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
@@ -660,42 +620,16 @@ export class ChatService {
         select: {
           id: true,
           name: true,
-          members: {
-            select: {
-              fortytwo_id: true,
-              pseudo: true,
-              connected: true,
-              in_game: true,
-            }
-          },
-          isPassword: true,
-          isPrivate: true,
+          members: { select: { fortytwo_id: true, pseudo: true, connected: true, in_game: true,}},
           admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
           owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          muted: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          banned: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+          isPassword: true,
+          isPrivate: true,
         },
       });
-      const modifiedSources = sources.map((source) => ({
-        ...source,
-        members: source.members.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-          isAdmin: true,
-          isOwner: true,
-        })),
-        type: 'MyDms',
-        isPrivate: source.isPrivate,
-        isPassword: source.isPassword,
-        owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
-        admins: source.admins.map((member) => ({
-          id: member.fortytwo_id,
-          name: member.pseudo,
-          connected: member.connected,
-          in_game: member.in_game,
-        })),
-      }));
-
+      const modifiedSources = this.get__modifiedSource(sources, "MyDms")
       return modifiedSources;
     } catch (error) {
       console.log('get__channels error:', error);
@@ -1013,10 +947,10 @@ export class ChatService {
     return value.isDM;
   }
 
-  async getUserBlocked(token: string) {
+  async getUserBlocked(userId: number) {
     const usersBlocked = await this.prisma.user.findUnique({
       where: {
-        fortytwo_id: Number(token),
+        fortytwo_id: userId,
       },
       select: {
         blocked: true,
@@ -1265,34 +1199,79 @@ export class ChatService {
         members: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
         admins: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
         owner: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+        muted: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
+        banned: {select: {fortytwo_id: true, pseudo: true, connected:true, in_game: true}},
         isPrivate: true,
         isPassword: true,
       },
     });
-    const modifiedSources = {
-      id: channel.id,
-      name: channel.name,
-      members: channel.members.map((member) => ({
-        id: member.fortytwo_id,
-        name: member.pseudo,
-        connected: member.connected,
-        in_game: member.in_game,
-        isAdmin: channel.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
-        isOwner: channel.owner ? channel.owner.fortytwo_id === member.fortytwo_id : false,
-      })),
-      type: type,
-      isPrivate: channel.isPrivate,
-      isPassword: channel.isPassword,
-      owner: {id: channel.owner.fortytwo_id, name: channel.owner.pseudo, connected: channel.owner.connected, in_game: channel.owner.in_game},
-      admins: channel.admins.map((member) => ({
-        id: member.fortytwo_id,
-        name: member.pseudo,
-        connected: member.connected,
-        in_game: member.in_game,
-      })),
-    }
+    const modifiedSources = this.formatFrontProperties(channel, type);
     return modifiedSources;
   }
+
+  //used to reformate other get__ prisma result.
+  private get__modifiedSource(sources: any[], type: string) {
+    return sources.map((source) => this.formatFrontProperties(source, type));
+  };
+
+  private formatFrontProperties(source: any, type: string) {
+    return {
+      id: source.id,
+      name: source.name,
+      type: type,
+      isPrivate: source.isPrivate,
+      isPassword: source.isPassword,
+      owner: {
+        id: source.owner.fortytwo_id,
+        name: source.owner.pseudo,
+        connected: source.owner.connected,
+        in_game: source.owner.in_game,
+      },
+      members: source.members.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+        in_game: member.in_game,
+      })),
+      admins: source.admins.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+        in_game: member.in_game,
+      })),
+      banned: source.banned.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+        in_game: member.in_game,
+      })),
+      muted: source.muted.map((member) => ({
+        id: member.fortytwo_id,
+        name: member.pseudo,
+        connected: member.connected,
+        in_game: member.in_game,
+      })),
+    };
+  }
+
+  // TODO to delete before correction
+  async printAllChannels() {
+    try {
+		  const channels = await this.prisma.channel.findMany({
+        include: {banned: {select: {fortytwo_id: true, pseudo: true}},
+        muted: {select: {fortytwo_id: true, pseudo: true}},
+                members : {select: {pseudo: true, fortytwo_id: true, messages: true}}}
+      })
+		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
+		  return channels;
+		} catch (error) {
+		  console.error(error);
+		}
+  }
+}
+
+
+
 
   // const sources = await this.prisma.channel.findMany({
   //   where: {
@@ -1322,20 +1301,73 @@ export class ChatService {
   // }));
 
 
+      // const modifiedSources = sources.map((source) => ({
+      //   // ...source,
+      //   id: source.id,
+      //   name: source.name,
+      //   members: source.members.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //   })),
+      //   type: 'ChannelsToJoin',
+      //   isPrivate: source.isPrivate,
+      //   isPassword: source.isPassword,
+      //   owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
+      //   admins: source.admins.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //   })),
+      // }));
 
-  // TODO to delete before correction
-  async printAllChannels() {
-    try {
-		  const channels = await this.prisma.channel.findMany({
-        include: {banned: {select: {fortytwo_id: true, pseudo: true}},
-        muted: {select: {fortytwo_id: true, pseudo: true}},
-                members : {select: {pseudo: true, fortytwo_id: true, messages: true}}}
-      })
-		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
-		  return channels;
-		} catch (error) {
-		  console.error(error);
-		}
-  }
-}
+      // const modifiedSources = sources.map((source) => ({
+      //   // ...source,
+      //   id: source.id,
+      //   name: source.name,
+      //   members: source.members.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //     isAdmin: source.admins.some((admin) => admin.fortytwo_id === member.fortytwo_id),
+      //     isOwner: source.owner ? source.owner.fortytwo_id === member.fortytwo_id : false,
+      //   })),
+      //   type: 'MyChannels',
+      //   isPrivate: source.isPrivate,
+      //   isPassword: source.isPassword,
+      //   owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
+      //   admins: source.admins.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //   })),
+      // }));
 
+
+      // const modifiedSources = sources.map((source) => ({
+      //   //...source,
+      //   id: source.id,
+      //   name: source.name,
+      //   members: source.members.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //     isAdmin: true,
+      //     isOwner: true,
+      //   })),
+      //   type: 'MyDms',
+      //   isPrivate: source.isPrivate,
+      //   isPassword: source.isPassword,
+      //   owner: {id: source.owner.fortytwo_id, name: source.owner.pseudo, connected: source.owner.connected, in_game: source.owner.in_game},
+      //   admins: source.admins.map((member) => ({
+      //     id: member.fortytwo_id,
+      //     name: member.pseudo,
+      //     connected: member.connected,
+      //     in_game: member.in_game,
+      //   })),
+      // }));

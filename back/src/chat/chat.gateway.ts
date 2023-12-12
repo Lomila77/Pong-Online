@@ -341,7 +341,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
-    
+
     await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
       console.log("getUpdatedChannelForFront", channel.members);
 
@@ -410,7 +410,11 @@ export class ChatGateway implements OnGatewayConnection {
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("ban", objToEmit);
+    })
+
+    // this.server.to(data.chatId.toString()).emit("ban", { userId: data.userId });
     console.log("chan banned");
   }
 
