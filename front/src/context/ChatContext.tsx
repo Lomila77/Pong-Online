@@ -100,13 +100,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     const token = Cookies.get('jwtToken');
     if (!token)
       return
+
     const newSocket = io('http://localhost:3333/chat', {
       auth: {
         token: token
       }
     });
+
     setPrevPseudo(user?.pseudo || '');
+
     newSocket.on('connect', () => {
+
       setSocket(newSocket);
 
       backRequest('chat/channels', 'GET').then((ret) => {
@@ -179,10 +183,12 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       /* *********************************************************
           * Invited:
-            - invite a friend in channel
+            - current user recieved an invitation to a private channel
+            - make channel visible in channelsToJoin
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
         console.log("invited signal received", channel.id);
+        channel.type = "ChannelsToJoin";
         setChannels((prev: IChannels) => ({
           ...prev!,
           ChannelsToJoin: addChannel(prev.ChannelsToJoin, channel),
@@ -226,15 +232,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log("Friend disconnected recieved", updatedUser)
         updateChatMember(updatedUser);
       });
-
-      // /* *********************************************************
-      //     * Friend disconnected:
-      //       - update member with updatedUser
-      // ***********************************************************/
-      // newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
-      //   console.log("Friend disconnected recieved", updatedUser)
-      //   updateChatMember(updatedUser);
-      // });
 
       /* *********************************************************
           * UserGameState:
@@ -314,19 +311,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         setblockedUsers(updatedBlockedList);
       });
 
-      // * quit event does not seems to exist anymore
-      // /* *********************************************************
-      //     * quit:
-      //       - A member has left channel
-      // ***********************************************************/
-      // newSocket?.on('quit', (channel: IChannel) => {
-      //   console.log("quit signal received", channel)
-      //   setChannels((prev: IChannels) => ({
-      //     ...prev!,
-      //     MyChannels: getUpdatedChannel(prev.MyChannels, channel),
-      //   }));
-      // });
-
       /* *********************************************************
           * user leave :
             - a member different than current user leaved
@@ -368,6 +352,61 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           MyChannels: removeChannel(prev.MyChannels, chatId),
         }));
       });
+
+      /* *********************************************************
+          * banned :
+            - current user has been banned from channel
+      ***********************************************************/
+      newSocket?.on('banned', (channel: IChannel) => {
+        console.log("banned event received", channel)
+        // todo close window of banned channel
+        // setChannels((prev: IChannels) => ({
+        //   ...prev!,
+        //   MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        // }));
+      });
+
+      /* *********************************************************
+          * ban :
+            - a member has been banned from channel
+      ***********************************************************/
+      newSocket?.on('ban', (channel: IChannel) => {
+        console.log("ban event received", channel)
+        channel.type= "MyChannels"
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+      });
+      /* *********************************************************
+          * unbanned :
+            - current user has been unbanned from channel
+      ***********************************************************/
+
+      /* *********************************************************
+          * unban :
+            -  a member has been unban from channel
+      ***********************************************************/
+
+      /* *********************************************************
+          * kicked :
+            - current user has been banned from channel
+      ***********************************************************/
+
+      /* *********************************************************
+          * kick :
+            - a member has been kicked from channel
+      ***********************************************************/
+
+      /* *********************************************************
+          * mute :
+            - a channel has been deleted
+      ***********************************************************/
+
+      /* *********************************************************
+          * unmute :
+            - a channel has been deleted
+      ***********************************************************/
 
       socketRef.current = newSocket;
     })
@@ -418,7 +457,11 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     }, [user, prevPseudo])
 
 
-  /*********** chat window states ************/
+
+
+ /* ********************************************************************************************
+     * fonctions to export
+  ********************************************************************************************* */
 
   /* *********************************************************
       * moveMemberToFirst && moveMemberToFirstInIChannels:
@@ -452,25 +495,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     return foundElem;
   };
 
-  /* *********************************************************
-      * isChannelKnown // USELESS DUE TO ASYNCRO OF SETCHANNELS
-        - usage : if (usChannelKnown("MyDms", 42))
+    /* *********************************************************
+      * isChannelKnown
+        - usage : if (usChannelKnown(currentStatem, "MyDms", 42))
           --> check if MyDms has a channel of id 42
   ***********************************************************/
-  // const isChannelKnown = (channelKey: string, idToFind?: number) => {
-  //   if (!idToFind)
-  //     return false;
-  //   return channels[channelKey].find((channel: IChannel) => channel.id === idToFind);
-  // };
-
   const isChannelKnown = (currentState: IChannels, channelKey: string, idToFind?: number): boolean => {
     if (!idToFind || !currentState[channelKey]) {
       return false;
     }
-
     return currentState[channelKey].find((channel: IChannel) => channel.id === idToFind) !== undefined;
   };
-
 
   /* *********************************************************
       * ischatOpenned
@@ -509,25 +544,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     }
       return prevChannels;
     };
-
-  // const handleEventChannelCreated = (newChannel : IChannel) => {
-  //   if (user)
-  //     newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
-
-  //   addChannelToChannelsByType(channels, newChannel)
-  // }
-
-  // const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
-
-  //   if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
-  //     newChannel.type = "ChannelsToJoin";
-  //   if(!isChannelKnown(newChannel.type, newChannel.id)) {
-  //     setChannels((prev: IChannels) => ({
-  //       ...prev!,
-  //       [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
-  //     }))
-  //   }
-  // }
 
     /* *********************************************************
       * updateMemberById
@@ -590,13 +606,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     }
     return channelList;
   }
-
-  // updateChannel --> replaced by get getUpdatedChannel.
-  // Reason : remode / add changes the key of a channel and therefore its visual position
-  // function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
-  //   const updatedChannel = removeChannel(channelList, channelToAdd.id);
-  //   return addChannel(updatedChannel, channelToAdd);
-  // }
 
   const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
     const key = windows.findIndex(window => window.id === updatedChannel.id)
@@ -680,9 +689,11 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   useEffect (() => {if (channels?.MyDms.length) console.log("new newChannels set in MyDms: ", channels?.MyDms)}, [channels?.MyDms])
 /********************************************************** */
 
-  /* *********************************************************
-      * fonctions to export
-  ***********************************************************/
+
+  /* ********************************************************************************************
+     * fonctions to export
+  ********************************************************************************************* */
+
   const closeWindow = (id : number) => {
     console.log("closeWindow called \n", id);
     setOpenedWindows((prev: IChatWindow[]) => prev ? prev.filter((f) => f.id !== id) : []);
@@ -726,14 +737,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
     console.log("Send Admin Form called");
+    // console.log("", )
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (targetId) {
       if (mute)
         socket?.emit('mute', {chatId: chatId, userId: targetId});
       else if (unMute)
         socket?.emit('unmute', {chatId: chatId, userId: targetId});
-      if (ban)
+      if (ban) {
+        console.log('ban event emited');
         socket?.emit('ban', {chatId: chatId, userId: targetId});
+      }
       else if (unBan)
         socket?.emit('unban', {chatId: chatId, userId: targetId});
       if (kick)
@@ -794,3 +808,61 @@ export const useChat = () => {
   }
   return context;
 };
+
+
+
+
+      // /* *********************************************************
+      //     * Friend disconnected:
+      //       - update member with updatedUser
+      // ***********************************************************/
+      // newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+      //   console.log("Friend disconnected recieved", updatedUser)
+      //   updateChatMember(updatedUser);
+      // });
+
+  // updateChannel --> replaced by get getUpdatedChannel.
+  // Reason : remode / add changes the key of a channel and therefore its visual position
+  // function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
+  //   const updatedChannel = removeChannel(channelList, channelToAdd.id);
+  //   return addChannel(updatedChannel, channelToAdd);
+  // }
+
+  // const handleEventChannelCreated = (newChannel : IChannel) => {
+  //   if (user)
+  //     newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
+
+  //   addChannelToChannelsByType(channels, newChannel)
+  // }
+
+  // const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
+
+  //   if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
+  //     newChannel.type = "ChannelsToJoin";
+  //   if(!isChannelKnown(newChannel.type, newChannel.id)) {
+  //     setChannels((prev: IChannels) => ({
+  //       ...prev!,
+  //       [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
+  //     }))
+  //   }
+  // }
+
+
+  // const isChannelKnown = (channelKey: string, idToFind?: number) => {
+  //   if (!idToFind)
+  //     return false;
+  //   return channels[channelKey].find((channel: IChannel) => channel.id === idToFind);
+  // };
+
+      // * quit event does not seems to exist anymore
+      // /* *********************************************************
+      //     * quit:
+      //       - A member has left channel
+      // ***********************************************************/
+      // newSocket?.on('quit', (channel: IChannel) => {
+      //   console.log("quit signal received", channel)
+      //   setChannels((prev: IChannels) => ({
+      //     ...prev!,
+      //     MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+      //   }));
+      // });

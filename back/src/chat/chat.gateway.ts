@@ -394,6 +394,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ActionsChanDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("ban signal recieved");
     if (this.clients[client.id] === undefined)
       return;
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
