@@ -55,7 +55,7 @@ const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => 
 
 
     const handleSendMessage = () => {
-        if (!chat.mute.find((userMuted) => userMuted.id === user?.fortytwo_id)) {
+        if (chat.mute && !chat.mute.find((userMuted) => userMuted.id === user?.fortytwo_id)) {
             sendMessage(message, chat.id);
             setMessage('');
         }
