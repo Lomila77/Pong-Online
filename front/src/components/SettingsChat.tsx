@@ -51,7 +51,6 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
             setErrorAdminData(true);
             return;
         }
-        console.log("Admin data before send: ", adminData);
         if (adminData.unBan) {
             sendAdminForm(chat.id, chat.banned.find((member: IChatMember) => member.name == adminData.target)?.id,
                 adminData.mute, adminData.unMute,

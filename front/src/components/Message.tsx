@@ -9,7 +9,6 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
     const {user, setUser} = useUser();
-    console.log("blockedUsers: ", blockedUsers, " | message Owner: ", message.owner);
     if (!user || (blockedUsers && blockedUsers.find(blockedUserId => blockedUserId == message.owner.id)))
         return;
     const classNameMessage = message.owner.id == user.fortytwo_id ? "chat chat-end" : "chat chat-start";
@@ -17,13 +16,8 @@ const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
         <div className={classNameMessage}>
             <div className="chat-header">
                 {message.owner.name}
-                {// TODO set time message <time className="text-xs opacity-50">12:45</time>
-                }
             </div>
             <div className="chat-bubble">{message.content}</div>
-            <div className="chat-footer opacity-50">
-                Delivered
-            </div>
         </div>
     )
     /*const getChatBubbleWithUrlOrNot = (content: string): JSX.Element => {
