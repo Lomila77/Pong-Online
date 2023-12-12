@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { ChatGateway } from './chat.gateway';
 import {backResInterface} from "../shared";
+import { promises } from 'dns';
 
 @Injectable()
 export class ChatService {
@@ -496,6 +497,19 @@ export class ChatService {
     });
 
     return chan !== null;
+  }
+
+  async isPrivate(chatId: number) : Promise <boolean>{
+    const chan = await this.prisma.channel.findUnique({
+      where: {
+        id: chatId,
+      },
+      select: {
+        isPrivate: true,
+      }
+    });
+
+    return chan ? chan.isPrivate : false;
   }
 
   async findNewOwner(chatId: number): Promise<User | null> {

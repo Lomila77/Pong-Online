@@ -408,7 +408,7 @@ export class ChatGateway implements OnGatewayConnection {
             sockets.find((socket) => socket.id === key).leave(data.chatId.toString());
           }
         );
-        this.server.to(key).emit("banned", { chatId: data.chatId });
+        this.server.to(key).emit("banned", data.chatId );
         break;
       }
     }
@@ -429,18 +429,26 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     // console.log(data);
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
+    const isPrivate = await this.chatService.isPrivate(data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.unban_Chan(data.userId, data.chatId);
-    // todo : send signal to concerned socket only if channel is public
-    for (let key in this.clients) {
-      if (this.clients[key].fortytwo_id === data.userId) {
-        // if channel is public, informe user
-        this.server.to(key).emit("unbanned", { chatId: data.chatId });
-        break;
+    // if channel is public/ send unbanned signal to concerned socket
+    if (!isPrivate) {
+      for (let key in this.clients) {
+        if (this.clients[key].fortytwo_id === data.userId) {
+          await (this.chatService.getUpdatedChannelForFront(data.chatId, "ChannelsToJoin")).then(objToEmit => {
+            this.server.to(key).emit("unbanned", objToEmit);
+          })
+          // this.server.to(key).emit("unbanned", { chatId: data.chatId });
+          break;
+        }
       }
     }
-    this.server.to(data.chatId.toString()).emit("unban", { userId: data.userId });
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("unban", objToEmit);
+    })
+    // this.server.to(data.chatId.toString()).emit("unban", { userId: data.userId });
     // console.log("chan unbanned");
   }
 
@@ -464,11 +472,17 @@ export class ChatGateway implements OnGatewayConnection {
             }
           );
         }
-        this.server.to(key).emit("kicked", { chatId: data.chatId });
+        await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+          this.server.to(key).emit("kicked", objToEmit);
+        })
+        // this.server.to(key).emit("kicked", { chatId: data.chatId });
         break;
       }
     }
-    this.server.to(data.chatId.toString()).emit("kick", { id: data.userId });
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("kick", objToEmit);
+    })
+    // this.server.to(data.chatId.toString()).emit("kick", { id: data.userId });
     console.log("chan kicked");
   }
 
@@ -484,7 +498,12 @@ export class ChatGateway implements OnGatewayConnection {
     if (!isAdmin)
       return;
     await this.chatService.mute_Chan(data.userId, data.chatId);
-    this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
+
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("mute", objToEmit);
+    })
+
+    // this.server.to(data.chatId.toString()).emit("mute", { userId: data.userId });
     console.log("chan muteed");
   }
 
@@ -500,7 +519,11 @@ export class ChatGateway implements OnGatewayConnection {
     if (!isAdmin)
       return;
     await this.chatService.unmute_Chan(data.userId, data.chatId);
-    this.server.to(data.chatId.toString()).emit("unmute", { username: data.userId });
+
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("unmute", objToEmit);
+    })
+    // this.server.to(data.chatId.toString()).emit("unmute", { username: data.userId });
     console.log("chan unmuteed");
   }
 

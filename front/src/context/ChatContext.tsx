@@ -351,6 +351,8 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
           MyChannels: removeChannel(prev.MyChannels, chatId),
         }));
+        // closeWindow(chatId);
+        //todo remove from opened windows too ? techniquement impossible
       });
 
       /* *********************************************************
@@ -371,13 +373,14 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * banned :
             - current user has been banned from channel
       ***********************************************************/
-      newSocket?.on('banned', (channel: IChannel) => {
-        console.log("banned event received", channel)
-        // todo close window of banned channel
-        // setChannels((prev: IChannels) => ({
-        //   ...prev!,
-        //   MyChannels: getUpdatedChannel(prev.MyChannels, channel),
-        // }));
+      newSocket?.on('banned', (chatId : number) => {
+        console.log("banned event received", chatId)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
+          MyChannels: removeChannel(prev.MyChannels, chatId),
+        }));
+        closeWindow(chatId);
       });
 
       /* *********************************************************
@@ -397,7 +400,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
             - current user has been unbanned from channel
       ***********************************************************/
       //todo current user has channel in channels to joined
-      
+      newSocket?.on('unbanned', (channel: IChannel) => {
+        console.log("unbanned event received", channel)
+        channel.type = "ChannelsToJoin";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: addChannel(prev.ChannelsToJoin, channel),
+        }));
+      });
+
+
+
       /* *********************************************************
           * unban :
             -  a member has been unban from channel
@@ -414,7 +427,15 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * kicked :
             - current user has been kicked from channel
       ***********************************************************/
-
+      newSocket?.on('kicked', (chatId : number) => {
+        console.log("kicked event received", chatId)
+        // todo close window of kicked channel
+        // todo move channel from MyChannels to Channels to join if public
+        // setChannels((prev: IChannels) => ({
+        //   ...prev!,
+        //   MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        // }));
+      });
       /* *********************************************************
           * kick :
             - a member has been kicked from channel
@@ -424,11 +445,27 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * mute :
             -  current user has been kicked from channel
       ***********************************************************/
+      newSocket?.on('mute', (channel: IChannel) => {
+        console.log("mute event received", channel)
+        channel.type= "MyChannels"
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+      });
 
       /* *********************************************************
           * unmute :
             - a channel has been deleted
       ***********************************************************/
+      newSocket?.on('mute', (channel: IChannel) => {
+        console.log("mute event received", channel)
+        channel.type= "MyChannels"
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+      });
 
       socketRef.current = newSocket;
     })
@@ -672,11 +709,11 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   };
 
   //todo : change function by const =>
-  function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
+  const removeChannel = (channelList: IChannel[], channelId: number): IChannel[] => {
     return channelList.filter((channel) => channel.id != channelId);
   }
 
-  function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
+  const addChannel= (channelList: IChannel[], newChannel: IChannel): IChannel[] => {
 
     const channelExists = channelList.find((channel) => channel.id === newChannel.id);
     if (!channelExists) {
@@ -690,20 +727,20 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         - usage : handleOpenWindow(ChannelToOpen)
           --> turn Ichannel into IchatWindow (Ichannel + message history )
   ***********************************************************/
-          const handleOpenWindow = async (chatData : IChannel) =>{
-            if (!ischatOpenned(chatData.id)){
-              await (backRequest('chat/chatWindowHistory/' + chatData.id, 'GET')).then(ret => {
-                const newWindow: IChatWindow = {
-                  ...chatData,
-                  history: ret?.data || []
-                }
-                setOpenedWindows((current: IChatWindow[]) => {return([...current || [], newWindow])})
-              }
-              )
-            }
-            else
-              console.log("window is already openned")
-          }
+  const handleOpenWindow = async (chatData : IChannel) =>{
+    if (!ischatOpenned(chatData.id)){
+      await (backRequest('chat/chatWindowHistory/' + chatData.id, 'GET')).then(ret => {
+        const newWindow: IChatWindow = {
+          ...chatData,
+          history: ret?.data || []
+        }
+        setOpenedWindows((current: IChatWindow[]) => {return([...current || [], newWindow])})
+      }
+      )
+    }
+    else
+      console.log("window is already openned")
+  }
 
   /*************************************** print functions */
   useEffect (() => {console.log("new openned window set : ", openedWindows)}, [openedWindows])
@@ -716,10 +753,16 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
      * fonctions to export
   ********************************************************************************************* */
 
-  const closeWindow = (id : number) => {
-    console.log("closeWindow called \n", id);
-    setOpenedWindows((prev: IChatWindow[]) => prev ? prev.filter((f) => f.id !== id) : []);
-  }
+  // const closeWindow = (id : number) => {
+  //   console.log("closeWindow called \n", id);
+  //   setOpenedWindows((prev: IChatWindow[]) => prev ? prev.filter((f) => f.id !== id) : []);
+  // }
+
+  const closeWindow = (id: number) => {
+    setOpenedWindows((prev: IChatWindow[]) =>
+      prev ? prev.filter((window) => window.id !== id) : []
+    );
+  };
 
   const openWindow = async (chatData? : IChannel, form?: IFormData, password?: string) => {
     const data = {
