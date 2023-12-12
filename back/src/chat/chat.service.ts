@@ -210,6 +210,16 @@ export class ChatService {
         },
       },
     });
+    const newUserChannels = user.userChannels.filter(channelId => channelId !== id);
+
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: newUserChannels,
+      },
+    });
   }
 
   async unban_Chan(userId: number, id: number) {
@@ -237,6 +247,16 @@ export class ChatService {
           connect: {
             fortytwo_id: user.fortytwo_id,
           },
+        },
+      },
+    });
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: {
+          set: [...user.userChannels, id],
         },
       },
     });
@@ -817,15 +837,26 @@ export class ChatService {
     const idchat = info.channelid;
 
     if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
+      let updateData = {};
+
+      if (info.isPassword === true && info.password) {
+        updateData = {
+          isPassword: true,
+          password: info.password,
+        };
+      } else if (info.isPassword === false) {
+        updateData = {
+          isPassword: false,
+          password: null,
+        };
+      }
+
       await this.prisma.channel.update({
         where: {
           id: idchat,
         },
-        data: {
-          isPassword: false, // Remove the password requirement
-        },
+        data: updateData,
       });
-
       return 0;
     } else {
       return 2;
