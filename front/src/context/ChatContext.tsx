@@ -275,12 +275,13 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log("new owner event received", channel)
         setChannels((prev: IChannels) => ({
           ...prev!,
-          MyChannels: updateChannel(prev.MyChannels, channel),
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
       });
 
       /* *********************************************************
           * NewUserJoin:
+            - a new members has join  channel
             - update channel with new member
             - update opened window with new channel update
       ************************************************************/
@@ -289,22 +290,24 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         channel.type = "MyChannels";
         setChannels((prev: IChannels) => ({
           ...prev!,
-          MyChannels: updateChannel(prev.MyChannels, channel),
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
         setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
       });
 
-      /* *********************************************************
-          * quit:
-            - A member has left channel
-      ***********************************************************/
-      newSocket?.on('quit', (channel: IChannel) => {
-        console.log("quit signal received", channel)
-        setChannels((prev: IChannels) => ({
-          ...prev!,
-          MyChannels: updateChannel(prev.MyChannels, channel),
-        }));
-      });
+
+      // * quit event does not seems to exist anymore
+      // /* *********************************************************
+      //     * quit:
+      //       - A member has left channel
+      // ***********************************************************/
+      // newSocket?.on('quit', (channel: IChannel) => {
+      //   console.log("quit signal received", channel)
+      //   setChannels((prev: IChannels) => ({
+      //     ...prev!,
+      //     MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+      //   }));
+      // });
 
       /* *********************************************************
           * user leave :
@@ -315,7 +318,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         channel.type = "MyChannels";
         setChannels((prev: IChannels) => ({
           ...prev!,
-          MyChannels: updateChannel(prev.MyChannels, channel),
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
         setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
       });
@@ -526,10 +529,28 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     };
   };
 
+  const getUpdatedChannel = (channelList: IChannel[], updatedChannel: IChannel) => {
+    const key = channelList.findIndex(channelList => channelList.id === updatedChannel.id)
+
+    if (key != -1) {
+      const updatedList = [...channelList];
+      updatedList[key] = {
+        ... updatedChannel,
+      }
+      return updatedList;
+    }
+    return channelList;
+  }
+
+  // updateChannel --> replaced by get getUpdatedChannel.
+  // Reason : remode / add changes the key of a channel and therefore its visual position
+  // function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
+  //   const updatedChannel = removeChannel(channelList, channelToAdd.id);
+  //   return addChannel(updatedChannel, channelToAdd);
+  // }
+
   const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
     const key = windows.findIndex(window => window.id === updatedChannel.id)
-    console.log("inside getUpdatedIChatWindows key: ", key);
-    console.log("inside getUpdatedIChatWindows: prev state ", windows);
 
     if (key != -1) {
       const updatedWindow = [...windows]; // = [...windows] creates a copy / = windows created a reference
@@ -537,7 +558,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         ... updatedChannel,
         history: windows[key].history,
       }
-      console.log("inside getUpdatedIChatWindows, updatedWindow", updatedWindow);
       return updatedWindow;
     }
     return windows;
@@ -574,11 +594,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   //todo : change function by const =>
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
     return channelList.filter((channel) => channel.id != channelId);
-  }
-
-  function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
-    const updatedChannel = removeChannel(channelList, channelToAdd.id);
-    return addChannel(updatedChannel, channelToAdd);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {

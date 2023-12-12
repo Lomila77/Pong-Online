@@ -336,6 +336,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
+    
     await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
       console.log("getUpdatedChannelForFront", channel.members);
 

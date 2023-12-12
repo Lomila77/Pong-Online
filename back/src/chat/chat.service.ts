@@ -122,7 +122,18 @@ export class ChatService {
     if (!user) {
       throw new Error('User not found');
     }
-
+    // remove id from channel list
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels : {
+          set : user.userChannels.filter(userChannelId => userChannelId !== id),
+        }
+      }
+    });
+    // remove user from channel
     const value = await this.prisma.channel.update({
       where: {
         id: id,
@@ -1316,7 +1327,9 @@ export class ChatService {
   async printAllChannels() {
     try {
 		  const channels = await this.prisma.channel.findMany({
-        include: {members : {select: {pseudo: true, fortytwo_id: true, messages: true}}}
+        include: {banned: {select: {fortytwo_id: true, pseudo: true}},
+        muted: {select: {fortytwo_id: true, pseudo: true}},
+                members : {select: {pseudo: true, fortytwo_id: true, messages: true}}}
       })
 		  console.log("****** PRINTING ALL CHANNELS ******\n", channels? channels : "channels is undefined");
 		  return channels;
