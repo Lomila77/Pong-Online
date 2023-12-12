@@ -362,6 +362,16 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         }));
       });
 
+      /* *********************************************************
+          * password updated :
+            - a channel has been deleted
+      ***********************************************************/
+      newSocket?.on('password updated', (isPassword: boolean, chatId: number) => {
+        console.log("password updated signal recieved:", chatId);
+        // TODO updated channel
+
+      });
+
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -735,10 +745,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         socket?.emit('set-admin', {chatId: chatId, userId: targetId});
     }
     if (user) {
-      if (isPassword && channel?.isPassword && password) // TODO add change pwd
-        socket?.emit('update', {channelId: chatId, userId: user?.fortytwo_id, isPassword: isPassword, Password: password});
-      else if (!isPassword && channel?.isPassword) {
-        socket?.emit('update', {channelId: chatId, userId: user?.fortytwo_id, isPassword: isPassword});
+      if (isPassword && password) {// TODO add change pwd
+        socket?.emit('update', {
+          channelid: chatId,
+          userId: user!.fortytwo_id,
+          isPassword: isPassword,
+          Password: password
+        });
+        console.log("update event send");
+      } else if (!isPassword && channel?.isPassword) {
+        socket?.emit('update', {channelid: chatId, userId: user?.fortytwo_id, isPassword: isPassword});
+        console.log("update event send");
       }
     }
   }

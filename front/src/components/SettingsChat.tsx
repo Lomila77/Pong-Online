@@ -34,10 +34,6 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     }, [adminData]);
 
     const sendAdminData = () => {
-        if (!adminData.target && adminData.isPassword == chat.isPassword) {
-            setErrorAdminData(true);
-            return;
-        }
         selectedMuteOption == "mute" ?
             setAdminData((prevState: any) => ({...prevState, mute: true})) :
             setAdminData((prevState: any) => ({...prevState, unMute: true}));
