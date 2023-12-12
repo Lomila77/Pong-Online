@@ -839,10 +839,10 @@ export class ChatService {
     if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
       let updateData = {};
 
-      if (info.isPassword === true && info.password) {
+      if (info.isPassword === true && info.Password) {
         updateData = {
           isPassword: true,
-          password: info.password,
+          password: info.Password,
         };
       } else if (info.isPassword === false) {
         updateData = {
