@@ -154,9 +154,8 @@ export class ChatController {
 
 	@Post('addFriend')
 	@UseGuards(JwtGuard)
-	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface) {
-		this.chat_service.addFriends(user, body.pseudo);
-		return {isOk: true}
+	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface): Promise<backResInterface> {
+		return this.chat_service.addFriends(user, body.pseudo);
 	}
 
 	@UseGuards(JwtGuard)

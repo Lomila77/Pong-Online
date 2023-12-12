@@ -6,21 +6,27 @@ import {bool} from "yup";
 
 interface ProfilCompProps {
   user: backResInterface;
+  myPseudo: string;
 }
 
-const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
+const ProfileComp: React.FC<ProfilCompProps> = ({user, myPseudo}) => {
     const [friendAdded, setFriendAdded] = useState<boolean>(false);
     const [userIsBlocked, setUserIsBlocked] = useState<boolean>(false);
 
     useEffect(() => {
         if (!user)
           return;
-        backRequest('users/isBlock/' + user?.pseudo, 'GET').then(data => {
-            setUserIsBlocked(data.isBlock!);
-        })
-        backRequest('users/isFriend/' + user?.pseudo, 'GET').then(data => {
-            setFriendAdded(data.isFriend!);
-        })
+        if (myPseudo == user.pseudo) {
+            setFriendAdded(true);
+            return;
+        } else {
+            backRequest('users/isBlock/' + user?.fortytwo_id, 'GET').then(data => {
+                setUserIsBlocked(data.isBlock!);
+            })
+            backRequest('users/isFriend/' + user?.pseudo, 'GET').then(data => {
+                setFriendAdded(data.isFriend!);
+            })
+        }
     }, [user]);
 
     const toggleUser = () => {
@@ -30,8 +36,10 @@ const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
         } else if (friendAdded)
             return;
         else {
-            backRequest('chat/addFriend', 'POST', {pseudo: user.pseudo});
-            setFriendAdded(true);
+            backRequest('chat/addFriend', 'POST', {pseudo: user.pseudo}).then(data => {
+                if (data.isOk)
+                    setFriendAdded(true);
+            });
         }
     }
 

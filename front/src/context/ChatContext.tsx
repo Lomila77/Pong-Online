@@ -3,6 +3,7 @@ import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
+import {boolean} from "yup";
 
 
 
@@ -72,6 +73,8 @@ export const ChatContext = createContext<{
                     isPassword: boolean, password: string) => void
   addFriendToChannel: (nameToAdd: string, chatId: number) => void
   leaveChannel: (chatId: number) => void
+  blockedUsers: number[]
+  blockUser: (blockUserId: number) => void
 } | null>(null);
 
 
@@ -81,7 +84,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
   const [prevPseudo, setPrevPseudo] = useState<string>('');
-  const [blockedUser, setblockedUser] = useState<number[]>([]);
+  const [blockedUsers, setblockedUsers] = useState<number[]>([]);
 
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
@@ -102,12 +105,12 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       backRequest('chat/channels', 'GET').then((data) => {
         console.log("chat/channels route is giving : ", data, "\n");
         let allChannels : IChannels = data.data.channels as IChannels
-        let blockedId : number[] = data.data.blockedUser as number[]
+        let blockedId : number[] = data.data.blockedUsers as number[]
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyChannels", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "ChannelsToJoin", user?.fortytwo_id || 0)
         allChannels && setChannels(allChannels);
-        blockedId && setblockedUser(blockedId);
+        blockedId && setblockedUsers(blockedId);
       })
 
       /* *********************************************************
@@ -279,6 +282,31 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
       });
 
+
+      /* *********************************************************
+          * user blocked:
+            - a user has blocked
+            - delete dm with user's block
+      ************************************************************/
+      newSocket?.on('user blocked', (blockedUserId: number) => {
+        console.log("user blocked received", blockedUserId);
+        setblockedUsers((prevState: number[]) => [...prevState, blockedUserId]);
+        const updatedMyDms: IChannel[] = channels.MyDms.filter((channel) => channel.members[1].id != blockedUserId);
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyDms: updatedMyDms,
+        }));
+      });
+
+      /* *********************************************************
+          * user unblocked:
+            - unblock user
+      ************************************************************/
+      newSocket?.on('unblock user', (toUnblockedUserId: number) => {
+        console.log("user unblocked received", toUnblockedUserId);
+        const updatedBlockedList = blockedUsers.filter((userId) => userId != toUnblockedUserId);
+        setblockedUsers(updatedBlockedList);
+      });
 
       // * quit event does not seems to exist anymore
       // /* *********************************************************
@@ -727,6 +755,12 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     }
   }
 
+  const blockUser = (blockUserId: number) => {
+    if (blockedUsers.find(userId => userId == blockUserId))
+      return;
+    socket?.emit('block', {id: blockUserId});
+  }
+
 
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
@@ -738,7 +772,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
   /*********** return ctx ************/
   return (
-    <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel, leaveChannel }}>
+    <ChatContext.Provider value={{ socket, channels, openedWindows, openWindow, closeWindow, sendMessage, sendAdminForm, addFriendToChannel, leaveChannel, blockedUsers, blockUser }}>
       {children}
     </ChatContext.Provider>
   );
