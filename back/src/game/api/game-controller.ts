@@ -53,11 +53,8 @@ export class GameController {
 
     @Get('users/me')
     @UseGuards(JwtGuard)
-    @UsePipes(new ValidationPipe())
-    async getUserHistoric(@Param('id') userId: string, @GetUser() user: User): Promise<UserHistoric[]> {
-        // const id = Number(userId)
-        const historic = await this.gameService.GetUserHistoric(user.fortytwo_id);
-        return historic;
+    async getUserHistoric(@GetUser() user: User): Promise<UserHistoric[]> {
+        return await this.gameService.GetUserHistoric(user.fortytwo_id);
     }
 
 }
