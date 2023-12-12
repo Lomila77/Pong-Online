@@ -4,6 +4,7 @@ import React from "react";
 import CardHistory from "./CardHistory";
 import { useQuery } from '@tanstack/react-query';
 import {backRequest } from '../api/queries';
+import history from "../pages/History";
 
 const GameHistory: React.FC = () => {
     const {user, setUser} = useUser();
@@ -24,14 +25,15 @@ const GameHistory: React.FC = () => {
           History
         </span>
             <div className="pt-7 grid gap-y-5">
-                {//user.history.map((history, index: number) => (
-                //    <CardHistory me={user.pseudo}
-                //                 rival={history.rival}
-                //                 rivalScore={history.rivalScore}
-                //                 meScore={history.myScore}
-                //                 key={index}
-                //    />
-                //))
+                {
+                    gameResults.map((historic, index) => (
+                        <CardHistory me={user?.pseudo}
+                                     rival={historic.opponentId}
+                                     rivalScore={(historic.win ? historic.score_looser : historic.score_winner)}
+                                     meScore={(historic.win ? historic.score_winner : historic.score_looser)}
+                                     key={index}
+                        />
+                    ))
                 }
             </div>
         </div>
