@@ -1013,6 +1013,31 @@ export class ChatService {
     return value.isDM;
   }
 
+  async blockUser(token: number, id_user: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        fortytwo_id: Number(token),
+      },
+      select: {
+        blocked: true,
+      }
+    })
+    if (user.blocked.find((elem: any) => { return elem === id_user }) === undefined) {
+      await this.prisma.user.update({
+        where: {
+          fortytwo_id: Number(token),
+        },
+        data: {
+          blocked: {
+            push: id_user,
+          },
+        },
+      });
+      return true;
+    }
+    return false;
+  }
+
   async getUserBlocked(token: string) {
     const usersBlocked = await this.prisma.user.findUnique({
       where: {

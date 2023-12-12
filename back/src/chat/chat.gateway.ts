@@ -522,6 +522,18 @@ export class ChatGateway implements OnGatewayConnection {
       client.broadcast.emit('chan updated', data);
   }
 
+  @SubscribeMessage('block')
+  async blockUser(
+    @MessageBody() data: { id: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = await this.userService.getUserbyId(data.id);
+    if (user) {
+      await this.chatService.blockUser(this.clients[client.id].fortytwo_id, user.fortytwo_id);
+      this.server.to(client.id).emit("user blocked", { id: data.id });
+    }
+  }
+
   // @SubscribeMessage('play')
   // async playMatchWithFriends(@ConnectedSocket() client: Socket, @MessageBody() data: PlayChanDto) {
   //   const room = await this.chatService.playMatchWithFriends(client, this.clients[client.id].fortytwo_userName, data.chatId, this.server);
