@@ -421,6 +421,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
             ...prev!,
             MyChannels: getUpdatedChannel(prev.MyChannels, channel),
           }));
+          setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
         });
 
       /* *********************************************************
