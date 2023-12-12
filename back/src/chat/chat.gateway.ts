@@ -517,7 +517,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const res: number = await this.chatService.update_chan(data);
     if (res == 0)
-      client.broadcast.emit('password updated', data.isPassword);
+      client.to(data.channelid.toString()).emit("password updated", { isPassword: data.isPassword, chatId: data.channelid });
   }
 
   @SubscribeMessage('block')
