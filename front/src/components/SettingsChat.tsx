@@ -34,10 +34,6 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     }, [adminData]);
 
     const sendAdminData = () => {
-        if (!adminData.target && adminData.isPassword == chat.isPassword) {
-            setErrorAdminData(true);
-            return;
-        }
         selectedMuteOption == "mute" ?
             setAdminData((prevState: any) => ({...prevState, mute: true})) :
             setAdminData((prevState: any) => ({...prevState, unMute: true}));
@@ -49,14 +45,7 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
             adminData.ban, adminData.unBan,
             adminData.kick, adminData.admin,
             adminData.isPassword, adminData.password);
-        setAdminData((prevState: any) => ({
-            ...prevState,
-            target: '',
-            mute: false, unMute: false,
-            ban: false, unBan: false,
-            kick: false, admin: false,
-            isPassword: chat.isPassword, password: '',}))
-        setErrorAdminData(false);
+        closeSettings();
     }
     return (
         <div className="absolute z-10 top-0 left-0 card h-full w-full bg-orangeNG shadow-xl">

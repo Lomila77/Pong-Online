@@ -774,9 +774,11 @@ export class ChatService {
       let updateData = {};
 
       if (info.isPassword === true && info.Password) {
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hash = await bcrypt.hash(info.Password, 10);
         updateData = {
           isPassword: true,
-          password: info.Password,
+          password: hash,
         };
       } else if (info.isPassword === false) {
         updateData = {
