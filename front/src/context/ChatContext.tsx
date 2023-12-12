@@ -310,14 +310,15 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           * user leave :
             - a member different than current user leaved
       ***********************************************************/
-            newSocket?.on('user leave', (channel: IChannel) => {
-              console.log("user leave receveid: ", channel);
-              setChannels((prev: IChannels) => ({
-                ...prev!,
-                MyChannels: updateChannel(prev.MyChannels, channel),
-              }));
-              setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
-            });
+      newSocket?.on('user leave', (channel: IChannel) => {
+        console.log("user leave receveid: ", channel);
+        channel.type = "MyChannels";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: updateChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
+      });
 
       /* *********************************************************
           * Quited :
