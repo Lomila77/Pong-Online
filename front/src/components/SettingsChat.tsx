@@ -33,13 +33,18 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
             setErrorAdminData(false);
     }, [adminData]);
 
+    useEffect(() => {
+        setAdminData((prevState: any) => ({
+            ...prevState,
+            mute: selectedMuteOption === "mute",
+            unMute: selectedMuteOption === "unMute",
+            ban:  selectedBanOption === "ban",
+            unBan: selectedBanOption === "unBan"
+        }));
+    }, [selectedMuteOption, selectedBanOption]);
+
     const sendAdminData = () => {
-        selectedMuteOption == "mute" ?
-            setAdminData((prevState: any) => ({...prevState, mute: true})) :
-            setAdminData((prevState: any) => ({...prevState, unMute: true}));
-        selectedBanOption == "ban" ?
-            setAdminData((prevState: any) => ({...prevState, ban: true})) :
-            setAdminData((prevState: any) => ({...prevState, unBan: true}));
+        console.log("Admin data before send: ", adminData);
         sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
             adminData.mute, adminData.unMute,
             adminData.ban, adminData.unBan,
