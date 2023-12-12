@@ -371,7 +371,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       /* *********************************************************
           * banned :
-            - current user has been banned from channel
+            - current user has been banned from channel //? OK
       ***********************************************************/
       newSocket?.on('banned', (chatId : number) => {
         console.log("banned event received", chatId)
@@ -385,7 +385,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       /* *********************************************************
           * ban :
-            - a member has been banned from channel
+            - a member has been banned from channel //? OK
       ***********************************************************/
       newSocket?.on('ban', (channel: IChannel) => {
         console.log("ban event received", channel)
@@ -394,6 +394,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           ...prev!,
           MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
+        setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
       });
       /* *********************************************************
           * unbanned :
@@ -409,8 +410,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         }));
       });
 
-
-
       /* *********************************************************
           * unban :
             -  a member has been unban from channel
@@ -423,27 +422,36 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
             MyChannels: getUpdatedChannel(prev.MyChannels, channel),
           }));
         });
+
       /* *********************************************************
           * kicked :
             - current user has been kicked from channel
       ***********************************************************/
-      newSocket?.on('kicked', (chatId : number) => {
-        console.log("kicked event received", chatId)
-        // todo close window of kicked channel
-        // todo move channel from MyChannels to Channels to join if public
-        // setChannels((prev: IChannels) => ({
-        //   ...prev!,
-        //   MyChannels: getUpdatedChannel(prev.MyChannels, channel),
-        // }));
+      newSocket?.on('kicked', (channel : IChannel) => {
+        console.log("kicked event received", channel)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: removeChannel(prev.MyChannels, channel.id),
+          ChannelsToJoin: channel.isPrivate ? prev.ChannelsToJoin : addChannel(prev.ChannelsToJoin, channel),
+        }));
+        closeWindow(channel.id);
       });
       /* *********************************************************
           * kick :
             - a member has been kicked from channel
       ***********************************************************/
-
+      newSocket?.on('kick', (channel: IChannel) => {
+        console.log("kick event received", channel)
+        channel.type= "MyChannels"
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
+      });
       /* *********************************************************
           * mute :
-            -  current user has been kicked from channel
+            -  a user has been muted in channel:
       ***********************************************************/
       newSocket?.on('mute', (channel: IChannel) => {
         console.log("mute event received", channel)
@@ -452,19 +460,21 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           ...prev!,
           MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
+        setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
       });
 
       /* *********************************************************
           * unmute :
-            - a channel has been deleted
+            -  a user has been unmute in channel:
       ***********************************************************/
-      newSocket?.on('mute', (channel: IChannel) => {
-        console.log("mute event received", channel)
+      newSocket?.on('unmute', (channel: IChannel) => {
+        console.log("unmute event received", channel)
         channel.type= "MyChannels"
         setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: getUpdatedChannel(prev.MyChannels, channel),
         }));
+        setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
       });
 
       socketRef.current = newSocket;

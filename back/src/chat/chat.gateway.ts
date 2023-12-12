@@ -425,6 +425,8 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ActionsChanDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("unban signal recieved");
+
     if (this.clients[client.id] === undefined)
       return;
     // console.log(data);
@@ -457,9 +459,12 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ActionsChanDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("kick signal recieved");
+
     if (this.clients[client.id] === undefined)
       return;
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
+    const isPrivate = await this.chatService.isPrivate(data.chatId);
     if (!isAdmin)
       return;
     await this.chatService.kick_Chan(data.userId, data.chatId);
@@ -472,7 +477,7 @@ export class ChatGateway implements OnGatewayConnection {
             }
           );
         }
-        await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+        await (this.chatService.getUpdatedChannelForFront(data.chatId, "ChannelsToJoin")).then(objToEmit => {
           this.server.to(key).emit("kicked", objToEmit);
         })
         // this.server.to(key).emit("kicked", { chatId: data.chatId });
@@ -492,6 +497,8 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ActionsChanDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("mute signal recieved");
+
     if (this.clients[client.id] === undefined)
       return;
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
@@ -513,6 +520,8 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: ActionsChanDto,
     @ConnectedSocket() client: Socket,
   ) {
+    console.log("unmute signal recieved");
+
     if (this.clients[client.id] === undefined)
       return;
     const isAdmin = await this.chatService.isAdmin_Chan(this.clients[client.id].fortytwo_id, data.chatId);
