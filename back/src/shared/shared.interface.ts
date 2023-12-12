@@ -82,6 +82,7 @@ export interface IChannels{
 	isF2Active?: boolean;
 	fortytwo_id?: number;
 	isBlock?: boolean;
+	blockedUsers?: number[];
 	isFriend?: boolean;
 	friends?: number[];
 	allUser?: User[];

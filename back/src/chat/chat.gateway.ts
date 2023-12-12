@@ -530,7 +530,7 @@ export class ChatGateway implements OnGatewayConnection {
     const user = await this.userService.getUserbyId(data.id);
     if (user) {
       await this.chatService.blockUser(this.clients[client.id].fortytwo_id, user.fortytwo_id);
-      this.server.to(client.id).emit("user blocked", { id: data.id });
+      this.server.to(client.id).emit("user blocked", data.id);
     }
   }
 

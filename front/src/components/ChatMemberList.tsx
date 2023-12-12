@@ -1,5 +1,5 @@
-import React from "react";
-import { IChannel } from "../context/ChatContext";
+import React, {useEffect, useState} from "react";
+import {IChannel, useChat} from "../context/ChatContext";
 
 interface ChatMemberListProps {
     chat: IChannel;
@@ -7,6 +7,15 @@ interface ChatMemberListProps {
 }
 
 const ChatMemberList: React.FC<ChatMemberListProps> = ({chat, closeList}) => {
+    const { blockUser } = useChat();
+    const [blockUserId, setBlockUserId] = useState(-1)
+
+    useEffect(() => {
+        if (blockUserId != -1) {
+            blockUser(blockUserId);
+            setBlockUserId(-1);
+        }
+    }, [blockUserId]);
     return (
         <div className={"absolute z-10 left-0 top-0 card h-full w-full bg-orangeNG shadow-xl"}>
             <div className="card-body flex flex-col overflow-auto">
@@ -17,7 +26,7 @@ const ChatMemberList: React.FC<ChatMemberListProps> = ({chat, closeList}) => {
                             <div className={"text-base-200"}>
                                 {member.name}
                             </div>
-                            <button className={"btn btn-error text-base-200 btn-xs"}>BLOCK</button>
+                            <button className={"btn btn-error text-base-200 btn-xs"} onClick={() => setBlockUserId(member.id)}>BLOCK</button>
                         </li>
                     ))}
                 </ul>

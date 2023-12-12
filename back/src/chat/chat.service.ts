@@ -1293,12 +1293,14 @@ export class ChatService {
       // signal will be send to  second user if he is connected. So front can send 'join channel'
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
+  async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
     if (me.pseudo == friendPseudo)
-      return;
+      return {isOk: false};
     const newFriend = await this.prisma.user.findFirst({
       where : {pseudo: friendPseudo},
     })
+    if (newFriend.blocked.find(idBlocked => idBlocked == me.fortytwo_id))
+      return {isOk: false};
     let status = await this.friendshipUpdatePrisma(me, newFriend);
     status = await this.friendshipUpdatePrisma(newFriend, me);
     if (status) {
@@ -1311,11 +1313,12 @@ export class ChatService {
         	{id : me.fortytwo_id, name: me.pseudo, connected: me.connected},
         	{id : newFriend.fortytwo_id, name: newFriend.pseudo, connected: newFriend.connected}
         ]
-      }
-      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      };
+      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created");
       // signal will be send to  second user if he is connected. So front can send 'join channel'
-      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created");
     }
+    return {isOk: true}
   }
 
   async emitSignal(targetId: number, obj: any, signal: string) {

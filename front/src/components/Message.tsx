@@ -4,12 +4,13 @@ import { IChatHistory } from "../context/ChatContext";
 
 interface MessageProps {
     message: IChatHistory;
-    blockedUser: number[];
+    blockedUsers: number[];
 }
 
-const Message: React.FC<MessageProps> = ({message, blockedUser}) => {
+const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
     const {user, setUser} = useUser();
-    if (!user || (blockedUser && blockedUser.find(blockedUserId => blockedUserId == message.owner)))
+    console.log("blockedUsers: ", blockedUsers, " | message Owner: ", message.owner);
+    if (!user || (blockedUsers && blockedUsers.find(blockedUserId => blockedUserId == message.owner.id)))
         return;
     const classNameMessage = message.owner.id == user.fortytwo_id ? "chat chat-end" : "chat chat-start";
     return (

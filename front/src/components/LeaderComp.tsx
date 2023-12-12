@@ -4,6 +4,12 @@ import CardLeader from './CardLeader';
 import ProfileModal from './ProfileComp';
 
 const LeaderComp: React.FC = () => {
+  const [me, setMe] = useState('');
+  useEffect(() => {
+    backRequest('users/profil', 'GET').then(data => {
+      setMe(data.pseudo);
+    })
+  }, []);
   const [users, setUsers] = useState<User[]>([]);
   useEffect((): void => {
     backRequest('users/all', 'GET').then(data => {
@@ -67,7 +73,7 @@ const LeaderComp: React.FC = () => {
             </button>
           </form>
           <div>
-            <ProfileModal user={selectedUser}/>
+            <ProfileModal user={selectedUser} myPseudo={me}/>
           </div>
         </div>
       </dialog>
