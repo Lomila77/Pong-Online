@@ -673,18 +673,20 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
                          kick: boolean, admin: boolean,
                          isPassword: boolean, password: string) => {
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
-    if (mute)
-      socket?.emit('mute', {chatId: chatId, userId: targetId});
-    else if (unMute)
-      socket?.emit('unmute', {chatId: chatId, userId: targetId});
-    if (ban)
-      socket?.emit('ban', {chatId: chatId, userId: targetId});
-    else if (unBan)
-      socket?.emit('unban', {chatId: chatId, userId: targetId});
-    if (kick)
-      socket?.emit('kick', {chatId: chatId, userId: targetId});
-    if (admin)
-      socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+    if (targetId) {
+      if (mute)
+        socket?.emit('mute', {chatId: chatId, userId: targetId});
+      else if (unMute)
+        socket?.emit('unmute', {chatId: chatId, userId: targetId});
+      if (ban)
+        socket?.emit('ban', {chatId: chatId, userId: targetId});
+      else if (unBan)
+        socket?.emit('unban', {chatId: chatId, userId: targetId});
+      if (kick)
+        socket?.emit('kick', {chatId: chatId, userId: targetId});
+      if (admin)
+        socket?.emit('set-admin', {chatId: chatId, userId: targetId});
+    }
     if (isPassword && channel?.isPassword) // TODO add change pwd
       socket?.emit('update', {channelId: chatId, userId: targetId, isPassword: isPassword, Password: password});
     else if (!isPassword && channel?.isPassword) {

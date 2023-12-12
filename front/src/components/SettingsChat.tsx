@@ -34,13 +34,17 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     }, [adminData]);
 
     const sendAdminData = () => {
+        if (!adminData.target && adminData.isPassword == chat.isPassword) {
+            setErrorAdminData(true);
+            return;
+        }
         selectedMuteOption == "mute" ?
             setAdminData((prevState: any) => ({...prevState, mute: true})) :
             setAdminData((prevState: any) => ({...prevState, unMute: true}));
         selectedBanOption == "ban" ?
             setAdminData((prevState: any) => ({...prevState, ban: true})) :
             setAdminData((prevState: any) => ({...prevState, unBan: true}));
-        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)!.id,
+        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
             adminData.mute, adminData.unMute,
             adminData.ban, adminData.unBan,
             adminData.kick, adminData.admin,
@@ -52,6 +56,7 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
             ban: false, unBan: false,
             kick: false, admin: false,
             isPassword: chat.isPassword, password: '',}))
+        setErrorAdminData(false);
     }
     return (
         <div className="absolute z-10 top-0 left-0 card h-full w-full bg-orangeNG shadow-xl">
@@ -165,7 +170,7 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
                             <label className={"font-display text-white"}>Pwd:</label>
                             <input className="checkbox"
                                    type={"checkbox"}
-                                   checked={chat.isPassword}
+                                   defaultChecked={chat.isPassword}
                                    onChange={(e) =>
                                        setAdminData(prevState => ({
                                            ...prevState,
