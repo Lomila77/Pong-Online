@@ -39,7 +39,7 @@ const LeaderComp: React.FC = () => {
           Leaderboard
         </span>
         <div className="pt-7 grid gap-y-5">
-          {users.map((user: User, index: number) => (
+          {users && users.map((user: User, index: number) => (
             <CardLeader
               key={index}
               name={user.pseudo}
