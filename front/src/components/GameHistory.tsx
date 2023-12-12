@@ -28,7 +28,7 @@ const GameHistory: React.FC = () => {
                 {
                     gameResults.map((historic, index) => (
                         <CardHistory me={user?.pseudo}
-                                     rival={historic.opponentId}
+                                     rival={historic.opponentUsername}
                                      rivalScore={(historic.win ? historic.score_looser : historic.score_winner)}
                                      meScore={(historic.win ? historic.score_winner : historic.score_looser)}
                                      key={index}
