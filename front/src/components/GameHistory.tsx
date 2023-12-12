@@ -7,6 +7,7 @@ import {backRequest } from '../api/queries';
 
 const GameHistory: React.FC = () => {
     const {user, setUser} = useUser();
+    
     if (!user)
         return;
 

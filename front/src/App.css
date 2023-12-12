@@ -58,19 +58,9 @@
   height: fit-content;
 }
 
-.enfant {
-  position: absolute;
-  bottom: -60px;
+.PrivateGame {
   filter: drop-shadow(2px 2px 0px #a1a1a1);
-  z-index: 1;
-}
-
-.Fire {
-  height: 10000px;
-}
-
-.shadow {
-  filter: drop-shadow(6px 6px 10px #ebe2ca);
+  height: fit-content;
 }
 
 .pseudo {
@@ -129,11 +119,15 @@
 
 .FireBuilding {
   filter: drop-shadow(7px 7px 1px #919191);
-  bottom: -20px;
-  left: -20px;
 }
 
 .renderFireBuilding {
   bottom: 0;
+  left: 0;
   position: absolute;
+}
+
+.Fire {
+  left: 18%;
+  top: 22%;
 }
