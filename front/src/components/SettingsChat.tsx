@@ -25,9 +25,9 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
 
     useEffect(() => {
         if (adminData?.target) {
-            if (adminData.unBan && !chat.banned.find((member: IChatMember) => member.name ===adminData.target))
+            if (adminData.unBan && !chat.banned.find((member: IChatMember) => member.name === adminData.target))
                 setErrorAdminData(true);
-            else if (!chat.members.find((member: IChatMember) => member.name == adminData.target))
+            else if (!chat.members.find((member: IChatMember) => member.name === adminData.target))
                 setErrorAdminData(true);
             else
                 setErrorAdminData(false);
@@ -46,16 +46,25 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     }, [selectedMuteOption, selectedBanOption]);
 
     const sendAdminData = () => {
-        if ((adminData.mute || adminData.ban || adminData.kick) && !adminData.target) {
+        if ((adminData.mute || adminData.ban || adminData.kick || adminData.unBan || adminData.unMute) &&
+            !adminData.target) {
             setErrorAdminData(true);
             return;
         }
         console.log("Admin data before send: ", adminData);
-        sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
-            adminData.mute, adminData.unMute,
-            adminData.ban, adminData.unBan,
-            adminData.kick, adminData.admin,
-            adminData.isPassword, adminData.password);
+        if (adminData.unBan) {
+            sendAdminForm(chat.id, chat.banned.find((member: IChatMember) => member.name == adminData.target)?.id,
+                adminData.mute, adminData.unMute,
+                adminData.ban, adminData.unBan,
+                adminData.kick, adminData.admin,
+                adminData.isPassword, adminData.password);
+        } else {
+            sendAdminForm(chat.id, chat.members.find((member: IChatMember) => member.name == adminData.target)?.id,
+                adminData.mute, adminData.unMute,
+                adminData.ban, adminData.unBan,
+                adminData.kick, adminData.admin,
+                adminData.isPassword, adminData.password);
+        }
         closeSettings();
     }
     return (
