@@ -210,6 +210,16 @@ export class ChatService {
         },
       },
     });
+    const newUserChannels = user.userChannels.filter(channelId => channelId !== id);
+
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: newUserChannels,
+      },
+    });
   }
 
   async unban_Chan(userId: number, id: number) {
@@ -237,6 +247,16 @@ export class ChatService {
           connect: {
             fortytwo_id: user.fortytwo_id,
           },
+        },
+      },
+    });
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: userId,
+      },
+      data: {
+        userChannels: {
+          set: [...user.userChannels, id],
         },
       },
     });
@@ -751,15 +771,26 @@ export class ChatService {
     const idchat = info.channelid;
 
     if (await this.isOwner_Chan(info.userId, info.channelid) == true) {
+      let updateData = {};
+
+      if (info.isPassword === true && info.Password) {
+        updateData = {
+          isPassword: true,
+          password: info.Password,
+        };
+      } else if (info.isPassword === false) {
+        updateData = {
+          isPassword: false,
+          password: null,
+        };
+      }
+
       await this.prisma.channel.update({
         where: {
           id: idchat,
         },
-        data: {
-          isPassword: false, // Remove the password requirement
-        },
+        data: updateData,
       });
-
       return 0;
     } else {
       return 2;
@@ -947,6 +978,32 @@ export class ChatService {
     return value.isDM;
   }
 
+
+  async blockUser(token: number, id_user: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        fortytwo_id: Number(token),
+      },
+      select: {
+        blocked: true,
+      }
+    })
+    if (user.blocked.find((elem: any) => { return elem === id_user }) === undefined) {
+      await this.prisma.user.update({
+        where: {
+          fortytwo_id: Number(token),
+        },
+        data: {
+          blocked: {
+            push: id_user,
+          },
+        },
+      });
+      return true;
+    }
+    return false;
+  }
+  
   async getUserBlocked(userId: number) {
     const usersBlocked = await this.prisma.user.findUnique({
       where: {
@@ -1158,12 +1215,38 @@ export class ChatService {
     return false;
   }
 
-  async addFriends(me: User, friendPseudo: string): Promise<void> {
+  async unblockUser(me: User, userBlockId: number): Promise<backResInterface> {
+    if (me.fortytwo_id == userBlockId)
+      return {isOk: false};
+    const unblockUser = await this.prisma.user.findUnique({
+      where : {fortytwo_id: userBlockId},
+    });
+    if (!unblockUser)
+      return {isOk: false};
+    const updatedBlocked = me.blocked.filter(id => id !== userBlockId);
+    await this.prisma.user.update({
+      where: {
+        fortytwo_id: me.fortytwo_id,
+      },
+      data: {
+        blocked: {
+          set: updatedBlocked,
+        }
+      }
+    })
+    this.emitSignal(me.fortytwo_id, userBlockId, "unblock user");
+    return {isOk: true};
+      // signal will be send to  second user if he is connected. So front can send 'join channel'
+  }
+
+  async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
     if (me.pseudo == friendPseudo)
-      return;
+      return {isOk: false};
     const newFriend = await this.prisma.user.findFirst({
       where : {pseudo: friendPseudo},
     })
+    if (newFriend.blocked.find(idBlocked => idBlocked == me.fortytwo_id))
+      return {isOk: false};
     let status = await this.friendshipUpdatePrisma(me, newFriend);
     status = await this.friendshipUpdatePrisma(newFriend, me);
     if (status) {
@@ -1176,11 +1259,12 @@ export class ChatService {
         	{id : me.fortytwo_id, name: me.pseudo, connected: me.connected},
         	{id : newFriend.fortytwo_id, name: newFriend.pseudo, connected: newFriend.connected}
         ]
-      }
-      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      };
+      this.emitSignal(me.fortytwo_id, goodFormatDmChannel, "friendship Created");
       // signal will be send to  second user if he is connected. So front can send 'join channel'
-      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created")
+      this.emitSignal(newFriend.fortytwo_id, goodFormatDmChannel, "friendship Created");
     }
+    return {isOk: true}
   }
 
   async emitSignal(targetId: number, obj: any, signal: string) {

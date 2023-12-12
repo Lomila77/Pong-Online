@@ -2,28 +2,45 @@ import React, {useEffect, useState} from 'react';
 import MGameWatch from '../images/MGameWatch.png';
 import {backRequest, backResInterface} from "../api/queries";
 import {useUser} from "../context/UserContext";
+import {bool} from "yup";
 
 interface ProfilCompProps {
   user: backResInterface;
+  myPseudo: string;
 }
 
-const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
-    // if (!user)
-    //     return;
+const ProfileComp: React.FC<ProfilCompProps> = ({user, myPseudo}) => {
     const [friendAdded, setFriendAdded] = useState<boolean>(false);
+    const [userIsBlocked, setUserIsBlocked] = useState<boolean>(false);
+
     useEffect(() => {
         if (!user)
           return;
-        backRequest('users/isFriend/' + user?.pseudo, 'GET').then(data => {
-            setFriendAdded(data.isFriend!);
-        })
+        if (myPseudo == user.pseudo) {
+            setFriendAdded(true);
+            return;
+        } else {
+            backRequest('users/isBlock/' + user?.fortytwo_id, 'GET').then(data => {
+                setUserIsBlocked(data.isBlock!);
+            })
+            backRequest('users/isFriend/' + user?.pseudo, 'GET').then(data => {
+                setFriendAdded(data.isFriend!);
+            })
+        }
     }, [user]);
 
-    const toggleAddFriend = () => {
-        if (friendAdded)
+    const toggleUser = () => {
+        if (userIsBlocked) {
+            backRequest('chat/unblockUser/' + user.fortytwo_id, 'POST');
+            setUserIsBlocked(false);
+        } else if (friendAdded)
             return;
-        backRequest('chat/addFriend', 'POST', {pseudo: user.pseudo});
-        setFriendAdded(true);
+        else {
+            backRequest('chat/addFriend', 'POST', {pseudo: user.pseudo}).then(data => {
+                if (data.isOk)
+                    setFriendAdded(true);
+            });
+        }
     }
 
   return (
@@ -79,7 +96,8 @@ const ProfileComp: React.FC<ProfilCompProps> = ({user}) => {
         </svg>
         <span className="font-display text-3xl text-orangeNG self-end">{user?.xp}</span>
       </div>
-      <button className={"btn btn-active btn-sm font-display btn-secondary text-xs text-white " + (friendAdded ? "btn-disabled" : "")} onClick={toggleAddFriend}>{friendAdded ? "Friend" : "Add to friend"}</button>
+      <button className={"btn btn-active btn-sm font-display btn-secondary text-xs text-white " + (userIsBlocked ? "btn-error" : friendAdded ? "btn-disabled" : "")}
+              onClick={toggleUser}>{userIsBlocked? "unblock user": friendAdded ? "Friend" : "Add to friend"}</button>
     </div>
   );
 };

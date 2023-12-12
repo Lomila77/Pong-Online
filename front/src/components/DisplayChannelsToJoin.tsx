@@ -11,6 +11,14 @@ const DisplayChannelsToJoin: React.FC = () => {
     const [displayInputPassword, setDisplayInputPassword] = useState(false);
     const [displayBadPassword, setDisplayBadPassword] = useState(false);
     const [password, setPassword] = useState('');
+    const [leaveChanId, setLeaveChanID] = useState(-1);
+
+    useEffect(() => {
+        if (leaveChanId != -1) {
+            leaveChannel(leaveChanId);
+            setLeaveChanID(-1);
+        }
+    }, [leaveChanId]);
 
     const handlePassword = () => {
         if (password && selectedTarget) {
@@ -55,18 +63,26 @@ const DisplayChannelsToJoin: React.FC = () => {
                             onClick={() => setSelectedTarget(channelToJoin)}>{channelToJoin.name}
                     </button>
                     {displayInputPassword && selectedTarget && selectedTarget.id == channelToJoin.id && (
-                        <div className={"absolute text-black bg-orangeNG flex flex-row justify-between items-center px-2 my-1"}>
+                        <div
+                            className={"absolute text-black bg-orangeNG flex flex-row justify-between items-center px-2 my-1"}>
                             <input type="password"
                                    placeholder="Password"
-                                   className={"input input-sm w-full max-w-xs " + (displayBadPassword? "border-rose-500" : "")}
+                                   className={"input input-sm w-full max-w-xs " + (displayBadPassword ? "border-rose-500" : "")}
                                    value={password}
-                                   onChange={e => {setPassword(e.target.value);
+                                   onChange={e => {
+                                       setPassword(e.target.value);
                                    }}
                             />
                             <button onClick={handlePassword} className={"btn btn-sm w-10"}>
                                 <img src={Check} alt={"Check"}/>
                             </button>
                         </div>
+                    )}
+                    {channelToJoin.isPrivate && (
+                        <button className="btn btn-square btn-ghost btn-sm p-2"
+                                onClick={() => setLeaveChanID(channelToJoin.id)}>
+                            <img src={Cross} alt={"LeaveChat"} className={""}/>
+                        </button>
                     )}
                 </li>
             ))}

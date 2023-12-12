@@ -154,11 +154,16 @@ export class ChatController {
 	}
 
 	@Post('addFriend')
-	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface) {
-		this.chat_service.addFriends(user, body.pseudo)
-		return {isOk: true}
+	@UseGuards(JwtGuard)
+	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface): Promise<backResInterface> {
+		return this.chat_service.addFriends(user, body.pseudo);
 	}
 
+	@UseGuards(JwtGuard)
+	@Post('unblockUser/:id')
+	async blockUser(@GetUser() user: User, @Param('id', ParseIntPipe) id: number): Promise<backResInterface> {
+		return this.chat_service.unblockUser(user, id);
+	}
 
 	// @Get('/del/:id')
 	// async deleteUser(@Param('id', ParseIntPipe) id: number) {

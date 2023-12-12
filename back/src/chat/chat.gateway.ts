@@ -330,8 +330,9 @@ export class ChatGateway implements OnGatewayConnection {
       } else {
         // no owner found --> delete channel. if != private send to all sockets
         await this.chatService.delChanById(chatId);
-        isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
+        //isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
         this.server.emit("chan deleted", chatId);
+
         return;
       }
     }
@@ -520,10 +521,20 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     const res: number = await this.chatService.update_chan(data);
-    if (res == 2)
-      client.broadcast.emit('not an owner', data);
-    else
-      client.broadcast.emit('chan updated', data);
+    if (res == 0)
+      client.broadcast.emit('password updated', data.isPassword);
+  }
+
+  @SubscribeMessage('block')
+  async blockUser(
+    @MessageBody() data: { id: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = await this.userService.getUserbyId(data.id);
+    if (user) {
+      await this.chatService.blockUser(this.clients[client.id].fortytwo_id, user.fortytwo_id);
+      this.server.to(client.id).emit("user blocked", data.id);
+    }
   }
 
   // @SubscribeMessage('play')
