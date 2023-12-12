@@ -1038,10 +1038,10 @@ export class ChatService {
     return false;
   }
 
-  async getUserBlocked(token: string) {
+  async getUserBlocked(userId: number) {
     const usersBlocked = await this.prisma.user.findUnique({
       where: {
-        fortytwo_id: Number(token),
+        fortytwo_id: userId,
       },
       select: {
         blocked: true,
