@@ -17,7 +17,8 @@ import { PrismaClient, User } from "@prisma/client";
 import { Response } from "express";
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
-import { backResInterface, frontReqInterface } from "src/shared";
+import { FrontReqDto, backResInterface } from "src/shared";
+import { sanitize } from "class-sanitizer";
 
 @UseGuards(JwtGuard)
 @Controller("chat")
@@ -155,7 +156,8 @@ export class ChatController {
 
 	@Post('addFriend')
 	@UseGuards(JwtGuard)
-	async addFriend(@GetUser() user: User, @Body() body: frontReqInterface): Promise<backResInterface> {
+	async addFriend(@GetUser() user: User, @Body() body: FrontReqDto): Promise<backResInterface> {
+		sanitize(body);
 		return this.chat_service.addFriends(user, body.pseudo);
 	}
 
@@ -194,7 +196,8 @@ export class ChatController {
 
 	@Post('/channels/:id/checkPassword')
 	@UseGuards(JwtGuard)
-	async checkPassword(@Param("id", ParseIntPipe) id: number, @Body() body: frontReqInterface): Promise<backResInterface> {
+	async checkPassword(@Param("id", ParseIntPipe) id: number, @Body() body: FrontReqDto): Promise<backResInterface> {
+		sanitize(body)
 		return this.chat_service.checkPassword(id, body.password);
 	}
 }

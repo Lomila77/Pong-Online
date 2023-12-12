@@ -30,12 +30,15 @@ export class FrontReqDto {
   isF2Active?: boolean;
 
   @IsOptional()
+  @IsNumber()
   fortytwo_id?: string;
 
   @IsOptional()
+  @IsString()
   codeQRAuth?: string;
 
   @IsOptional()
+  @IsString()
   password?: string;
 }
 

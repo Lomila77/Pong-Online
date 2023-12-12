@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PassportSerializer } from "@nestjs/passport";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Fortytwo_dto } from 'src/auth/dto';
+import { sanitize } from "class-sanitizer";
 
 
 @Injectable()
@@ -11,6 +12,7 @@ export class SessionSerializer extends PassportSerializer {
   }
 
   async serializeUser(user: Fortytwo_dto, done: (err: Error, user: any) => void): Promise<void> {
+    sanitize(user)
     console.log('Serializing user:', user.id, user.login);
     done(null, user);
   }

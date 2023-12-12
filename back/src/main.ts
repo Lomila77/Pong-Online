@@ -48,7 +48,8 @@ async function bootstrap() {
       cookie: {
         httpOnly: true,
         maxAge: 3600000,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        // secure: true,
         signed: true,
       },
       name: app.get(ConfigService).get<string>('COOKIES_NAME'),

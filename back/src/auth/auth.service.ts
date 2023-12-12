@@ -9,7 +9,7 @@ import * as qrcode from 'qrcode';
 import { Request, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 import { HttpStatus } from '@nestjs/common';
-import { backResInterface, frontReqInterface } from 'src/shared';
+import { FrontReqDto, backResInterface } from 'src/shared';
 
 @Injectable({})
 export class AuthService {
@@ -95,7 +95,7 @@ export class AuthService {
     });
   }
 
-  async postAuthSettings(user: User, frontReq: frontReqInterface, res: Response) : Promise<backResInterface>{
+  async postAuthSettings(user: User, frontReq: FrontReqDto, res: Response) : Promise<backResInterface>{
     try {
       if (user && !user.pseudo) {
         const updatedUser = await this.user.updateUser(user.fortytwo_id, frontReq);

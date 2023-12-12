@@ -1,5 +1,5 @@
 
-import {backResInterface, frontReqInterface} from './../shared/shared.interface';
+import {backResInterface, FrontReqDto} from './../shared/shared.interface';
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
@@ -7,8 +7,8 @@ import { User } from '@prisma/client';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { join } from 'path';
+import { sanitize } from 'class-sanitizer';
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {
@@ -28,7 +28,8 @@ export class UserController {
 
   @Put('/user')
   @UseGuards(JwtGuard)
-  getUser(@Body() body: frontReqInterface) {
+  getUser(@Body() body: FrontReqDto) {
+    sanitize(body)
     return this.userService.getUser(body.pseudo);
   }
 
@@ -39,7 +40,8 @@ export class UserController {
   }
 
   @Put('/checkpseudo')
-  async checkpseudo(@Body() body: frontReqInterface) {
+  async checkpseudo(@Body() body: FrontReqDto) {
+    sanitize(body)
     return this.userService.checkPseudo(body.pseudo)
   }
 
@@ -58,9 +60,10 @@ export class UserController {
   @Post('update')
   @UseGuards(JwtGuard)
   async settingslock(
-      @Body() body: frontReqInterface,
+      @Body() body: FrontReqDto,
       @GetUser() user: User,
   ) {
+    sanitize(body)
     return await this.userService.updateUser(user.fortytwo_id, body)
   }
 
@@ -100,8 +103,9 @@ export class UserController {
       },
     }),
   }))
-  async uploadAvatar(@Body() body: frontReqInterface, @GetUser() user: User, @UploadedFile() file) {
-    const update: frontReqInterface = {
+  async uploadAvatar(@Body() body: FrontReqDto, @GetUser() user: User, @UploadedFile() file) {
+    sanitize(body)
+    const update: FrontReqDto = {
       ...body,
       avatar: file.filename,
     };

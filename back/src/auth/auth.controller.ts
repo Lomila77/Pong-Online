@@ -8,15 +8,16 @@ import {
   Res, Put,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, Fortytwo_dto } from './dto';
+import { Fortytwo_dto } from './dto';
 import { ApiAuthGuard } from './guard/ft_api.guard';
 import { GetUser } from './decorator/get-user.decorator';
 import { JwtGuard } from './guard';
 import { User } from '@prisma/client';
 import { SessionAuthGuard } from './guard/session.guard';
 import { Request, Response } from 'express';
-import {backResInterface, frontReqInterface} from 'src/shared';
+import {FrontReqDto, backResInterface} from 'src/shared';
 import * as process from "process";
+import { sanitize } from 'class-sanitizer';
 
 @Controller('auth')
 export class AuthController {
@@ -28,6 +29,7 @@ export class AuthController {
     @Req() req: { user: Fortytwo_dto; request: Request },
     @Res() res: Response,
   ) {
+    sanitize(req.user);
     try {
       const ret: {firstConnection: boolean, isF2Active: boolean} = await this.authService.handleIncommingUser(
         req.user,
@@ -48,10 +50,12 @@ export class AuthController {
   @Post('settingslock')
   @UseGuards(SessionAuthGuard)
   async settingslock(
-    @Body() frontReq: frontReqInterface,
+    @Body() frontReq: FrontReqDto,
     @GetUser() user: User,
     @Res() res: Response,
   ) {
+    sanitize(frontReq);
+    console.log("sanitized", frontReq);
     try {
       res.status(200).send(await this.authService.postAuthSettings(user, frontReq, res ));
     }
@@ -91,7 +95,8 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Put('/verify')
-  verify(@GetUser() user: User, @Body() body: frontReqInterface): backResInterface {
+  verify(@GetUser() user: User, @Body() body: FrontReqDto): backResInterface {
+    sanitize(body);
     return this.authService.verify(user, body.codeQRAuth);
   }
 
