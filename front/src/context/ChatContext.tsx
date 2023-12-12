@@ -5,28 +5,10 @@ import { useUser } from './UserContext';
 import { io, Socket } from 'socket.io-client';
 
 
-// Todo : emit messages : might be type (message: string, channel : Ichannels);
-
 
 // Todo : update channels (change password, name new admin ....)
 
-// Todo : see if better to not open window when new channel is created but to have an other color on screen ?
-
-// Todo : update channel --> update a channel inside Ichannels. idee de prototype : ('updateChannel', 'channel:Ichannel')
 // Todo : need to handle error event with case : NotInvited, Banned, Wrong password, This channel does not exist!!!
-// todo : need to handle newFriend in channel event
-
-// *npx prisma generate
-
-// some code that can still be usefull
-//case channel id already exist in list: need to update info
-// else {
-//   setChannels((prev) => ({
-//   ...prev!,
-//   MyDms: prev?.MyDms?.map((channel) => (channel.id === newChat.id ? newChat : channel)) || [],
-//   }));
-// }
-// break;
 
   export interface IChatMember {
     name: string;
@@ -99,6 +81,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
   const [openedWindows, setOpenedWindows] = useState<IChatWindow[]>([])
   const [prevPseudo, setPrevPseudo] = useState<string>('');
+  const [blockedUser, setblockedUser] = useState<number[]>([]);
 
   /*********** init chat Context ************/
   const socketRef = useRef<Socket | null>(null);
@@ -118,11 +101,13 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
 
       backRequest('chat/channels', 'GET').then((data) => {
         console.log("chat/channels route is giving : ", data, "\n");
-        let allChannels : IChannels = data.data as IChannels
+        let allChannels : IChannels = data.data.channels as IChannels
+        let blockedId : number[] = data.data.blockedUser as number[]
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyDms", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "MyChannels", user?.fortytwo_id || 0)
         allChannels = moveMemberToFirstInIChannels(allChannels, "ChannelsToJoin", user?.fortytwo_id || 0)
         allChannels && setChannels(allChannels);
+        blockedId && setblockedUser(blockedId);
       })
 
       /* *********************************************************
@@ -215,7 +200,6 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           }));
       });
 
-
       /* *********************************************************
           * Friend connected:
             - update member with updatedUser
@@ -234,14 +218,14 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         updateChatMember(updatedUser);
       });
 
-      /* *********************************************************
-          * Friend disconnected:
-            - update member with updatedUser
-      ***********************************************************/
-      newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
-        console.log("Friend disconnected recieved", updatedUser)
-        updateChatMember(updatedUser);
-      });
+      // /* *********************************************************
+      //     * Friend disconnected:
+      //       - update member with updatedUser
+      // ***********************************************************/
+      // newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+      //   console.log("Friend disconnected recieved", updatedUser)
+      //   updateChatMember(updatedUser);
+      // });
 
       /* *********************************************************
           * UserGameState:
@@ -365,15 +349,16 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   }
 
   /* *********************************************************
-      * pseudo Update:
-        - invite a friend in channel
+      * ChatContext init useEffect
+          - init if user authenticated and socket !connected
+          - disconnect if !authenticated and socket connected
   ***********************************************************/
 
   useEffect(() => {
     if (user?.isAuthenticated && !socket?.connected) {
       initChatCtx();
     }
-    else if (!user?.isAuthenticated  && socket?.connected) {
+    else if (!user?.isAuthenticated && socket?.connected) {
       console.log("deleting socket useState Socket : ",user, socket);
       socketRef.current?.disconnect();
       setSocket(null)
@@ -381,7 +366,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
   }, [user])
 
   /* *********************************************************
-      * useEffect{}[user, prevPseudo]
+      * useEffect for pseudo update
           - on change of user state change pseudo
           - the horrible ifs conditions is due to the fact that for some reason
             on update of user via settings user goes from partially "undefined" user
@@ -438,10 +423,18 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         - usage : if (usChannelKnown("MyDms", 42))
           --> check if MyDms has a channel of id 42
   ***********************************************************/
-  const isChannelKnown = (channelKey: string, idToFind?: number) => {
-    if (!idToFind)
+  // const isChannelKnown = (channelKey: string, idToFind?: number) => {
+  //   if (!idToFind)
+  //     return false;
+  //   return channels[channelKey].find((channel: IChannel) => channel.id === idToFind);
+  // };
+
+  const isChannelKnown = (currentState: IChannels, channelKey: string, idToFind?: number): boolean => {
+    if (!idToFind || !currentState[channelKey]) {
       return false;
-    return channels[channelKey].find((channel: IChannel) => channel.id === idToFind);
+    }
+
+    return currentState[channelKey].find((channel: IChannel) => channel.id === idToFind) !== undefined;
   };
 
 
@@ -460,25 +453,47 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
           --> reformat members so current user is on top
           --> add Channel to the right place in channels:IChannels
   ***********************************************************/
-  const handleEventChannelCreated = (newChannel : IChannel) => {
-    if (user)
-      newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
 
-    addChannelToChannelsByType(channels, newChannel)
-  }
+  const handleEventChannelCreated = (newChannel: IChannel) => {
+    setChannels((prevChannels: IChannels) => {
+      if (user) {
+        newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0);
+      }
+      return addChannelToChannelsByType(prevChannels, newChannel);
+    });
+  };
 
-  //todo : check if I can use a prev earlier
-  const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
-
-    if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
+  const addChannelToChannelsByType = (prevChannels: IChannels, newChannel: IChannel): IChannels => {
+    if (newChannel.type === "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id)) {
       newChannel.type = "ChannelsToJoin";
-    if(!isChannelKnown(newChannel.type, newChannel.id)) {
-      setChannels((prev: IChannels) => ({
-        ...prev!,
-        [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
-      }))
     }
-  }
+    if (!isChannelKnown(prevChannels, newChannel.type, newChannel.id)) {
+      return {
+        ...prevChannels,
+        [newChannel.type]: prevChannels ? [...prevChannels[newChannel.type], newChannel] : [newChannel],
+      };
+    }
+      return prevChannels;
+    };
+
+  // const handleEventChannelCreated = (newChannel : IChannel) => {
+  //   if (user)
+  //     newChannel.members = moveMemberToFirst(newChannel.members, user.fortytwo_id || 0)
+
+  //   addChannelToChannelsByType(channels, newChannel)
+  // }
+
+  // const addChannelToChannelsByType = (channels: IChannels, newChannel: IChannel) => {
+
+  //   if (newChannel.type == "MyChannels" && !newChannel.members.find(member => member.id === user?.fortytwo_id))
+  //     newChannel.type = "ChannelsToJoin";
+  //   if(!isChannelKnown(newChannel.type, newChannel.id)) {
+  //     setChannels((prev: IChannels) => ({
+  //       ...prev!,
+  //       [newChannel.type]: prev ? [...prev[newChannel.type], newChannel] : [newChannel],
+  //     }))
+  //   }
+  // }
 
     /* *********************************************************
       * updateMemberById
@@ -649,13 +664,17 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       isPassword:  form?.isPassword?  form.isPassword  :  false,
       password:    form?.password?    form.password    :  "",
     }
-    // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if ((data.type && !isChannelKnown(data.type, data.id)) || data.type == 'ChannelsToJoin') {
-      console.log("Join Channel called from openWindow")
-      // console.log("openWindoc called : data = ", data);
-      // console.log("socket = ", socket);
+    //todo : is isChannelKnow really usefull here ?
+
+    // if channels == channelsToJoin, emit join Channel
+    // case channel is not known --> we are creating a new channel,
+    // chan creation and join channel will be done elsewhere
+    if ((data.type && !isChannelKnown(channels, data.type, data.id))
+        || data.type == 'ChannelsToJoin') {
+      console.log("Join Channel called from openWindow with data : ", data)
       socket?.emit('Join Channel', data);
     }
+    // if is myDms or MyChannels : open directly
     else if (chatData) {
       console.log("inside openWindow before calling handleOpenWindow: ", chatData);
       handleOpenWindow(chatData);
