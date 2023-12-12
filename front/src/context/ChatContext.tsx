@@ -806,6 +806,8 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       socket?.emit('sendMessage', {message: message, channelId: channelId})
   }
 
+
+  //todo set priorities. Can do multiple event in the same time
   const sendAdminForm = (chatId: number, targetId: number,
                          mute: boolean, unMute: boolean,
                          ban: boolean, unBan: boolean,
@@ -837,7 +839,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         console.log('unBan event emited');
         socket?.emit('unban', {chatId: chatId, userId: targetId});
       }
-      if (kick)
+      if (kick && !ban )
         socket?.emit('kick', {chatId: chatId, userId: targetId});
       if (admin)
         socket?.emit('set-admin', {chatId: chatId, userId: targetId});
