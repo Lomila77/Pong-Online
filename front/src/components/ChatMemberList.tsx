@@ -8,7 +8,7 @@ interface ChatMemberListProps {
 
 const ChatMemberList: React.FC<ChatMemberListProps> = ({chat, closeList}) => {
     return (
-        <div className={"absolute left-0 top-0 card h-full w-full bg-orangeNG shadow-xl"}>
+        <div className={"absolute z-10 left-0 top-0 card h-full w-full bg-orangeNG shadow-xl"}>
             <div className="card-body flex flex-col overflow-auto">
                 <h3 className={"font-display text-base-200"}>Member List:</h3>
                 <ul className="bg-orangeNG rounded-box mt-5">

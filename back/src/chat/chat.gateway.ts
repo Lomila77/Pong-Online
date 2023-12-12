@@ -18,6 +18,7 @@ import { QuitChanDto, JoinChanDto, ActionsChanDto, PlayChanDto } from "./dto/edi
 import { EditChannelCreateDto } from './dto/edit-chat.dto';
 import { IsAdminDto } from './dto/admin.dto';
 import * as jwt from 'jsonwebtoken';
+import {GetResult} from "@prisma/client/runtime/library";
 // import * as redisAdapter from 'socket.io-redis';
 
 // import { backResInterface } from './../shared/shared.interface';
@@ -115,7 +116,7 @@ export class ChatGateway implements OnGatewayConnection {
         });
       }
     }
-    console.log("disconnecting : ", user.pseudo, " ", client.id);
+    //console.log("disconnecting : ", user.pseudo, " ", client.id);
     delete this.clients[client.id];
     client.disconnect();
   }
@@ -158,7 +159,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (ret === 0 || ret === 5) {
       client.join(channel.id.toString());
       if (ret !== 5) {
-        this.server.to(channel.id.toString()).emit("NewUserJoin", { username: user.fortytwo_userName, id: user.fortytwo_id, avatarUrl: user.avatar })
+        console.log("checkpoint");
         if (data.id) {
           await this.prisma.channel.update({
             where: { id: channel.id },
@@ -168,6 +169,13 @@ export class ChatGateway implements OnGatewayConnection {
               },
             },
             select : {members : true, id: true, name: true, }
+          }).then(async () => {
+            await (this.chatService.getUpdatedChannelForFront(channel.id, data.type)).then(channel => {
+              console.log("Members: ", channel.members, "\n\n\n");
+              channel.members.forEach(member => {
+                this.emitSignal(member.id, channel, "NewUserJoin");
+              })
+            });
           });
         }
       }
@@ -304,14 +312,21 @@ export class ChatGateway implements OnGatewayConnection {
 
     const isOwner = await this.chatService.isOwner_Chan(userId, chatId);
     const isAdmin = await this.chatService.isAdmin_Chan(userId, chatId);
+    const isPrivate = (await this.chatService.getChannelById(chatId)).isPrivate
 
     if (isOwner) {
       const newOwner = await this.chatService.findNewOwner(chatId);
       if (newOwner) {
-        await this.chatService.updateOwner(chatId, newOwner.fortytwo_id);
+        const channel = await this.chatService.getUpdatedChannelForFront(chatId, "MyChannels");
+        channel.members.forEach(member => {
+          if (member.id != userId)
+            this.emitSignal(member.id, channel, 'new owner');
+        })
       } else {
+        // no owner found --> delete channel. if != private send to all sockets
         await this.chatService.delChanById(chatId);
-        this.server.to(client.id).emit("chan deleted", { chatId: chatId });
+        isPrivate ? this.server.to(client.id).emit("chan deleted", chatId) :
+        this.server.emit("chan deleted", chatId);
         return;
       }
     }
@@ -319,11 +334,16 @@ export class ChatGateway implements OnGatewayConnection {
     if (isAdmin) {
       await this.chatService.removeAdmin(userId, chatId);
     }
-
     await this.chatService.quit_Chan(userId, chatId);
     client.leave(chatId.toString());
-    this.server.to(client.id).emit("quited", { chatId: chatId });
-    this.server.to(chatId.toString()).emit("quit", { pseudo: this.clients[client.id].pseudo });
+    
+    await this.chatService.getUpdatedChannelForFront(chatId, "MyChannel").then(channel => {
+      console.log("getUpdatedChannelForFront", channel.members);
+
+      this.server.to(client.id).emit("quited", channel);
+      this.server.to(chatId.toString()).emit("user leave", channel);
+    })
+    // TODO: mettre a jour la liste des membre en local front quand il part
   }
 
   @SubscribeMessage('is-admin')
@@ -354,7 +374,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatService.invit_Chan(data.userId, data.chatId);
     for (let key in this.clients) {
       if (this.clients[key].fortytwo_id === data.userId) {
-        await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+        await (this.chatService.getUpdatedChannelForFront(data.chatId, "ChannelsToJoin")).then(objToEmit => {
           this.server.to(key).emit("invited", objToEmit);
         });
         console.log("user invited");
@@ -519,16 +539,32 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     const currentUserId = this.clients[client.id].fortytwo_id;
-    const currrentUser = await this.prisma.user.findUnique({
+    const currentUser = await this.prisma.user.findUnique({
       where: {fortytwo_id: currentUserId},
-      select: {pseudo: true, connected: true}
+      select: {pseudo: true, connected: true, in_game: true}
     })
-    if (currrentUser) {
+    if (currentUser) {
       const idSet = await this.collectChannelMembersIdsSet(currentUserId);
       idSet.forEach(id => {
-        this.emitSignal(id, {id: currentUserId, name: currrentUser.pseudo, connected:currrentUser.connected }, 'pseudo Update');
+        this.emitSignal(id, {id: currentUserId, name: currentUser.pseudo, connected:currentUser.connected, in_game: currentUser.in_game }, 'pseudo Update');
       })
     }
+  }
+
+  @SubscribeMessage('ingame Update')
+  async ingame_update(
+      @ConnectedSocket() client: Socket,
+  ) {
+    console.log("INGAME UPDATE...\n\n\n")
+    const currentUserId = this.clients[client.id].fortytwo_id;
+    this.prisma.user.findUnique({
+      where: {fortytwo_id: currentUserId},
+      select: {pseudo: true, connected: true, in_game: true, friends: true}
+    }).then((user) => {
+      user.friends.forEach(id => {
+        this.emitSignal(id, {id: currentUserId, name: user.pseudo, connected:user.connected, in_game:user.in_game }, 'ingame Update');
+      })
+    })
   }
 
   /** get a set of userId that has a least a channel in commun with userId */
@@ -560,6 +596,8 @@ export class ChatGateway implements OnGatewayConnection {
       this.server.to(userSocketId).emit(signal,  obj);
     }
   }
+
+
 
   // async addFriends(me: User, friendPseudo: string): Promise<backResInterface> {
   //   const meFriends = (await this.prisma.user.findUnique({

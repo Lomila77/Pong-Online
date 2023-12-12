@@ -5,6 +5,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { User } from '../../api/queries';
 import GameStatusesComponent from './GameStatusesComponent';
 import { ThreeDots } from 'react-loader-spinner';
+import Cookies from "js-cookie";
+import { useUser } from "../../context/UserContext";
+
 
 export enum GameStatus {
     WAITING_FOR_PLAYERS = 'WAITING_FOR_PLAYERS',
@@ -13,12 +16,11 @@ export enum GameStatus {
 }
 
 export interface Player {
-    firstName: string;
+    firstName: string | undefined;
 }
 
 interface JoinRoomMessage {
     room: string;
-    name: string;
 }
 
 export interface FinishedGameState {
@@ -36,7 +38,7 @@ export interface FinishedGameState {
     scoreLeft: number;
     scoreRight: number;
     currentPlayer: {
-        name: string;
+        name: string | undefined ;
         side: string;
         score: number;
     } | null;
@@ -59,20 +61,44 @@ export interface GameParameters {
 
 function Game() {
 
-    const [user, setUser] = useState<User | null>(null);
+    //const [user, setUser] = useState<User | null>(null);
+    const {user} = useUser(); // Recuperation de la session de l'utilisateur
+    const socketRef = useRef<Socket | null>(null);
+
+    const token = Cookies.get('jwtToken');
+    if (!token)
+      return //TODO: redirect vers login ?
 
     useEffect(() => {
-        // TODO change = Ask username with js
-        const username = prompt('Enter your username');
-        if (username) {
-            setUser({
-                pseudo: username,
-                avatar: null,
-                friends: [],
-                isF2Active: false,
-            });
-        }
+        socketRef.current = io('http://localhost:3333/events', { //TODO: add variable environment
+            auth: {
+                token: token
+            }
+        });
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
     }, []);
+
+    if (socketRef === null || socketRef.current === undefined) {
+        return <ThreeDots color='#000000' height={100} width={100} />;
+    }
+
+
+    // useEffect(() => {
+    //     // TODO change = Ask username with js
+    //     const username = prompt('Enter your username');
+    //     if (username) {
+    //         setUser({
+    //             pseudo: username,
+    //             avatar: null,
+    //             friends: [],
+    //             isF2Active: false,
+    //         });
+    //     }
+    // }, []);
 
 
 
@@ -134,24 +160,9 @@ function Game() {
     }
 
     const { gameId } = useParams<{ gameId: string }>();
-    const socketRef = useRef<Socket | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const navigate = useNavigate();
-
-    useEffect(() => {
-        socketRef.current = io('http://localhost:3333/events');
-
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-        };
-    }, []);
-
-    if (socketRef === null || socketRef.current === undefined) {
-        return <ThreeDots color='#000000' height={100} width={100} />;
-    }
 
     const updateGameStatus = (gameStatus: GameStatus) => {
         setGameStatus(gameStatus);
@@ -229,12 +240,12 @@ function Game() {
     useEffect(() => {
         if (!gameId) return;
         if (user && socketRef && socketRef.current) {
-            console.log('joinRoom', gameId, 'user', user);
-            const joinRoomMessage: JoinRoomMessage = {
+            console.log('joinRoom', gameId, 'user', user); //TODO: remove ?
+            const joinRoomMessage: { room: string } = {
                 room: gameId,
-                name: user!.pseudo,
             };
             socketRef.current.emit('joinRoom', joinRoomMessage);
+            console.log("joinRoom emitted");
         }
     }, [user]);
 
@@ -242,7 +253,6 @@ function Game() {
         if (!user) return;
 
         socketRef.current?.on('movePaddleOpponent', function (data) {
-            console.log('movePaddleOpponent - playingSide', playingSide, 'data', data);
             if (playingSide === 'LEFT') {
                 setRightPaddlePositionY(data.y);
             } else if (playingSide === 'RIGHT') {
@@ -266,6 +276,7 @@ function Game() {
         });
 
         socketRef.current?.on('yourPosition', function (data) {
+            console.log("event Your Position: USER PSEUDO = " + user.pseudo);
             if (data.side === 'RIGHT') {
                 playingSide = 'RIGHT';
                 setRightPlayer({
@@ -360,7 +371,6 @@ function Game() {
             setGameStatus(GameStatus.FINISHED);
         });
         socketRef.current?.on('ballPositionEvent', function (data) {
-            console.log('received ballPositionEvent');
             updateGameStatus(GameStatus.IN_PROGRESS);
             setBallPositionX(data.x);
             setBallPositionY(data.y);

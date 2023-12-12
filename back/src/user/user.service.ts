@@ -223,4 +223,19 @@ export class UserService {
       return 'something went wong in my spell :' + error
     }
   }
+
+  async getAvatar(userId: number) {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+
+    return await this.prisma.user.findUnique({
+      where: {
+        fortytwo_id: userId,
+      },
+      select: {
+        avatar: true
+      }
+    })
+  }
 }

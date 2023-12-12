@@ -8,6 +8,8 @@ import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { join } from 'path';
+import * as express from 'express';
 
 dotenv.config();
 // configurePassport(passport);
@@ -55,6 +57,7 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(cookieParser());
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(app.get(ConfigService).get<number>('BACK_PORT'));
 }

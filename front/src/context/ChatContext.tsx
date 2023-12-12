@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, {ReactNode, createContext, useState, useContext, useEffect, useRef } from 'react';
 import { backRequest, backResInterface } from '../api/queries';
 import Cookies from 'js-cookie';
 import { useUser } from './UserContext';
@@ -32,6 +32,7 @@ import { io, Socket } from 'socket.io-client';
     name: string;
     id: number;
     connected?: boolean;
+    in_game?: boolean;
   }
 
 export interface IChatHistory {
@@ -63,6 +64,7 @@ export interface IChannels{
 	MyDms: IChannel[];
 	MyChannels: IChannel[];
 	ChannelsToJoin : IChannel[];
+  [key: string]: IChannel[];
   }
 
 export interface IFormData {
@@ -91,7 +93,7 @@ export const ChatContext = createContext<{
 } | null>(null);
 
 
-export const ChatProvider = ({ children }) => {
+export const ChatProvider = ({ children} : { children: ReactNode }) => {
   const { user } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [channels, setChannels ] = useState<IChannels>({MyDms: [], MyChannels: [], ChannelsToJoin: []});
@@ -181,32 +183,21 @@ export const ChatProvider = ({ children }) => {
       });
 
       /* *********************************************************
-          * Quited :
-            - if quited, remove channel from myChannels and then add it to channelToJoin (if !isPrivate)
-      ***********************************************************/
-      newSocket?.on('quited', (chatId: number) => {
-        console.log("Channel quited: \n\n\n", chatId);
-        console.log("\n\n", channels);
-      });
-
-      /* *********************************************************
           * Invited:
             - invite a friend in channel
       ***********************************************************/
       newSocket?.on('invited', (channel: IChannel) => {
+        console.log("invited signal received", channel.id);
         setChannels((prev: IChannels) => ({
           ...prev!,
-          MyChannels: addChannel(prev.MyChannels, channel),
           ChannelsToJoin: removeChannel(prev.ChannelsToJoin, channel.id),
+          MyChannels: addChannel(prev.MyChannels, channel),
         }));
-        console.log("Channel quited: \n\n\n", channel.id);
-        console.log("\n\n", channels);
       });
 
       /* *********************************************************
           * Chan updated:
-
-            -
+            - update channel Password and password status
       ***********************************************************/
       newSocket?.on('chan updated', (channelid: number, isPassword: boolean, Password: string) => {
           setChannels((prev: IChannels) => ({
@@ -244,6 +235,30 @@ export const ChatProvider = ({ children }) => {
       });
 
       /* *********************************************************
+          * Friend disconnected:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('Friend disconnected', (updatedUser: IChatMember) => {
+        console.log("Friend disconnected recieved", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
+          * UserGameState:
+            - update member with updatedUser
+      ***********************************************************/
+      newSocket?.on('userGameState', (userId: number) => {
+        // emit chat gateway iam in game and tell to my friend i am in game
+        newSocket?.emit('ingame Update');
+        console.log("user gamestate received");
+      });
+
+      newSocket?.on('ingame Update', (updatedUser: IChatMember) => {
+        console.log("ingame Update", updatedUser)
+        updateChatMember(updatedUser);
+      });
+
+      /* *********************************************************
           * pseudo Update:
             - update member with updatedUser
       ***********************************************************/
@@ -251,7 +266,91 @@ export const ChatProvider = ({ children }) => {
         console.log("pseudo update recieved", updatedUser)
         updateChatMember(updatedUser);
       });
-1
+
+      /* *********************************************************
+          * new owner:
+            - update channel with new owner
+      ***********************************************************/
+      newSocket?.on('new owner', (channel: IChannel) => {
+        console.log("new owner event received", channel)
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+      });
+
+      /* *********************************************************
+          * NewUserJoin:
+            - a new members has join  channel
+            - update channel with new member
+            - update opened window with new channel update
+      ************************************************************/
+      newSocket?.on('NewUserJoin', (channel: IChannel) => {
+        console.log("new user join event received", channel)
+        channel.type = "MyChannels";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
+      });
+
+
+      // * quit event does not seems to exist anymore
+      // /* *********************************************************
+      //     * quit:
+      //       - A member has left channel
+      // ***********************************************************/
+      // newSocket?.on('quit', (channel: IChannel) => {
+      //   console.log("quit signal received", channel)
+      //   setChannels((prev: IChannels) => ({
+      //     ...prev!,
+      //     MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+      //   }));
+      // });
+
+      /* *********************************************************
+          * user leave :
+            - a member different than current user leaved
+      ***********************************************************/
+      newSocket?.on('user leave', (channel: IChannel) => {
+        console.log("user leave receveid: ", channel);
+        channel.type = "MyChannels";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows((prevState) => (getUpdatedIChatWindows(prevState, channel)));
+      });
+
+      /* *********************************************************
+          * Quited :
+            - current user left  channel
+      ***********************************************************/
+      newSocket?.on('quited', (channel: IChannel) => {
+        console.log("Channel quited: receveid: ", channel);
+
+        channel.type = "ChannelsToJoin";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: (channel.isPrivate ? prev.ChannelsToJoin : addChannel(prev.ChannelsToJoin, channel)),
+          MyChannels: removeChannel(prev.MyChannels, channel.id),
+        }));
+      });
+
+      /* *********************************************************
+          * chan deleted :
+            - a channel has been deleted
+      ***********************************************************/
+      newSocket?.on('chan deleted', (chatId: number) => {
+        console.log("chan deleted signal recieved:", chatId);
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          ChannelsToJoin: removeChannel(prev.ChannelsToJoin, chatId),
+          MyChannels: removeChannel(prev.MyChannels, chatId),
+        }));
+      });
+
       socketRef.current = newSocket;
     })
     newSocket.on('disconnect', () => {
@@ -430,9 +529,41 @@ export const ChatProvider = ({ children }) => {
     };
   };
 
+  const getUpdatedChannel = (channelList: IChannel[], updatedChannel: IChannel) => {
+    const key = channelList.findIndex(channelList => channelList.id === updatedChannel.id)
+
+    if (key != -1) {
+      const updatedList = [...channelList];
+      updatedList[key] = {
+        ... updatedChannel,
+      }
+      return updatedList;
+    }
+    return channelList;
+  }
+
+  // updateChannel --> replaced by get getUpdatedChannel.
+  // Reason : remode / add changes the key of a channel and therefore its visual position
+  // function updateChannel(channelList: IChannel[], channelToAdd: IChannel): IChannel[] {
+  //   const updatedChannel = removeChannel(channelList, channelToAdd.id);
+  //   return addChannel(updatedChannel, channelToAdd);
+  // }
+
+  const getUpdatedIChatWindows = (windows: IChatWindow[], updatedChannel: IChannel) => {
+    const key = windows.findIndex(window => window.id === updatedChannel.id)
+
+    if (key != -1) {
+      const updatedWindow = [...windows]; // = [...windows] creates a copy / = windows created a reference
+      updatedWindow[key] = {
+        ... updatedChannel,
+        history: windows[key].history,
+      }
+      return updatedWindow;
+    }
+    return windows;
+  }
 
   const getUpdatedMembersIChatWindows = (windows: IChatWindow[], updatedUser: IChatMember) => {
-    // const updatedMyDms = channels.MyDms.map((channel) => getUpdatedMembersIChannel(channel, updatedUser))
     return windows.map((window) => getUpdatedMembersIChatWindow(window, updatedUser));
   }
 
@@ -462,14 +593,10 @@ export const ChatProvider = ({ children }) => {
 
   //todo : change function by const =>
   function removeChannel(channelList: IChannel[], channelId: number): IChannel[] {
-    // console.log("removeChannel : initial channel list ", channelList);
-    // const filteredlist = channelList.filter((channel) => channel.id !== channelId);
-    // console.log("removeChannel : filtered channel list ", filteredlist);
-    return channelList.filter((channel) => channel.id !== channelId);
+    return channelList.filter((channel) => channel.id != channelId);
   }
 
   function addChannel(channelList: IChannel[], newChannel: IChannel): IChannel[] {
-    // console.log("addChannel : initial channel list ", channelList);
 
     const channelExists = channelList.find((channel) => channel.id === newChannel.id);
     if (!channelExists) {
@@ -494,6 +621,8 @@ export const ChatProvider = ({ children }) => {
               }
               )
             }
+            else
+              console.log("window is already openned")
           }
 
   /*************************************** print functions */
@@ -521,12 +650,11 @@ export const ChatProvider = ({ children }) => {
       password:    form?.password?    form.password    :  "",
     }
     // if unknown, emit JoinChannel, chan creation and join channel will be done elsewhere
-    if (data.type && !isChannelKnown(data.type, data.id)
-      || data.type === 'ChannelsToJoin') {
+    if ((data.type && !isChannelKnown(data.type, data.id)) || data.type == 'ChannelsToJoin') {
       console.log("Join Channel called from openWindow")
       // console.log("openWindoc called : data = ", data);
       // console.log("socket = ", socket);
-      socket?.emit('Join Channel', data)
+      socket?.emit('Join Channel', data);
     }
     else if (chatData) {
       console.log("inside openWindow before calling handleOpenWindow: ", chatData);
@@ -578,22 +706,12 @@ export const ChatProvider = ({ children }) => {
     }
   }
 
+
   const leaveChannel = (chatId: number) => {
     socket?.emit('quit', {chatId: chatId});
-    const channelToQuit = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
-    if (channelToQuit) {
-      channelToQuit?.isPrivate ?
-          setChannels((prev: IChannels) => ({
-            ...prev!,
-            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-          })) :
-          setChannels((prev: IChannels) => ({
-            ...prev!,
-            MyChannels: removeChannel(prev.MyChannels, channelToQuit.id),
-            ChannelsToJoin: addChannel(prev.ChannelsToJoin, channelToQuit),
-          }));
-      closeWindow(channelToQuit.id);
-    }
+
+    console.log("EMIT QUIT channel: ", chatId ,"\n\n\n");
+    closeWindow(chatId);
   }
 
 

@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
+export interface User {
+    pseudo: string;
+    fortytwo_id: number;
+}
 export interface GamePlayer {
     name: string;
     side: string; 

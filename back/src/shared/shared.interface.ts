@@ -1,3 +1,44 @@
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+
+export class UserDto {
+  @IsString()
+  pseudo: string;
+
+  @IsOptional()
+  avatar: any;
+
+  @IsBoolean()
+  isF2Active: boolean;
+
+  @IsOptional()
+  friends?: number[];
+
+  @IsOptional()
+  win?: number;
+}
+
+export class FrontReqDto {
+  @IsOptional()
+  @IsString()
+  pseudo?: string;
+
+  @IsOptional()
+  avatar?: any;
+
+  @IsOptional()
+  @IsBoolean()
+  isF2Active?: boolean;
+
+  @IsOptional()
+  fortytwo_id?: string;
+
+  @IsOptional()
+  codeQRAuth?: string;
+
+  @IsOptional()
+  password?: string;
+}
+
 export interface User {
 	pseudo: string;
 	avatar: any;
