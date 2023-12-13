@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {IChatMember, IChatWindow, useChat} from "../context/ChatContext";
+import {useUser} from "../context/UserContext";
 
 interface SettingsChatPros {
     chat: IChatWindow;
@@ -8,6 +9,7 @@ interface SettingsChatPros {
 
 const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
     const { sendAdminForm } = useChat();
+    const { user} = useUser();
     const [errorAdminData, setErrorAdminData] = useState(false);
     const [selectedMuteOption, setSelectedMuteOption] = useState('');
     const [selectedBanOption, setSelectedBanOption] = useState('');
@@ -27,7 +29,8 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
         if (adminData?.target) {
             if (adminData.unBan && !chat.banned.find((member: IChatMember) => member.name === adminData.target))
                 setErrorAdminData(true);
-            else if (!chat.members.find((member: IChatMember) => member.name === adminData.target))
+            else if (!chat.members.find((member: IChatMember) => member.name === adminData.target) ||
+                adminData.target == user?.pseudo)
                 setErrorAdminData(true);
             else
                 setErrorAdminData(false);
@@ -160,45 +163,49 @@ const SettingsChat: React.FC<SettingsChatPros> = ({chat, closeSettings}) => {
                                    }))}
                         />
                     </div>
-                    <div className={"flex flex-row justify-between items-center my-2 mx-5"}>
-                        <label htmlFor={"adminAdminData"} className={"font-display text-white"}>Admin role: </label>
-                        <input id={"adminAdminData"}
-                               className="checkbox"
-                               type={"checkbox"}
-                               checked={adminData.admin}
-                               onChange={(e) =>
-                                   setAdminData(prevState => ({
-                                       ...prevState,
-                                       admin: (e.target.checked),
-                                   }))}
-                        />
-                    </div>
-                    <div className={"flex flex-row justify-between items-center"}>
-                        <div className={"flex flex-row mx-2"}>
-                            <label className={"font-display text-white"}>Pwd:</label>
-                            <input className="checkbox"
+                    {chat.owner.id == user?.fortytwo_id && (
+                        <div className={"flex flex-row justify-between items-center my-2 mx-5"}>
+                            <label htmlFor={"adminAdminData"} className={"font-display text-white"}>Admin role: </label>
+                            <input id={"adminAdminData"}
+                                   className="checkbox"
                                    type={"checkbox"}
-                                   defaultChecked={chat.isPassword}
+                                   checked={adminData.admin}
                                    onChange={(e) =>
+                                       setAdminData(prevState => ({
+                                           ...prevState,
+                                           admin: (e.target.checked),
+                                       }))}
+                            />
+                        </div>
+                    )}
+                    {chat.owner.id == user?.fortytwo_id && (
+                        <div className={"flex flex-row justify-between items-center"}>
+                            <div className={"flex flex-row mx-2"}>
+                                <label className={"font-display text-white"}>Pwd:</label>
+                                <input className="checkbox"
+                                    type={"checkbox"}
+                                    defaultChecked={chat.isPassword}
+                                    onChange={(e) =>
                                        setAdminData(prevState => ({
                                            ...prevState,
                                            isPassword: (e.target.checked),
                                        }))}
-                            />
+                                />
+                            </div>
+                            <div className={"mx-2"}>
+                                <input className="input input-bordered input-sm max-w-xs w-54 text-black"
+                                       type={"password"}
+                                       onChange={(e) =>
+                                           setAdminData(prevState => ({
+                                               ...prevState,
+                                               password: e.target.value,
+                                           }))}
+                                       minLength={1}
+                                       disabled={!adminData.isPassword}
+                                />
+                            </div>
                         </div>
-                        <div className={"mx-2"}>
-                            <input className="input input-bordered input-sm max-w-xs w-54 text-black"
-                                   type={"password"}
-                                   onChange={(e) =>
-                                       setAdminData(prevState => ({
-                                           ...prevState,
-                                           password: e.target.value,
-                                       }))}
-                                   minLength={1}
-                                   disabled={!adminData.isPassword}
-                            />
-                        </div>
-                    </div>
+                    )}
                 </div>
                 <div className="card-actions absolute bg-orangeNG bottom-5 right-5">
                     <button className={"btn btn-sm bg-base-200 font-display"} onClick={sendAdminData}>Send</button>

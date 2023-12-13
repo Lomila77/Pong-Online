@@ -546,7 +546,9 @@ export class ChatGateway implements OnGatewayConnection {
     if (!isAdmin)
       return;
     await this.chatService.set_admin_Chan(data.userId, data.chatId);
-    this.server.to(data.chatId.toString()).emit("set-admin", { id: data.userId });
+    await (this.chatService.getUpdatedChannelForFront(data.chatId, "MyChannels")).then(objToEmit => {
+      this.server.to(data.chatId.toString()).emit("set-admin", objToEmit);
+    })
     console.log("new admin");
   }
 
