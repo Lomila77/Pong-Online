@@ -37,6 +37,12 @@ const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, 
         setDisplayUserProfil(displayUserProfil !== true);
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.keyCode === 13) {
+            handleSendMessage();
+        }
+    };
+
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
     };
@@ -60,7 +66,7 @@ const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, 
 
     return (
         <div className={`collapse bg-base-200 px-5 w-80 window-chat ${isChecked ? 'checked' : ''}`}>
-            <input type="checkbox" className="h-4" checked={isChecked} onChange={handleCheckboxChange}/>
+            <input type="checkbox" className="h-4" checked={isChecked} onKeyDown={handleCheckboxChange}/>
             <div className="collapse-title text-orangeNG font-display">
                 {user}
             </div>
@@ -88,15 +94,17 @@ const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, 
                     </div>
                 )}
             </div>
-            <div className="flex flex-row justify-between py-4">
-                <input className="input input-bordered input-sm max-w-xs w-60"
+            <div className="flex flex-row justify-between py-4" onKeyDown={handleKeyDown}>
+                <input
+                    className="input input-bordered input-sm max-w-xs w-60"
                     placeholder="Tapez votre message..."
                     type="text"
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)} />
+                    onChange={(e) => setMessage(e.target.value)}
+                />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                    onClick={handleSendMessage}><
-                        img src={Send} alt="Send" />
+                    onClick={handleSendMessage}>
+                    <img src={Send} alt="Send" />
                 </button>
             </div>
         </div>
