@@ -14,6 +14,15 @@ import * as express from 'express';
 dotenv.config();
 // configurePassport(passport);
 
+function checkIfAllowed(ipAddress: string): boolean {
+  // Votre logique de vérification ici
+  // Par exemple, vous pouvez comparer l'adresse IP avec une liste d'adresses IP autorisées
+
+  const allowedIPs = ['192.168.0.100', '10.0.0.1', '...']; // Liste des adresses IP autorisées
+
+  return allowedIPs.includes(ipAddress);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
@@ -23,7 +32,19 @@ async function bootstrap() {
   );
 
   const corsOptions: CorsOptions = {
-    origin: 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Middleware function to access the request object
+      app.use((req, res, next) => {
+        const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        // Vérifier si l'adresse IP est autorisée
+        const isAllowed = checkIfAllowed(ipAddress);
+        if (isAllowed) {
+          callback(null, origin);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      });
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
