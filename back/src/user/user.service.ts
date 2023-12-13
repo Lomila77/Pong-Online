@@ -50,13 +50,18 @@ export class UserService {
           pseudo: update.pseudo,
           avatar: update.avatar,
           isF2Active: update.isF2Active,
-        }
+          secretOf2FA: update.isF2Active ? undefined : "0"
+        },
       })
+      console.log("returning user", user);
       return {
+          fortytwo_id: user.fortytwo_id,
           pseudo: user.pseudo,
           avatar: user.avatar,
           isF2Active: user.isF2Active,
           isOk: true,
+          connected: user.connected,
+          isF2authenticated: user.isF2authenticated,
           isAuthenticated: user.connected,
       }
     } catch (error){
@@ -123,7 +128,9 @@ export class UserService {
         avatar: user.avatar,
         isF2Active: user.isF2Active,
         isOk: true,
+        connected: user.connected,
         isAuthenticated: user.connected,
+        isF2authenticated: user.isF2authenticated
     }
   }
 

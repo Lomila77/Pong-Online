@@ -83,6 +83,8 @@ export interface IChannels{
 	message?: string;
 	avatar?: any;
 	isF2Active?: boolean;
+	isF2authenticated?: boolean;
+	connected?:boolean;
 	fortytwo_id?: number;
 	isBlock?: boolean;
 	blockedUsers?: number[];

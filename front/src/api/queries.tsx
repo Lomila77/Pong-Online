@@ -131,6 +131,8 @@ export interface frontReqInterface {
     message?: string;
     avatar?: any;
     isF2Active?: boolean;
+	  isF2authenticated?: boolean;
+	  connected?:boolean;
     fortytwo_id?: number;
     isBlock?: boolean;
     blockedUsers?: number[];
@@ -163,8 +165,11 @@ export async function backRequest(url: string, method: string, params?: frontReq
         'Content-Type': 'application/json',
       };
     }
-
     const response = await fetch('http://localhost:3333/' + url, reqOptions);
+    // const data = await response.json(); // Correction ici
+
+    // console.log("back request ", url, " is returning\n\n\n\n", data);
+
     return response.ok ? await response.json() : { isOk: false, message: response.status }
   }
   catch (error) {

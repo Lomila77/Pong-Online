@@ -83,6 +83,8 @@ export class AuthService {
           fortytwo_id: true,
           avatar:true,
           connected: true,
+          isF2Active: true,
+          isF2authenticated: true,
         }
       });
     res.clearCookie(process.env.COOKIES_NAME);

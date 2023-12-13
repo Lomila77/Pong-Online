@@ -36,7 +36,7 @@ export const UserProvider = ({ children }) => {
     }
     else // means that user 's token is either expired or user is not considered as connected by server
       disconnectUser();
-    console.log("🚀 ~ file: UserContext.tsx:41 ~ afteruser :", user)
+    console.log("🚀 ~ file: UserContext.tsx:41 ~ updatedData :", updatedData)
   }
 
   useEffect(() => {
