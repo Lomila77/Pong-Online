@@ -184,6 +184,18 @@ export class ChatService {
       throw new Error('User not found');
     }
 
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!channel) {
+      throw new Error('Channel not found');
+    }
+    if (channel.ownerId === user.id) {
+      return;
+    }
     await this.prisma.channel.update({
       where: {
         id: id,

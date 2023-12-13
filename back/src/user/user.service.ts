@@ -1,4 +1,4 @@
-import { backResInterface, frontReqInterface } from './../shared/shared.interface';
+import { backResInterface, FrontReqDto } from './../shared/shared.interface';
 import { validate } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
@@ -38,7 +38,7 @@ export class UserService {
     }
   }
 
-  async updateUser(userId: number, update: frontReqInterface) :Promise<backResInterface>{
+  async updateUser(userId: number, update: FrontReqDto) :Promise<backResInterface>{
     try {
       // if ((await this.checkPseudo(update.pseudo)).isOk)
       //   return {isOk: false}
