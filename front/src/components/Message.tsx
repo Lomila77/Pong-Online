@@ -10,10 +10,12 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
     const {user} = useUser();
+    const navigate = useNavigate();
+
+
     if (!user || (blockedUsers && blockedUsers.find(blockedUserId => blockedUserId == message.owner.id)))
         return;
     const classNameMessage = message.owner.id == user.fortytwo_id ? "chat chat-end" : "chat chat-start";
-    const navigate = useNavigate();
     const getOnlyPathFromURL = (url: string): string => {
         const urlObject = new URL(url);
         return urlObject.pathname;
