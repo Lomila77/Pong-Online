@@ -193,7 +193,7 @@ export class ChatService {
     if (!channel) {
       throw new Error('Channel not found');
     }
-    if (channel.ownerId === user.id) {
+    if (channel.ownerId === user.fortytwo_id) {
       return;
     }
     await this.prisma.channel.update({

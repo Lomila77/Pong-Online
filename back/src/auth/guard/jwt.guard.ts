@@ -18,8 +18,10 @@ export class JwtGuard extends AuthGuard('jwt') {
 
     if (canActivate) {
         const request: Request = context.switchToHttp().getRequest();
+
         if (request.user) {
           const { connected } =  request.user as any
+      //   const { connected, isF2Active, isF2Authenticated } =  request.user as any
           if (connected)
             return true;
         }
