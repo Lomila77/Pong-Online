@@ -343,11 +343,11 @@ export class EventsGateway {
                 winner = leftPlayer;
                 looser = rightPlayer
             }
-            await this.setUserInGame(client.data.fortytwo_id, true);
             this.chatGateway.emitSignal(client.data.fortytwo_id, {
                 pseudo: client.data.pseudo,
                 inGame: false
             }, "userGameState")
+            await this.setUserInGame(client.data.fortytwo_id, false);
             this.server.to(room).emit('endGame', {
                 leftPlayer: leftPlayer,
                 rightPlayer: rightPlayer,
