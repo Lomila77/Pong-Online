@@ -451,6 +451,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
         }));
         setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
       });
+
       /* *********************************************************
           * mute :
             -  a user has been muted in channel:
@@ -471,7 +472,21 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
       ***********************************************************/
       newSocket?.on('unmute', (channel: IChannel) => {
         console.log("unmute event received", channel)
-        channel.type= "MyChannels"
+        channel.type= "MyChannels";
+        setChannels((prev: IChannels) => ({
+          ...prev!,
+          MyChannels: getUpdatedChannel(prev.MyChannels, channel),
+        }));
+        setOpenedWindows(prevState => getUpdatedIChatWindows(prevState, channel));
+      });
+
+      /* *********************************************************
+          * set-admin :
+            -  a user past admin in channel:
+      ***********************************************************/
+      newSocket?.on('set-admin', (channel: IChannel) => {
+        console.log("set-admin event received", channel)
+        channel.type= "MyChannels";
         setChannels((prev: IChannels) => ({
           ...prev!,
           MyChannels: getUpdatedChannel(prev.MyChannels, channel),
@@ -829,7 +844,7 @@ export const ChatProvider = ({ children} : { children: ReactNode }) => {
     // console.log('password:', password);
     const channel = channels.MyChannels.find((channel: IChannel) => channel.id == chatId);
     if (targetId) {
-      if (mute)
+      if (mute && !ban)
         socket?.emit('mute', {chatId: chatId, userId: targetId});
       else if (unMute)
         socket?.emit('unmute', {chatId: chatId, userId: targetId});

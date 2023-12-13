@@ -10,29 +10,14 @@ function Home() {
     const { user } = useUser();
     const navigate = useNavigate();
 
-// useEffect(() => {
-//   //   if (!user?.isAuthenticated)
-//   //     console.log("\n\n\n\nuser.isAuthenticated", user?.isAuthenticated);
-//   //     navigate("/login");
-//   // }, [user?.isAuthenticated]);
-
     const renderFireAndBuilding = (
-        <div className="relative FireBuilding">
+        <div className="relative FireBuilding z-0">
             <img src={Buildings} alt="Building" className="" />
             <div className="Fire">
             <FireGif />
             </div>
         </div>
     );
-
-    // const renderFire = (
-    //     <>
-    //       <img className="Buildings" src={Buildings} />
-    //       <div className="Fire">
-    //         <FireGif />
-    //       </div>
-    //     </>
-    //   )
 
     const newGame = () => {
         GameService.createOrJoinGame().then((game) => {
@@ -42,14 +27,9 @@ function Home() {
         });
     };
 
-    const newPrivateGame = () => {
-        navigate(`/game/create`);
-    };
-
-
     return (
         <div className='flex relative flex-col-reverse md:flex-row lg:flex-row xl:flex-row 2xl:flex-row h-full'>
-            <div className='flex flex-col flex-1 items-center justify-center py-2 px-5 bg-red'>
+            <div className='flex flex-col flex-1 items-center justify-center py-2 px-5 bg-red z-0'>
                 <div className='renderFireBuilding'>
                     {renderFireAndBuilding}
                 </div>
@@ -60,11 +40,6 @@ function Home() {
                     onClick={newGame}>
                     NEW GAME
                 </button>
-                <button
-                    className='text-2xl font-display text-orangeNG hover:text-3xl ease-in-out duration-300 mb-4 PrivateGame' 
-                    onClick={newPrivateGame}>
-                    PRIVATE GAME
-                </button>
             </div>
             <div>
                 <Chat />
@@ -72,23 +47,5 @@ function Home() {
         </div>
     );
 }
-
-// return (
-//     <div className="flex items-stretch Parent relative flex-col-reverse md:flex-row ">
-//       <div className="sm:block md:hidden">{renderFire}</div>
-//       <div className="hidden md:block flex flex-1 items-end relative">
-//         {renderFire}
-//       </div>
-//       <div className="flex flex-1 items-center justify-center sm:py-2 sm:px-5">
-//         <button className="text-6xl font-display text-orangeNG hover:text-7xl ease-i-out duration-300 NewGame mb-32">
-//           NEW GAME
-//         </button>
-//       </div>
-//       <div>
-//           <Chat />
-//       </div>
-//     </div>
-//   )
-// }
 
 export default Home;

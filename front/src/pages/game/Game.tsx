@@ -45,6 +45,8 @@ export interface FinishedGameState {
 }
 
 export interface GameParameters {
+    scoreLeft: number,
+    scoreRight: number,
     xBall: number,
     yBall: number,
     xSpeed: number,
@@ -60,14 +62,14 @@ export interface GameParameters {
 }
 
 function Game() {
-
     //const [user, setUser] = useState<User | null>(null);
     const {user} = useUser(); // Recuperation de la session de l'utilisateur
     const socketRef = useRef<Socket | null>(null);
 
     const token = Cookies.get('jwtToken');
-    if (!token)
-      return //TODO: redirect vers login ?
+    if (!token) {
+        return; //TODO: redirect vers login ?
+    }
 
     useEffect(() => {
         socketRef.current = io('http://localhost:3333/events', { //TODO: add variable environment
@@ -86,7 +88,6 @@ function Game() {
         return <ThreeDots color='#000000' height={100} width={100} />;
     }
 
-
     // useEffect(() => {
     //     // TODO change = Ask username with js
     //     const username = prompt('Enter your username');
@@ -99,8 +100,6 @@ function Game() {
     //         });
     //     }
     // }, []);
-
-
 
     const handleResize = () => {
         const newWidth = window.innerWidth;
@@ -146,6 +145,8 @@ function Game() {
     const [boardHeight, setBoardHeight] = useState<number>(400);
 
     const setGameParameters = (gameData: GameParameters) => {
+        setScoreLeft((gameData.scoreLeft));
+        setScoreRight(gameData.scoreRight);
         setBallRadius(gameData.ballRadius);
         setBallPositionX(gameData.xBall);
         setBallPositionY(gameData.yBall);
@@ -169,10 +170,6 @@ function Game() {
     };
 
     const canvasHeight = boardHeight;
-
-    const gameLoopInChild = () => {
-
-    };
 
     const drawPaddles = () => {
         const paddleOffset = 30; // change in backend to 30
@@ -234,7 +231,6 @@ function Game() {
 
     const initializeCanvas = (canvasEl: HTMLCanvasElement) => {
         canvasRef.current = canvasEl;
-        gameLoopInChild();
     };
 
     useEffect(() => {
@@ -248,6 +244,47 @@ function Game() {
             console.log("joinRoom emitted");
         }
     }, [user]);
+
+    function movePaddle(e: { key: string; }) {
+        if (canvasRef.current === null) {
+            return;
+        }
+        if (socketRef.current === null) {
+            return;
+        }
+        if (playingSide == 'LEFT') {
+            if (e.key === 'ArrowUp' && leftPaddlePositionY > 0) {
+                console.log('player left movePaddle UP');
+                socketRef.current.emit('movePaddleClient', { direction: 'UP', room: gameId });
+            } else if (e.key === 'ArrowDown' && leftPaddlePositionY < canvasHeight - paddleHeight) {
+                console.log('player left movePaddle DOWN');
+                socketRef.current.emit('movePaddleClient', { direction: 'DOWN', room: gameId });
+            }
+        } else if (playingSide == 'RIGHT') {
+            if (e.key === 'ArrowUp' && rightPaddlePositionY > 0) {
+                console.log('player right movePaddle UP');
+                socketRef.current.emit('movePaddleClient', { direction: 'UP', room: gameId });
+            } else if (e.key === 'ArrowDown' && rightPaddlePositionY < canvasHeight - paddleHeight) {
+                console.log('player right movePaddle DOWN');
+                socketRef.current.emit('movePaddleClient', { direction: 'DOWN', room: gameId });
+            }
+        }
+    }
+
+    useEffect(() => {
+
+        const handleKeyDown = (event) => {
+            console.log("addEventListener");
+            event.preventDefault();
+            movePaddle(event);
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            console.log("return removeEventListener");
+            document.removeEventListener('keydown', handleKeyDown);
+        }
+        }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -292,36 +329,6 @@ function Game() {
                 console.error('yourPosition error');
             }
 
-            function movePaddle(e: { key: string; }) {
-                if (canvasRef.current === null) {
-                    return;
-                }
-                if (socketRef.current === null) {
-                    return;
-                }
-                if (playingSide == 'LEFT') {
-                    if (e.key === 'ArrowUp' && leftPaddlePositionY > 0) {
-                        console.log('player left movePaddle UP');
-                        socketRef.current.emit('movePaddleClient', { direction: 'UP', room: gameId });
-                    } else if (e.key === 'ArrowDown' && leftPaddlePositionY < canvasHeight - paddleHeight) {
-                        console.log('player left movePaddle DOWN');
-                        socketRef.current.emit('movePaddleClient', { direction: 'DOWN', room: gameId });
-                    }
-                } else if (playingSide == 'RIGHT') {
-                    if (e.key === 'ArrowUp' && rightPaddlePositionY > 0) {
-                        console.log('player right movePaddle UP');
-                        socketRef.current.emit('movePaddleClient', { direction: 'UP', room: gameId });
-                    } else if (e.key === 'ArrowDown' && rightPaddlePositionY < canvasHeight - paddleHeight) {
-                        console.log('player right movePaddle DOWN');
-                        socketRef.current.emit('movePaddleClient', { direction: 'DOWN', room: gameId });
-                    }
-                }
-            }
-
-            document.addEventListener('keydown', (event) => {
-                event.preventDefault()
-                movePaddle(event);
-            });
         });
 
         socketRef.current?.on('gameData', function (data) {
@@ -351,6 +358,7 @@ function Game() {
         });
 
         socketRef.current?.on('gameDoesNotExist', function (data) {
+            console.log('gameDoesNotExist', data);
             navigate('/')
         })
 

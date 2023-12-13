@@ -39,7 +39,7 @@ const LeaderComp: React.FC = () => {
           Leaderboard
         </span>
         <div className="pt-7 grid gap-y-5">
-          {users && users.map((user: User, index: number) => (
+          {users && users.slice().sort((a, b) => b.win - a.win).map((user: User, index: number) => (
             <CardLeader
               key={index}
               name={user.pseudo}
@@ -50,20 +50,6 @@ const LeaderComp: React.FC = () => {
           ))}
         </div>
       </div>
-      
-      {/* {selectedUser && (
-          <div className={"flex justify-center items-center"}>
-            <div className="modal-box shrink w-64 card card-bordered border-white border-4 ">
-              <button className="btn btn-sm btn-circle text-bleuPseudo btn-ghost absolute right-2 top-2"
-                    onClick={toggleCloseCardLeader}>
-                ✕
-              </button>
-              <div>
-                <ProfileModal user={selectedUser}/>
-              </div>
-            </div>
-          </div>
-      )} */}
 
       <dialog id="my_modal_3" className="modal">
         <div className="modal-box shrink w-64 card card-bordered border-white border-4">

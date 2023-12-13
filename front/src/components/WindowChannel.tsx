@@ -53,6 +53,11 @@ const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => 
     const closeParam = () => {setDisplayParam(false);};
     const closeMemberList = () => {setDisplayMemberList(false);};
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.keyCode === 13) {
+            handleSendMessage();
+        }
+    };
 
     const handleSendMessage = () => {
         if ((chat.mute && !chat.mute.find((userMuted) => userMuted.id === user?.fortytwo_id)) ||
@@ -126,10 +131,10 @@ const WindowChannel: React.FC<WindowChannelProps> = ({chat, destroyChannel}) => 
                         <Message message={msg} key={index} blockedUsers={blockedUsers}/>
                         ))}
                 </div>
-                <div className="flex flex-row justify-between py-4">
+                <div className="flex flex-row justify-between py-4" onKeyDown={handleKeyDown}>
                     <input className="input input-bordered input-sm max-w-xs w-60"
                            placeholder="Tapez votre message..."
-                           type="text"                               
+                           type="text"
                            value={message}
                            onChange={(e) => setMessage(e.target.value)} />
                     <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
