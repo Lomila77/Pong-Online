@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface MessageProps {
     message: IChatHistory;
-    blockedUsers: number[];
+    blockedUsers: number[] | null;
 }
 
 const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
-    const {user, setUser} = useUser();
+    const {user} = useUser();
     if (!user || (blockedUsers && blockedUsers.find(blockedUserId => blockedUserId == message.owner.id)))
         return;
     const classNameMessage = message.owner.id == user.fortytwo_id ? "chat chat-end" : "chat chat-start";
