@@ -60,23 +60,6 @@ export class EventsGateway {
         }
     }
 
-    async setUserInGame(userId: number, status: boolean) {
-        try {
-            await this.prisma.user.update({
-                where: {
-                    fortytwo_id: userId,
-                },
-                data: {
-                    in_game: status,
-                },
-            });
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
-
     @SubscribeMessage('joinRoom')
     async handleJoinRoom(@MessageBody() data: { room: string }, @ConnectedSocket() client: Socket): Promise<any> {
         let user: User;
@@ -90,8 +73,6 @@ export class EventsGateway {
         }
         // this.clients[client.id] = user;
         const mapPong = this.roomStoreService.getMapPong();
-        console.log("MAP PONG");
-        console.log(mapPong);
         // si la room existe pas encore
         if (!mapPong.get(data.room)) {
             client.emit('gameDoesNotExist', {})
@@ -110,6 +91,10 @@ export class EventsGateway {
                 // déjà 2 joueurs dans la partie mais pas le joueur qui join
                 return
             }
+            await this.chatGateway.emitSignal(user.fortytwo_id, {
+                username: user.pseudo,
+                inGame: true
+            }, "userGameState")
 
             // le joueur qui join était déjà dans la partie
             const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -118,6 +103,7 @@ export class EventsGateway {
                 playerRight: players.right,
                 playerLeft: players.left
             })
+            client.data.side = mapPong.get(data.room).map.get(user.pseudo).side
             client.emit('yourPosition', {
                 y: mapPong.get(data.room).map.get(user.pseudo).y,
                 side: client.data.side
@@ -128,10 +114,9 @@ export class EventsGateway {
         }
 
         await this.chatGateway.emitSignal(user.fortytwo_id, {
-            pseudo: user.pseudo,
+            username: user.pseudo,
             inGame: true
         }, "userGameState")
-        await this.setUserInGame(user.fortytwo_id, true);
 
 
         // le joueur arrive dans la partie et c'est le premier
@@ -150,11 +135,6 @@ export class EventsGateway {
             mapPong.get(data.room).game.scoreLeft = 0;
             client.emit('startGame', {eventName: "waiting", gameData: mapPong.get(data.room).game})
             client.emit('yourPosition', {y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT"})
-            await this.chatGateway.emitSignal(user.fortytwo_id, {
-                pseudo: user.pseudo,
-                inGame: true
-            }, "userGameState")
-await this.setUserInGame(user.fortytwo_id, true);
             return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
         }
 
@@ -202,11 +182,9 @@ await this.setUserInGame(user.fortytwo_id, true);
 
     async handleDisconnect(@ConnectedSocket() client: Socket) {
         await this.chatGateway.emitSignal(client.data.fortytwo_id, {
-            pseudo: client.data.pseudo,
+            username: client.data.pseudo,
             inGame: false
         }, "userGameState")
-        await this.setUserInGame(client.data.fortytwo_id, false);
-
         const room = client.data.room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -267,7 +245,7 @@ await this.setUserInGame(user.fortytwo_id, true);
         const playerRight = player1.side === "RIGHT" ? player1 : player2;
         const playerLeft = player1.side === "LEFT" ? player1 : player2;
         const intervalId = setInterval(async () => {
-            const stop = await this.handleGame(room, playerRight, playerLeft, client)
+            const stop = this.handleGame(room, playerRight, playerLeft, client)
             if (stop === 0) {
                 clearInterval(intervalId);
                 return;
@@ -303,7 +281,7 @@ await this.setUserInGame(user.fortytwo_id, true);
     }
 
 
-    async handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+    handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
         //stop si les deux clients sont déconnectés en pleine partie pour clear la room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -344,10 +322,9 @@ await this.setUserInGame(user.fortytwo_id, true);
                 looser = rightPlayer
             }
             this.chatGateway.emitSignal(client.data.fortytwo_id, {
-                pseudo: client.data.pseudo,
+                username: client.data.pseudo,
                 inGame: false
             }, "userGameState")
-            await this.setUserInGame(client.data.fortytwo_id, false);
             this.server.to(room).emit('endGame', {
                 leftPlayer: leftPlayer,
                 rightPlayer: rightPlayer,
@@ -373,7 +350,6 @@ await this.setUserInGame(user.fortytwo_id, true);
     }
 
     private ballIsTouchingLeftPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number) {
-
         const topBorderCollision: boolean =
             yBall + ballRadius >= leftPlayer.y &&
             yBall + ballRadius <= leftPlayer.y + paddleHeight &&
@@ -467,7 +443,6 @@ await this.setUserInGame(user.fortytwo_id, true);
                 name_right: rightPlayer.name,
                 score_right: rightPlayer.score,
             });
-            //} else if (xBall < paddleWidth) {
         } else if (xBall <= 0) {
             rightPlayer.score += 1;
             xBall = 400;
@@ -481,6 +456,13 @@ await this.setUserInGame(user.fortytwo_id, true);
                 score_right: rightPlayer.score,
             });
         }
+
+
+        const updatedGame = this.roomStoreService.getMapPong().get(room).game;
+        updatedGame.scoreLeft = leftPlayer.score;
+        updatedGame.scoreRight = rightPlayer.score;
+        this.roomStoreService.getMapPong().get(room).game = updatedGame;
+
         const end_game = (leftPlayer.score >= victoryPoints || rightPlayer.score >= victoryPoints)
         return { xBall, yBall, xSpeed, ySpeed, end_game };
     }
