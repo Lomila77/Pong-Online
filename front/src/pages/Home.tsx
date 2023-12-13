@@ -17,7 +17,7 @@ function Home() {
 //   // }, [user?.isAuthenticated]);
 
     const renderFireAndBuilding = (
-        <div className="relative FireBuilding">
+        <div className="relative FireBuilding z-0">
             <img src={Buildings} alt="Building" className="" />
             <div className="Fire">
             <FireGif />
@@ -49,7 +49,7 @@ function Home() {
 
     return (
         <div className='flex relative flex-col-reverse md:flex-row lg:flex-row xl:flex-row 2xl:flex-row h-full'>
-            <div className='flex flex-col flex-1 items-center justify-center py-2 px-5 bg-red'>
+            <div className='flex flex-col flex-1 items-center justify-center py-2 px-5 bg-red z-0'>
                 <div className='renderFireBuilding'>
                     {renderFireAndBuilding}
                 </div>

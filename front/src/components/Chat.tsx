@@ -55,7 +55,7 @@ const Chat: React.FC = () => {
                 </div>
             )}
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" onClick={toggleDrawerOpen}/>
-            <div className="drawer-content">
+            <div className={"drawer-content " + (drawerOpen ? "" : "z-10")}>
                 <label htmlFor="my-drawer-4"
                        className="btn drawer-button btn-circle m-5 p-2">
                     <img src={Messagerie} alt={"chat"} className={"w-10"}/>
@@ -68,7 +68,8 @@ const Chat: React.FC = () => {
                         <DisplayDm loadPrivateGame={setLoadPrivateGame}/>
                     )}
                     {displayChannelDrawer && (
-                        <li className="flex flex-row justify-between items-center border-b-2 font-display px-9 text-base-200 mb-5">MY CHANNEL</li>
+                        <li className="flex flex-row justify-between items-center border-b-2 font-display px-9 text-base-200 mb-5">MY
+                            CHANNEL</li>
                     )}
                     {displayChannelDrawer && (
                         <DisplayChannels/>
@@ -79,30 +80,30 @@ const Chat: React.FC = () => {
                     {displayChannelDrawer && (
                         <DisplayChannelsToJoin/>
                     )}
-                </ul>
-                {displayChannelDrawer && (
-                    <div className="absolute bottom-0 mx-24 mt-auto mb-52 border border-2 rounded-lg">
-                        <button className="btn btn-square btn-ghost p-2" onClick={toggleCreateChannel}>
-                            <img src={NewChannel} alt={"newChan"} className={"w-10"}/>
-                        </button>
+                    {displayChannelDrawer && (
+                        <div className="self-center mt-auto mb-48 border border-2 rounded-lg">
+                            <button className="btn btn-square btn-ghost p-2" onClick={toggleCreateChannel}>
+                                <img src={NewChannel} alt={"newChan"} className={"w-10"}/>
+                            </button>
+                        </div>
+                    )}
+                    <div
+                        className="self-center flex flex-row items-center justify-around mb-36 absolute bottom-0 border border-2 rounded-lg p-2">
+                        <img src={Messagerie} alt={"chat"} className="mx-5 w-10"/>
+                        <input type="checkbox"
+                               className="toggle toggle-md"
+                               defaultChecked={false}
+                               onChange={toggleDisplayChannel}/>
+                        <img src={Channel} alt={"channel"} className="mx-5 w-10"/>
                     </div>
-                )}
-                <div
-                    className="flex flex-row items-center justify-around mb-36 absolute bottom-0 border border-2 rounded-lg p-2 mx-1.5">
-                    <img src={Messagerie} alt={"chat"} className="mx-5 w-10"/>
-                    <input type="checkbox"
-                           className="toggle toggle-md"
-                           defaultChecked={false}
-                           onChange={toggleDisplayChannel}/>
-                    <img src={Channel} alt={"channel"} className="mx-5 w-10"/>
-                </div>
+                </ul>
                 <div className="absolute mr-64 mb-32 bottom-0 flex flex-row-reverse overflow-hidden">
                     {drawerOpen && openedWindows && openedWindows.map((channel: IChatWindow, index: number) =>
-                            channel.type == 'MyDms' && (
-                                <div key={index} className="px-5">
-                                    <WindowChat user={channel.members[1].name}
-                                                me={user}
-                                                destroyChat={() => setSelectedTargetToDestroy(channel)}
+                        channel.type == 'MyDms' && (
+                            <div key={index} className="px-5">
+                                <WindowChat user={channel.members[1].name}
+                                            me={user}
+                                            destroyChat={() => setSelectedTargetToDestroy(channel)}
                                                 history={channel.history}
                                                 chatId={channel.id}
                                     />
