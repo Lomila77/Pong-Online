@@ -20,6 +20,7 @@ model User {
   avatar            String   @default("0")
   isF2Active        Boolean  @default(false)
   secretOf2FA       String   @default("0")
+  isF2authenticated Boolean  @default(false)
   xp                Float    @default(0)
   ratio             Int      @default(0)
   createdAt         DateTime @default(now())

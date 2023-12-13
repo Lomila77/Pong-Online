@@ -10,6 +10,7 @@ const TwoFA: React.FC = () => {
     const [inputStyle, setInputStyle] = useState('');
     const [isError, setIsError] = useState(false);
     const navigate = useNavigate();
+    
     useEffect(() => {
         backRequest('auth/twoFA', 'GET').then((data) => {
             setUrlPath(data.qrCodeUrl!);

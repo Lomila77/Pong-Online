@@ -90,12 +90,13 @@ export class AuthController {
   @Get('/twoFA')
   @UseGuards(JwtGuard)
   async twoFA(@GetUser() user: User): Promise<backResInterface> {
+    console.log("HERRRRE ROUTE TWOfa")
     return await this.authService.twoFA(user);
   }
 
   @UseGuards(JwtGuard)
   @Put('/verify')
-  verify(@GetUser() user: User, @Body() body: FrontReqDto): backResInterface {
+  async verify(@GetUser() user: User, @Body() body: FrontReqDto): Promise<backResInterface> {
     sanitize(body);
     return this.authService.verify(user, body.codeQRAuth);
   }

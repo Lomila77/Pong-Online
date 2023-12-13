@@ -76,6 +76,7 @@ export class AuthService {
         },
         data: {
           connected: false,
+          isF2authenticated : false,
         },
         select: {
           pseudo: true,
@@ -98,9 +99,9 @@ export class AuthService {
   async postAuthSettings(user: User, frontReq: FrontReqDto, res: Response) : Promise<backResInterface>{
     try {
       if (user && !user.pseudo) {
-        const updatedUser = await this.user.updateUser(user.fortytwo_id, frontReq);
         await this.handleCookies(user.fortytwo_id, res)
         await this.user.toggleConnectionStatus(user.fortytwo_id, true);
+        const updatedUser = await this.user.updateUser(user.fortytwo_id, frontReq);
         return updatedUser;
       }
       return {isOk: false};
@@ -111,29 +112,75 @@ export class AuthService {
   }
 
   async twoFA(user: User): Promise<backResInterface> {
-    const secret = speakeasy.generateSecret({
-      name: user.pseudo,
-    });
-    await this.prisma.user.update({
-      where: {
-        fortytwo_id: user.fortytwo_id,
-      },
-      data: {
-        secretOf2FA: secret.base32,
-      }
-    })
-    qrcode.toDataURL(secret.otpauth_url, function (err) {
-      if (err) throw err;
-    });
-    return {qrCodeUrl: secret.otpauth_url};
+    console.log("inside back twoFA user value : ", user);
+    // if current user has no secret generated yet generate and add it to db
+    if (user.secretOf2FA === "0") {
+    console.log("apparentyle user 2fa secret is null ???? ");
+
+      const secret = speakeasy.generateSecret({
+        name: user.pseudo,
+      });
+      await this.prisma.user.update({
+        where: {
+          fortytwo_id: user.fortytwo_id,
+        },
+        data: {
+          secretOf2FA: secret.base32,
+        },
+      });
+      qrcode.toDataURL(secret.otpauth_url, function (err) {
+        if (err) throw err;
+      });
+      console.log("returning secret.otpauth_url")
+      return { qrCodeUrl: secret.otpauth_url };
+    }
+    // if current user has already a 2fa do not generate a new one
+    // else {
+    //   return { qrCodeUrl: user.secretOf2FA };
+    // }
+
+    // if current user has already a 2fa he Should not get a qrcode
+    return undefined
   }
 
-  verify(user: User, code: string): backResInterface {
-    return {verifyQrCode: speakeasy.totp.verify({
+  // async twoFA(user: User): Promise<backResInterface> {
+  //   const secret = speakeasy.generateSecret({
+  //     name: user.pseudo,
+  //   });
+  //   await this.prisma.user.update({
+  //     where: {
+  //       fortytwo_id: user.fortytwo_id,
+  //     },
+  //     data: {
+  //       secretOf2FA: secret.base32,
+  //     }
+  //   })
+  //   qrcode.toDataURL(secret.otpauth_url, function (err) {
+  //     if (err) throw err;
+  //   });
+  //   return {qrCodeUrl: secret.otpauth_url};
+  // }
+
+  async verify(user: User, code: string): Promise <backResInterface> {
+    const ret = speakeasy.totp.verify({
       secret: user.secretOf2FA,
       encoding: "base32",
-      token: code,
-    })};
+      token: code, });
+    if (ret) {
+      await this.prisma.user.update({
+        where : { fortytwo_id: user.fortytwo_id },
+        data: {
+          isF2authenticated : true,
+        }
+      });
+    }
+    console.log("ret in verify", ret);
+    return {verifyQrCode: ret};
+
+    // return {verifyQrCode:  speakeasy.totp.verify({
+    //   secret: user.secretOf2FA,
+    //   encoding: "base32",
+    //   token: code, })};
   }
 
 

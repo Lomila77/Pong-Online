@@ -21,7 +21,8 @@ const App = () => {
       <Routes>
         {/* route that should redirect towards "/" us user is authenticated */}
           <Route path="/login" element={ <AuthRedirectRoutes> <Login/> </AuthRedirectRoutes>} />
-          <Route path="/twoFA" element={ <AuthRedirectRoutes>  <TwoFA/> </AuthRedirectRoutes>} />
+          {/* <Route path="/twoFA" element={ <AuthRedirectRoutes>  <TwoFA/> </AuthRedirectRoutes>} /> */}
+          <Route path="/twoFA" element={  <TwoFA/> } />
           <Route path="/settingslock" element={<AuthRedirectRoutes> <Settings /> </AuthRedirectRoutes>} />
 
         {/* route that should redirect towards "/login" us user is not authenticated */}

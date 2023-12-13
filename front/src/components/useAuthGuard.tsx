@@ -24,6 +24,7 @@ const AuthRedirectRoutes = ({ children }) => {
   return children;
 };
 
+
 export { ProtectedRoute, AuthRedirectRoutes };
 
 
