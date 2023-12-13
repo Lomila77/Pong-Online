@@ -60,14 +60,14 @@ export interface GameParameters {
 }
 
 function Game() {
-
     //const [user, setUser] = useState<User | null>(null);
     const {user} = useUser(); // Recuperation de la session de l'utilisateur
     const socketRef = useRef<Socket | null>(null);
 
     const token = Cookies.get('jwtToken');
-    if (!token)
-      return //TODO: redirect vers login ?
+    if (!token) {
+        return; //TODO: redirect vers login ?
+    }
 
     useEffect(() => {
         socketRef.current = io('http://localhost:3333/events', { //TODO: add variable environment
@@ -86,7 +86,6 @@ function Game() {
         return <ThreeDots color='#000000' height={100} width={100} />;
     }
 
-
     // useEffect(() => {
     //     // TODO change = Ask username with js
     //     const username = prompt('Enter your username');
@@ -99,8 +98,6 @@ function Game() {
     //         });
     //     }
     // }, []);
-
-
 
     const handleResize = () => {
         const newWidth = window.innerWidth;
@@ -170,10 +167,6 @@ function Game() {
 
     const canvasHeight = boardHeight;
 
-    const gameLoopInChild = () => {
-
-    };
-
     const drawPaddles = () => {
         const paddleOffset = 30; // change in backend to 30
         canvasRef.current!.getContext('2d')!.fillStyle = 'white';
@@ -234,7 +227,6 @@ function Game() {
 
     const initializeCanvas = (canvasEl: HTMLCanvasElement) => {
         canvasRef.current = canvasEl;
-        gameLoopInChild();
     };
 
     useEffect(() => {
@@ -351,6 +343,7 @@ function Game() {
         });
 
         socketRef.current?.on('gameDoesNotExist', function (data) {
+            console.log('gameDoesNotExist', data);
             navigate('/')
         })
 

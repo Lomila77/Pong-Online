@@ -30,7 +30,7 @@ function GameStatusesComponent({
             }
             {
                 gameStatus === GameStatus.IN_PROGRESS ? (
-                    <div className='flex flex-row items-center justify-center mb-8'>
+                    <div className='flex flex-row items-center justify-center my-8 w-full'>
                         <div className='flex-1 flex justify-end break-all text-right'>
                             <p className='text-3xl font-display text-green-300 ease-i-out duration-300 NewGame'>
                                 {leftPlayer?.firstName}

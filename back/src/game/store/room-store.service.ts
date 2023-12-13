@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { LargeNumberLike } from 'crypto';
 
 export interface User {
     pseudo: string;
@@ -10,6 +11,7 @@ export interface GamePlayer {
     x: number;
     y: number;
     score: number;
+    disconnected: boolean;
   }
   
   export interface BallMoveEvent {
@@ -18,6 +20,8 @@ export interface GamePlayer {
   }
   
   export interface Game {
+    scoreLeft: number;
+    scoreRight: number;
     xBall: number; 
     yBall: number; 
     xSpeed: number; 

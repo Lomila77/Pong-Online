@@ -24,6 +24,8 @@ export class CreatePrivateGame {
         const uuid = this.generateUuid();
         this.roomStoreService.getMapPong().set(uuid, {
             "map": new Map(), "players": [], "game": {
+                scoreLeft: 0,
+                scoreRight: 0,
                 xBall: 200,
                 yBall: 200,
                 xSpeed: ballXSpeed[dto.xSpeed - 1],

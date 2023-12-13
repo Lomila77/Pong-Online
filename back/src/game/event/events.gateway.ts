@@ -65,7 +65,7 @@ export class EventsGateway {
         let user: User;
         try {
             user = await this.validateUser(client.handshake.auth.token);
-            console.log("client " + user + " is trying to join a room...");
+            console.log("client " + user.pseudo + " is trying to join a room..."); //TODO: remove ?
         } catch (e) {
             console.log(e);
             client.disconnect();
@@ -73,7 +73,6 @@ export class EventsGateway {
         }
         // this.clients[client.id] = user;
         const mapPong = this.roomStoreService.getMapPong();
-
         // si la room existe pas encore
         if (!mapPong.get(data.room)) {
             client.emit('gameDoesNotExist', {})
@@ -82,9 +81,10 @@ export class EventsGateway {
         // on associe le user au socket
         client.data.fortytwo_id = user.fortytwo_id;
         client.data.room = data.room;
+        client.data.pseudo = user.pseudo;
         // on add le user dans la room
         client.join(data.room);
-        console.log("user " + user + " has joined room " + data.room); //TODO: remove ?
+        console.log(client.data.pseudo + ": joined a room"); //TODO: rm
         // si déjà deux joueurs dans les players
         if (mapPong.get(data.room).players.length === 2) {
             if (!mapPong.get(data.room).map.get(user.pseudo)) {
@@ -105,7 +105,9 @@ export class EventsGateway {
             })
             client.emit('yourPosition', {
                 y: mapPong.get(data.room).map.get(user.pseudo).y,
-                side: mapPong.get(data.room).map.get(user.pseudo).side
+                side: client.data.side
+                //side: mapPong.get(data.room).map.get(user.pseudo).side 
+                //TODO: remove if working
             })
             return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
         }
@@ -118,15 +120,18 @@ export class EventsGateway {
 
         // le joueur arrive dans la partie et c'est le premier
         if (!mapPong.get(data.room).map.get(user.pseudo) && mapPong.get(data.room).players.length === 0) {
+            client.data.side = "left";
             mapPong.get(data.room).map.set(user.pseudo, {
                 name: user.pseudo,
                 x: this.paddleGapWithWall,
                 y: 100,
                 side: "LEFT",
-                score: 0
+                score: 0,
+                disconnected: false,
             });
             mapPong.get(data.room).players.push(user.pseudo)
             mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
+            mapPong.get(data.room).game.scoreLeft = 0;
             client.emit('startGame', {eventName: "waiting"})
             client.emit('yourPosition', {y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT"})
             return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
@@ -134,13 +139,16 @@ export class EventsGateway {
 
         // le joueur arrive dans la partie et c'est le deuxième
         if (!mapPong.get(data.room).map[user.pseudo] && mapPong.get(data.room).players.length === 1) {
+            client.data.side = "right";
             mapPong.get(data.room).map.set(user.pseudo, {
                 name: user.pseudo,
                 x: this.canvasHeight - this.paddleGapWithWall,
                 y: 100,
                 side: "RIGHT",
-                score: 0
+                score: 0,
+                disconnected: false,
             })
+            mapPong.get(data.room).game.scoreRight = 0;
             mapPong.get(data.room).players.push(user.pseudo)
             mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
             const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -172,19 +180,8 @@ export class EventsGateway {
     }
 
     async handleDisconnect(@ConnectedSocket() client: Socket) {
-        if (!client.data.room) {
-            return
-        }
-        let user: User;
-        try {
-            user = await this.validateUser(client.handshake.auth.token);
-        } catch (e) {
-            console.log(e);
-            client.disconnect();
-            return;
-        }
-        await this.chatGateway.emitSignal(user.fortytwo_id, {
-            username: user.pseudo,
+        await this.chatGateway.emitSignal(client.data.fortytwo_id, {
+            username: client.data.pseudo,
             inGame: false
         }, "userGameState")
         const room = client.data.room
@@ -197,10 +194,10 @@ export class EventsGateway {
             clearInterval(mapPong.get(room).game.intervalId)
             setTimeout(() => {
                 mapPong.delete(room)
-            }, 2000)
+            }, 500)
 
         }
-        console.log(`Client déconnecté: ${client.id}`);
+        console.log(`Client déconnecté: ${client.data.pseudo}`);
     }
 
     @SubscribeMessage('sendMessage')
@@ -211,21 +208,13 @@ export class EventsGateway {
     }
 
     @SubscribeMessage('movePaddleClient')
-    async handlePlay(
+    handlePlay(
         @MessageBody() data: { room: string; direction: 'UP' | 'DOWN' },
         @ConnectedSocket() client: Socket
     ) {
-        let user: User;
-        try {
-            user = await this.validateUser(client.handshake.auth.token);
-        } catch (e) {
-            console.log(e);
-            client.disconnect();
-            return;
-        }
         const mapPlayer = this.roomStoreService.getMapPong();
-        const sockets = await this.server.in(data.room).allSockets();
-        let paddlePositionY = mapPlayer.get(data.room).map.get(user.pseudo).y;
+        const sockets = this.server.in(data.room).allSockets();
+        let paddlePositionY = mapPlayer.get(data.room).map.get(client.data.pseudo).y;
         const translation = 15;
         const maxHeight = ((this.canvasHeight - (paddlePositionY + this.paddleHeight)) <= translation);
         const minHeight = (paddlePositionY < translation);
@@ -243,11 +232,11 @@ export class EventsGateway {
         client.emit("moveMyPaddle", {"y": paddlePositionY});
         // client.broadcast.to(data.room) -> tous les gens de la room sauf toi
         client.broadcast.to(data.room).emit('movePaddleOpponent', {"y": paddlePositionY});
-        mapPlayer.get(data.room).map.get(user.pseudo).y = paddlePositionY;
+        mapPlayer.get(data.room).map.get(client.data.pseudo).y = paddlePositionY;
         return {event: 'messageSent', data: `Message sent to room: ${data.room}`};
     }
 
-    async launchGame(room: string, client: Socket) {
+    launchGame(room: string, client: Socket) {
         const mapPlayer = this.roomStoreService.getMapPong();
         const player1 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
         const player2 = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
@@ -255,7 +244,11 @@ export class EventsGateway {
         const playerRight = player1.side === "RIGHT" ? player1 : player2;
         const playerLeft = player1.side === "LEFT" ? player1 : player2;
         const intervalId = setInterval(async () => {
-            const stop = await this.handleGame(room, playerRight, playerLeft, client)
+            const stop = this.handleGame(room, playerRight, playerLeft, client)
+            if (stop === 0) {
+                clearInterval(intervalId);
+                return;
+            }
             if (stop === 1) {
                 clearInterval(intervalId);
 
@@ -267,18 +260,6 @@ export class EventsGateway {
 
                     this.gameService.Insert(winner.name, looser.name, winner.score, looser.score)
                 }
-                // sendGameInfoToDB(player1, player2, time, )
-                /* GAME
-                   end_timestamp
-                   winner id
-                   looser id
-                   score winner
-                   score looser
-                   uid de la partie
-
-                   USER winner
-                   win +1 pour winner
-                */
                 return;
             }
             this.notifyRoomWithBallStat(room);
@@ -299,20 +280,15 @@ export class EventsGateway {
     }
 
 
-    async handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+    handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+        //stop si les deux clients sont déconnectés en pleine partie pour clear la room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
-            return
-        }
-        let user: User;
-        try {
-            user = await this.validateUser(client.handshake.auth.token);
-        } catch (e) {
-            console.log(e);
-            client.disconnect();
-            return;
+            return 0;
         }
         let {
+            scoreLeft,
+            scoreRight,
             ballRadius,
             xBall,
             xSpeed,
@@ -334,17 +310,18 @@ export class EventsGateway {
         ySpeed = handledBouncingOnPaddle.ySpeed;
 
         const handledScore = this.handleScore(xBall, ballRadius, canvasWidth, leftPlayer, yBall, room, rightPlayer, this.paddleWidth, xSpeed, ySpeed, victoryPoints);
-
+        scoreLeft = leftPlayer.score;
+        scoreRight = rightPlayer.score;
         //end of the game
         if (handledScore.end_game) {
             let winner = rightPlayer;
             let looser = leftPlayer;
-            if (leftPlayer.score > rightPlayer.score) {
+            if (scoreLeft > scoreRight) {
                 winner = leftPlayer;
                 looser = rightPlayer
             }
-            this.chatGateway.emitSignal(user.fortytwo_id, {
-                username: user.pseudo,
+            this.chatGateway.emitSignal(client.data.fortytwo_id, {
+                username: client.data.pseudo,
                 inGame: false
             }, "userGameState")
             this.server.to(room).emit('endGame', {
@@ -352,8 +329,8 @@ export class EventsGateway {
                 rightPlayer: rightPlayer,
                 looser: looser,
                 winner: winner,
-                left_score: leftPlayer.score,
-                right_score: rightPlayer.score
+                left_score: scoreLeft,
+                right_score: scoreRight,
             })
             clearInterval(mapPong.get(room).game.intervalId)
             mapPong.delete(room)

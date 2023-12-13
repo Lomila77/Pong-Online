@@ -14,6 +14,7 @@ import TwoFA from "./components/TwoFA";
 import { AuthRedirectRoutes, ProtectedRoute } from "./components/useAuthGuard";
 import Game from './pages/game/Game';
 import CreateGame from './pages/game/CreateGame';
+import NotFound from './components/404';
 
 const App = () => {
   return (
@@ -31,6 +32,7 @@ const App = () => {
           <Route path="/history" element={ <ProtectedRoute> <Layout> <History /> </Layout> </ProtectedRoute>}/>
           <Route path='/game/create' element={ <ProtectedRoute> <Layout> <CreateGame/> </Layout> </ProtectedRoute>}/>
           <Route path='/game/:gameId' element={<ProtectedRoute> <Layout> <Game /> </Layout> </ProtectedRoute>}/>
+          <Route path="*" element={<Layout> <NotFound/> </Layout>}/>
       </Routes>
     </Router>
   );

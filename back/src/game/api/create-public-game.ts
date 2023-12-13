@@ -30,13 +30,15 @@ export class CreatePublicGame {
         const uuid = this.generateUuid();
         this.roomStoreService.getMapPong().set(uuid, {
             "map": new Map(), "players": [], "game": {
+                scoreLeft: 0,
+                scoreRight: 0,
                 xBall: 200,
                 yBall: 200,
                 xSpeed: 3,
                 ySpeed: 3,
                 canvasWidth: 800,
                 canvasHeight: 400,
-                paddleWidth: 10,
+                paddleWidth: 3,
                 paddleHeight: 100,
                 leftPaddlePositionY: 100,
                 rightPaddlePositionY: 100,

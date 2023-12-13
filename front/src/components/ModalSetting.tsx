@@ -25,6 +25,7 @@ const ModalSetting = () => {
   const handleChangeFile = (e: any) => {
     setFile(URL.createObjectURL(e.target.files[0]));
     fileSize = e.target.files[0].size;
+    if
     fileTest1 = e.target.files[0];
   };
 
