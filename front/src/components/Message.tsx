@@ -1,3 +1,7 @@
+import React, {useState} from "react";
+import {useUser} from "../context/UserContext";
+import { IChatHistory } from "../context/ChatContext";
+import { useNavigate } from 'react-router-dom';
 
 interface MessageProps {
     message: IChatHistory;
@@ -46,3 +50,5 @@ const Message: React.FC<MessageProps> = ({message, blockedUsers}) => {
         </div>
     )
 }
+
+export default Message;
