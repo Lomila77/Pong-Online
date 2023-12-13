@@ -121,6 +121,8 @@ const SettingComp: React.FC = () => {
       data.avatar = user?.avatar
     else
       data.avatar = file;
+    if (settingsLock && !data.pseudo)
+      return;
     updateUser(settingsLock, {...data});
     if (settingsLock)
       navigate('/');
