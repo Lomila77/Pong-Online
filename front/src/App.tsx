@@ -30,7 +30,7 @@ const App = () => {
           <Route path="/settings" element={ <ProtectedRoute> <Layout> <Settings /></Layout>  </ProtectedRoute>} />
           <Route path="/leaderboard" element={ <ProtectedRoute> <Layout> <Leaderboard /> </Layout> </ProtectedRoute>} />
           <Route path="/history" element={ <ProtectedRoute> <Layout> <History /> </Layout> </ProtectedRoute>}/>
-          <Route path='/game/create' element={ <ProtectedRoute> <Layout> <CreateGame/> </Layout> </ProtectedRoute>}/>
+          <Route path='/game/create' element={ <ProtectedRoute> <Layout> <CreateGame channelId={undefined} /> </Layout> </ProtectedRoute>}/>
           <Route path='/game/:gameId' element={<ProtectedRoute> <Layout> <Game /> </Layout> </ProtectedRoute>}/>
           <Route path="*" element={<Layout> <NotFound/> </Layout>}/>
       </Routes>

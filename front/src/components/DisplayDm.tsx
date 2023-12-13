@@ -4,8 +4,9 @@ import Play from "../images/play.svg";
 
 interface DisplayDmProps {
     loadPrivateGame: (userId: number) => void;
+    setPrivateGameModalOpened: (value: boolean) => void;
 }
-const DisplayDm: React.FC<DisplayDmProps> = ({loadPrivateGame}) => {
+const DisplayDm: React.FC<DisplayDmProps> = ({loadPrivateGame, setPrivateGameModalOpened}) => {
     const {channels, openedWindows, openWindow, closeWindow, leaveChannel, sendMessage } = useChat();
     const [selectedTarget, setSelectedTarget] = useState<IChannel | null>(null);
 
@@ -37,7 +38,10 @@ const DisplayDm: React.FC<DisplayDmProps> = ({loadPrivateGame}) => {
                         </div>
                     </button>
                     <button className="btn btn-square btn-ghost btn-sm"
-                            onClick={() => loadPrivateGame(dm.id)}>
+                            onClick={() => {
+                                loadPrivateGame(dm.id);
+                                setPrivateGameModalOpened(true);
+                            }}>
                         <img src={Play} alt={"play"} className={""}/>
                     </button>
                 </li>
