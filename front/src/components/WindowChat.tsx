@@ -95,8 +95,8 @@ const WindowChat: React.FC<WindowChatProps> = ({user, me, destroyChat, history, 
                     value={message}
                     onChange={(e) => setMessage(e.target.value)} />
                 <button className="btn btn-circle btn-sm btn-ghost ring ring-white ring-offset-base-100 content-center"
-                    onClick={handleSendMessage}><
-                        img src={Send} alt="Send" />
+                    onClick={handleSendMessage}>
+                    <img src={Send} alt="Send" />
                 </button>
             </div>
         </div>
