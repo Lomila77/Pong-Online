@@ -60,6 +60,24 @@ export class EventsGateway {
         }
     }
 
+    async setUserInGame(userId: number, status: boolean) {
+        try {
+            await this.prisma.user.update({
+                where: {
+                    fortytwo_id: userId,
+                },
+                data: {
+                    in_game: status,
+                },
+            });
+            return true;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    }
+
+
     @SubscribeMessage('joinRoom')
     async handleJoinRoom(@MessageBody() data: { room: string }, @ConnectedSocket() client: Socket): Promise<any> {
         let user: User;
@@ -92,9 +110,11 @@ export class EventsGateway {
                 return
             }
             await this.chatGateway.emitSignal(user.fortytwo_id, {
-                username: user.pseudo,
+                pseudo: user.pseudo,
                 inGame: true
             }, "userGameState")
+            await this.setUserInGame(user.fortytwo_id, true);
+
 
             // le joueur qui join était déjà dans la partie
             const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -114,9 +134,11 @@ export class EventsGateway {
         }
 
         await this.chatGateway.emitSignal(user.fortytwo_id, {
-            username: user.pseudo,
+            pseudo: user.pseudo,
             inGame: true
         }, "userGameState")
+        await this.setUserInGame(user.fortytwo_id, true);
+
 
 
         // le joueur arrive dans la partie et c'est le premier
@@ -182,9 +204,11 @@ export class EventsGateway {
 
     async handleDisconnect(@ConnectedSocket() client: Socket) {
         await this.chatGateway.emitSignal(client.data.fortytwo_id, {
-            username: client.data.pseudo,
-            inGame: false
+            pseudo: client.data.pseudo,
+            inGame: true
         }, "userGameState")
+        await this.setUserInGame(client.data.fortytwo_id, true);
+
         const room = client.data.room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -281,7 +305,7 @@ export class EventsGateway {
     }
 
 
-    handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+    async handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
         //stop si les deux clients sont déconnectés en pleine partie pour clear la room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -321,10 +345,12 @@ export class EventsGateway {
                 winner = leftPlayer;
                 looser = rightPlayer
             }
-            this.chatGateway.emitSignal(client.data.fortytwo_id, {
-                username: client.data.pseudo,
-                inGame: false
+            await this.chatGateway.emitSignal(client.data.fortytwo_id, {
+                pseudo: client.data.pseudo,
+                inGame: true
             }, "userGameState")
+            await this.setUserInGame(client.data.fortytwo_id, true);
+
             this.server.to(room).emit('endGame', {
                 leftPlayer: leftPlayer,
                 rightPlayer: rightPlayer,
