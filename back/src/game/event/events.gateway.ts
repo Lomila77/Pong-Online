@@ -60,6 +60,23 @@ export class EventsGateway {
         }
     }
 
+    async setUserInGame(userId: number, status: boolean) {
+        try {
+            await this.prisma.user.update({
+                where: {
+                    fortytwo_id: userId,
+                },
+                data: {
+                    in_game: status,
+                },
+            });
+            return true;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    }
+
     @SubscribeMessage('joinRoom')
     async handleJoinRoom(@MessageBody() data: { room: string }, @ConnectedSocket() client: Socket): Promise<any> {
         let user: User;
@@ -73,6 +90,8 @@ export class EventsGateway {
         }
         // this.clients[client.id] = user;
         const mapPong = this.roomStoreService.getMapPong();
+        console.log("MAP PONG");
+        console.log(mapPong);
         // si la room existe pas encore
         if (!mapPong.get(data.room)) {
             client.emit('gameDoesNotExist', {})
@@ -92,9 +111,10 @@ export class EventsGateway {
                 return
             }
             await this.chatGateway.emitSignal(user.fortytwo_id, {
-                username: user.pseudo,
+                pseudo: user.pseudo,
                 inGame: true
             }, "userGameState")
+            await this.setUserInGame(user.fortytwo_id, true);
 
             // le joueur qui join était déjà dans la partie
             const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -113,9 +133,10 @@ export class EventsGateway {
         }
 
         await this.chatGateway.emitSignal(user.fortytwo_id, {
-            username: user.pseudo,
+            pseudo: user.pseudo,
             inGame: true
         }, "userGameState")
+        await this.setUserInGame(user.fortytwo_id, true);
 
 
         // le joueur arrive dans la partie et c'est le premier
@@ -132,7 +153,7 @@ export class EventsGateway {
             mapPong.get(data.room).players.push(user.pseudo)
             mapPong.get(data.room).players = [...new Set(mapPong.get(data.room).players)] as string[]
             mapPong.get(data.room).game.scoreLeft = 0;
-            client.emit('startGame', {eventName: "waiting"})
+            client.emit('startGame', {eventName: "waiting", gameData: mapPong.get(data.room).game})
             client.emit('yourPosition', {y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT"})
             return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
         }
@@ -181,9 +202,11 @@ export class EventsGateway {
 
     async handleDisconnect(@ConnectedSocket() client: Socket) {
         await this.chatGateway.emitSignal(client.data.fortytwo_id, {
-            username: client.data.pseudo,
+            pseudo: client.data.pseudo,
             inGame: false
         }, "userGameState")
+        await this.setUserInGame(client.data.fortytwo_id, false);
+
         const room = client.data.room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -244,7 +267,7 @@ export class EventsGateway {
         const playerRight = player1.side === "RIGHT" ? player1 : player2;
         const playerLeft = player1.side === "LEFT" ? player1 : player2;
         const intervalId = setInterval(async () => {
-            const stop = this.handleGame(room, playerRight, playerLeft, client)
+            const stop = await this.handleGame(room, playerRight, playerLeft, client)
             if (stop === 0) {
                 clearInterval(intervalId);
                 return;
@@ -280,7 +303,7 @@ export class EventsGateway {
     }
 
 
-    handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
+    async handleGame(room: string, rightPlayer: GamePlayer, leftPlayer: GamePlayer, client: Socket) {
         //stop si les deux clients sont déconnectés en pleine partie pour clear la room
         const mapPong = this.roomStoreService.getMapPong();
         if (!mapPong.get(room)) {
@@ -320,8 +343,9 @@ export class EventsGateway {
                 winner = leftPlayer;
                 looser = rightPlayer
             }
+            await this.setUserInGame(client.data.fortytwo_id, true);
             this.chatGateway.emitSignal(client.data.fortytwo_id, {
-                username: client.data.pseudo,
+                pseudo: client.data.pseudo,
                 inGame: false
             }, "userGameState")
             this.server.to(room).emit('endGame', {
@@ -348,49 +372,49 @@ export class EventsGateway {
         }
     }
 
-  private ballIsTouchingLeftPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number) {
+    private ballIsTouchingLeftPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number) {
 
-    const topBorderCollision: boolean =
-      yBall + ballRadius >= leftPlayer.y &&
-      yBall + ballRadius <= leftPlayer.y + paddleHeight &&
-      xBall >= this.paddleGapWithWall &&
-      xBall <= this.paddleGapWithWall + paddleWidth;
+        const topBorderCollision: boolean =
+            yBall + ballRadius >= leftPlayer.y &&
+            yBall + ballRadius <= leftPlayer.y + paddleHeight &&
+            xBall >= this.paddleGapWithWall &&
+            xBall <= this.paddleGapWithWall + paddleWidth;
 
-    const rightBorderCollision: boolean =
-      xBall - ballRadius <= this.paddleGapWithWall + paddleWidth &&
-      yBall >= leftPlayer.y &&
-      yBall <= leftPlayer.y + paddleHeight;
+        const rightBorderCollision: boolean =
+            xBall - ballRadius <= this.paddleGapWithWall + paddleWidth &&
+            yBall >= leftPlayer.y &&
+            yBall <= leftPlayer.y + paddleHeight;
 
-    const bottomBorderCollision: boolean =
-      yBall - ballRadius >= leftPlayer.y &&
-      yBall - ballRadius <= leftPlayer.y + paddleHeight &&
-      xBall >= this.paddleGapWithWall &&
-      xBall <= this.paddleGapWithWall + paddleWidth;
+        const bottomBorderCollision: boolean =
+            yBall - ballRadius >= leftPlayer.y &&
+            yBall - ballRadius <= leftPlayer.y + paddleHeight &&
+            xBall >= this.paddleGapWithWall &&
+            xBall <= this.paddleGapWithWall + paddleWidth;
 
-    return topBorderCollision || rightBorderCollision || bottomBorderCollision;
+        return topBorderCollision || rightBorderCollision || bottomBorderCollision;
 
     }
 
-  private ballIsTouchingRightPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, rightPlayer: GamePlayer, paddleHeight: number, canvaWidth: number) {
-    const topBorderCollision: boolean =
-      yBall + ballRadius >= rightPlayer.y &&
-      yBall + ballRadius <= rightPlayer.y + paddleHeight &&
-      xBall >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
-      xBall <= canvaWidth - this.paddleGapWithWall;
+    private ballIsTouchingRightPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, rightPlayer: GamePlayer, paddleHeight: number, canvaWidth: number) {
+        const topBorderCollision: boolean =
+            yBall + ballRadius >= rightPlayer.y &&
+            yBall + ballRadius <= rightPlayer.y + paddleHeight &&
+            xBall >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
+            xBall <= canvaWidth - this.paddleGapWithWall;
 
-    const leftBorderCollision: boolean =
-      xBall + ballRadius >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
-      yBall >= rightPlayer.y &&
-      yBall <= rightPlayer.y + paddleHeight;
+        const leftBorderCollision: boolean =
+            xBall + ballRadius >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
+            yBall >= rightPlayer.y &&
+            yBall <= rightPlayer.y + paddleHeight;
 
-    const bottomBorderCollision: boolean =
-      yBall - ballRadius >= rightPlayer.y &&
-      yBall - ballRadius <= rightPlayer.y + paddleHeight &&
-      xBall >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
-      xBall <= canvaWidth - this.paddleGapWithWall;
+        const bottomBorderCollision: boolean =
+            yBall - ballRadius >= rightPlayer.y &&
+            yBall - ballRadius <= rightPlayer.y + paddleHeight &&
+            xBall >= canvaWidth - this.paddleGapWithWall - paddleWidth &&
+            xBall <= canvaWidth - this.paddleGapWithWall;
 
-    return topBorderCollision || leftBorderCollision || bottomBorderCollision;
-  }
+        return topBorderCollision || leftBorderCollision || bottomBorderCollision;
+    }
 
     private handleBouncingOnPaddle(xBall: number, ballRadius: number, paddleWidth: number, yBall: number, leftPlayer: GamePlayer, paddleHeight: number, xSpeed: number, ySpeed: number, canvaWidth: number, rightPlayer: GamePlayer) {
         //let xDir: number = xSpeed >= 0 ? 1 : 0;
@@ -429,46 +453,46 @@ export class EventsGateway {
         return {ySpeed, xSpeed};
     }
 
-  private handleScore(xBall: number, ballRadius: number, canvaWidth: number, leftPlayer: GamePlayer, yBall: number, room: string, rightPlayer: GamePlayer, paddleWidth: number, xSpeed: number, ySpeed: number, victoryPoints: number) {
-    //if (xBall + ballRadius >= canvaWidth) {
-    if (xBall >= canvaWidth) {
-      leftPlayer.score += 1;
-      xBall = 400;
-      yBall = 200;
-      xSpeed = 3;
-      ySpeed = 3;
-      this.server.to(room).emit('scoring', {
-        name_left: leftPlayer.name,
-        score_left: leftPlayer.score,
-        name_right: rightPlayer.name,
-        score_right: rightPlayer.score,
-      });
-    //} else if (xBall < paddleWidth) {
-    } else if (xBall <= 0) {
-      rightPlayer.score += 1;
-      xBall = 400;
-      yBall = 200;
-      xSpeed = -3;
-      ySpeed = -3;
-      this.server.to(room).emit('scoring', {
-        name_left: leftPlayer.name,
-        score_left: leftPlayer.score,
-        name_right: rightPlayer.name,
-        score_right: rightPlayer.score,
-      });
+    private handleScore(xBall: number, ballRadius: number, canvaWidth: number, leftPlayer: GamePlayer, yBall: number, room: string, rightPlayer: GamePlayer, paddleWidth: number, xSpeed: number, ySpeed: number, victoryPoints: number) {
+        //if (xBall + ballRadius >= canvaWidth) {
+        if (xBall >= canvaWidth) {
+            leftPlayer.score += 1;
+            xBall = 400;
+            yBall = 200;
+            xSpeed = 3;
+            ySpeed = 3;
+            this.server.to(room).emit('scoring', {
+                name_left: leftPlayer.name,
+                score_left: leftPlayer.score,
+                name_right: rightPlayer.name,
+                score_right: rightPlayer.score,
+            });
+            //} else if (xBall < paddleWidth) {
+        } else if (xBall <= 0) {
+            rightPlayer.score += 1;
+            xBall = 400;
+            yBall = 200;
+            xSpeed = -3;
+            ySpeed = -3;
+            this.server.to(room).emit('scoring', {
+                name_left: leftPlayer.name,
+                score_left: leftPlayer.score,
+                name_right: rightPlayer.name,
+                score_right: rightPlayer.score,
+            });
+        }
+        const end_game = (leftPlayer.score >= victoryPoints || rightPlayer.score >= victoryPoints)
+        return { xBall, yBall, xSpeed, ySpeed, end_game };
     }
-    const end_game = (leftPlayer.score >= victoryPoints || rightPlayer.score >= victoryPoints)
-    return { xBall, yBall, xSpeed, ySpeed, end_game };
-  }
 
-  getPlayerRightAndPlayerLeft(room: string): { right: string, left: string } {
-    const mapPlayer = this.roomStoreService.getMapPong();
-    const playerOne = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
-    const playerTwo = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
+    getPlayerRightAndPlayerLeft(room: string): { right: string, left: string } {
+        const mapPlayer = this.roomStoreService.getMapPong();
+        const playerOne = mapPlayer.get(room).map.get(mapPlayer.get(room).players[0])
+        const playerTwo = mapPlayer.get(room).map.get(mapPlayer.get(room).players[1])
 
-    return {
-      right: playerOne.side === "RIGHT" ? playerOne.name : playerTwo.name,
-      left: playerOne.side === "RIGHT" ? playerTwo.name : playerOne.name
+        return {
+            right: playerOne.side === "RIGHT" ? playerOne.name : playerTwo.name,
+            left: playerOne.side === "RIGHT" ? playerTwo.name : playerOne.name
+        }
     }
-  }
 }
