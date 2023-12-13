@@ -11,7 +11,7 @@ import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
 import History from './pages/History';
 import TwoFA from "./components/TwoFA";
-import { AuthRedirectRoutes, ProtectedRoute } from "./components/useAuthGuard";
+import { AuthRedirectRoutes, ProtectedRoute, Redirec2FAtRoutes } from "./components/useAuthGuard";
 import Game from './pages/game/Game';
 import CreateGame from './pages/game/CreateGame';
 
@@ -21,8 +21,8 @@ const App = () => {
       <Routes>
         {/* route that should redirect towards "/" us user is authenticated */}
           <Route path="/login" element={ <AuthRedirectRoutes> <Login/> </AuthRedirectRoutes>} />
-          {/* <Route path="/twoFA" element={ <AuthRedirectRoutes>  <TwoFA/> </AuthRedirectRoutes>} /> */}
-          <Route path="/twoFA" element={  <TwoFA/> } />
+          <Route path="/twoFA" element={ <Redirec2FAtRoutes>  <TwoFA/> </Redirec2FAtRoutes>} />
+          {/* <Route path="/twoFA" element={  <TwoFA/> } /> */}
           <Route path="/settingslock" element={<AuthRedirectRoutes> <Settings /> </AuthRedirectRoutes>} />
 
         {/* route that should redirect towards "/login" us user is not authenticated */}

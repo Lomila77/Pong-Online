@@ -9,6 +9,7 @@ const UserContext = createContext<{
   // setUser: React.Dispatch<React.SetStateAction<backResInterface | null>>;
   updateUser: (fistConnection: boolean, newData: any) => void;
   disconnectUser: () => void
+  refreshUser: () => void;
 } | null>(null);
 
 export const UserProvider = ({ children }) => {
@@ -83,11 +84,19 @@ export const UserProvider = ({ children }) => {
     })
   };
 
+  // Ajouter la fonction de rafraîchissement
+  const refreshUser = async () => {
+    const refreshedUserData = await backRequest('users/profil', 'GET');
+    handleQuerySuccess(refreshedUserData);
+  };
+
+
   return (
     <UserContext.Provider value={{
     user,
     updateUser: handleUpdateUser,
     disconnectUser,
+    refreshUser,
     }}>
       {children}
       {/* <ChatProvider>{children}</ChatProvider> */}

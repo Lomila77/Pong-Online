@@ -142,7 +142,7 @@ export class AuthService {
     // }
 
     // if current user has already a 2fa he Should not get a qrcode
-    return undefined
+    return {qrCodeUrl: ""}
   }
 
   // async twoFA(user: User): Promise<backResInterface> {

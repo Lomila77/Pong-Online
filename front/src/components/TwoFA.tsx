@@ -3,24 +3,32 @@ import {backRequest} from "../api/queries";
 import React from 'react';
 import QRCode from 'react-qr-code';
 import {useNavigate} from "react-router-dom";
+import { useUser } from "../context/UserContext";
 
 const TwoFA: React.FC = () => {
+    const {user, refreshUser} = useUser()
     const [urlPath, setUrlPath] = useState<string>('');
     const [code, setCode] = useState('');
     const [inputStyle, setInputStyle] = useState('');
     const [isError, setIsError] = useState(false);
     const navigate = useNavigate();
-    
+
     useEffect(() => {
         backRequest('auth/twoFA', 'GET').then((data) => {
             setUrlPath(data.qrCodeUrl!);
         })
     }, []);
 
+    useEffect(() => {
+        if (user?.isF2authenticated)
+            navigate('/')
+    }, [user?.isF2authenticated])
+
     const submit = () => {
         backRequest('auth/verify', 'PUT', {codeQRAuth: code}).then(data => {
             if (data.verifyQrCode) {
-                navigate('/')
+                refreshUser();
+                // navigate('/')
             } else {
                 setInputStyle('border-rose-500')
                 setIsError(true);
