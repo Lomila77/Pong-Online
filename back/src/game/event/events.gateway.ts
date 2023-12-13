@@ -110,11 +110,6 @@ export class EventsGateway {
                 // déjà 2 joueurs dans la partie mais pas le joueur qui join
                 return
             }
-            await this.chatGateway.emitSignal(user.fortytwo_id, {
-                pseudo: user.pseudo,
-                inGame: true
-            }, "userGameState")
-            await this.setUserInGame(user.fortytwo_id, true);
 
             // le joueur qui join était déjà dans la partie
             const players = this.getPlayerRightAndPlayerLeft(data.room);
@@ -155,6 +150,11 @@ export class EventsGateway {
             mapPong.get(data.room).game.scoreLeft = 0;
             client.emit('startGame', {eventName: "waiting", gameData: mapPong.get(data.room).game})
             client.emit('yourPosition', {y: mapPong.get(data.room).game.leftPaddlePositionY, side: "LEFT"})
+            await this.chatGateway.emitSignal(user.fortytwo_id, {
+                pseudo: user.pseudo,
+                inGame: true
+            }, "userGameState")
+await this.setUserInGame(user.fortytwo_id, true);
             return {event: 'joinedRoom', data: `Joined room: ${data.room}`};
         }
 
