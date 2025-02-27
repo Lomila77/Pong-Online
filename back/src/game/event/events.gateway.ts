@@ -269,7 +269,7 @@ export class EventsGateway {
         const playerRight = player1.side === "RIGHT" ? player1 : player2;
         const playerLeft = player1.side === "LEFT" ? player1 : player2;
         const intervalId = setInterval(async () => {
-            const stop = this.handleGame(room, playerRight, playerLeft, client)
+            const stop = await this.handleGame(room, playerRight, playerLeft, client)
             if (stop === 0) {
                 clearInterval(intervalId);
                 return;
